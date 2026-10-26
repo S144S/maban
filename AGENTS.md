@@ -226,6 +226,17 @@ Agents must manage versioning proactively as part of implementation; do not wait
 
 Updating version files does not itself publish a release. When a release is requested, use component-specific Git tags such as `backend/v1.2.3` and `frontend/v1.4.0`; do not automatically tag, push, or publish merely because a version changed.
 
+### Component Changelogs
+
+Maintain `backend/CHANGELOG.md` and `frontend/CHANGELOG.md` independently, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Agents must update the relevant changelog proactively alongside each notable component change and every version bump.
+
+- **Structure:** Keep an `Unreleased` section at the top and released versions below it, newest first. Group entries under `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`, including only groups with entries.
+- **Before release:** Record pending changes under `Unreleased` even when the component's `VERSION` has already advanced. State the current development version immediately below that heading and keep it synchronized with `VERSION`. A version bump is not evidence of a published release.
+- **Entry content:** Write concise English descriptions of the actual change and its user or developer impact. Document breaking changes explicitly, including migration requirements. Summarize meaningful changes rather than copying commit messages or listing every edited file.
+- **Scope:** Update only the affected component's changelog; update both for cross-component changes, describing each side's impact. Shared runtime color changes belong to the frontend changelog. Routine project-wide documentation, formatting, or test-only edits do not need release notes unless they affect how the component is used or maintained.
+- **Consistency:** Include changelog updates with implementation and version changes in the same commit when committing. Refine an existing entry for follow-up fixes to the same pending change rather than duplicating it. Before finishing, check that notable changes and version decisions are reflected in the appropriate changelog.
+- **On release:** When an actual release is requested, move the applicable pending entries into a section named `## [X.Y.Z] - YYYY-MM-DD`, using that component's released version and actual release date. Retain an `Unreleased` section for future work. Do not fabricate historical releases, release dates, or features, and preserve published history except for factual corrections.
+
 ## Git Conventions
 
 ### Commit Messages
