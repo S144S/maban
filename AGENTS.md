@@ -4,6 +4,17 @@
 
 MaBan (مابان) is a web application for family financial management.
 
+## Architecture and Repository Structure
+
+MaBan uses a **modular monolith** architecture and is maintained in a **monorepo**.
+
+- **Modular monolith:** Organize backend functionality into cohesive business-domain modules within one application deployed as a unit. Each module must have clear responsibilities, explicit public interfaces, and encapsulated implementation details.
+- **Module boundaries:** Communicate across modules through their public application interfaces. Avoid importing another module's internal repositories or directly modifying its owned data. Keep dependencies explicit and acyclic, and preserve these boundaries even when modules share the same PostgreSQL database.
+- **Shared code:** Keep shared infrastructure and genuinely reusable primitives small and focused. Business rules belong to their owning modules; shared utilities must not become a way to bypass module boundaries.
+- **Frontend organization:** Organize frontend features around cohesive product capabilities, with reusable UI components and shared infrastructure separated from feature-specific logic.
+- **Monorepo:** Keep backend code in `backend/`, frontend code in `frontend/`, and project-wide documentation and shared tooling in this repository. Coordinate cross-component changes within the same repository while preserving independent backend and frontend versions.
+- **Architecture changes:** Maintain the modular monolith as the default architecture. Introducing independently deployed domain services or splitting the repository requires an explicit architectural decision.
+
 ## Technology Stack
 
 ### Backend
@@ -177,6 +188,43 @@ Follow SOLID principles throughout the backend and frontend, applying them appro
 - **Dependency Inversion:** Keep business logic dependent on abstractions rather than infrastructure details. Supply concrete dependencies at application boundaries, using dependency injection where appropriate.
 
 Apply these principles pragmatically: prefer clear, simple designs and introduce abstractions when they serve a concrete need. Do not add unnecessary inheritance, layers, or speculative extension points.
+
+## Independent Semantic Versioning
+
+Maintain separate backend and frontend versions following [Semantic Versioning 2.0.0](https://semver.org/), using `MAJOR.MINOR.PATCH` with non-negative integers and no leading zeros.
+
+### Sources of Truth
+
+- `backend/VERSION` is the authoritative backend version.
+- `frontend/VERSION` is the authoritative frontend version.
+- Each file contains only its version and a trailing newline. Both start at `0.1.0` to indicate initial development; this does not mean either application is already implemented or released.
+- Versions evolve independently. Update only the affected component; update both when both are affected. Shared runtime assets such as `styles/colors.css` belong to the frontend for versioning purposes.
+- When package metadata and runtime version displays are introduced, derive their versions from these files where supported. Otherwise synchronize mirrors such as `package.json`, applicable lockfile metadata, and `pyproject.toml` in the same change. Do not create competing sources of truth. Alembic revision identifiers and API route versions are separate from application versions.
+
+### Choosing the Increment
+
+| Increment | When to apply | Example |
+| --- | --- | --- |
+| MAJOR | Backward-incompatible changes to supported contracts, such as removing an API field, changing its meaning, or requiring migration of persisted frontend data without backward compatibility. Document the impact and migration path. | `1.4.2` → `2.0.0` |
+| MINOR | Backward-compatible features or additions to supported functionality, including new API capabilities or user-facing workflows. | `1.4.2` → `1.5.0` |
+| PATCH | Backward-compatible fixes, visual corrections, performance or security improvements, and internal or dependency changes affecting the shipped application without adding features. | `1.4.2` → `1.4.3` |
+
+- A major increment resets minor and patch to zero; a minor increment resets patch to zero.
+- Use the highest applicable increment for each component across the complete logical change. Judge actual compatibility and behavior, not just the commit type. Conventional Commit `!` or `BREAKING CHANGE:` markers must agree with the version decision.
+- Although SemVer permits unstable APIs during `0.x`, MaBan deliberately uses the same increment rules from the start: a breaking change from `0.1.0` becomes `1.0.0`. Do not silently treat breaking changes as patches or minors during initial development. A planned first stable release may also explicitly promote the version to `1.0.0`.
+- Documentation-only, test-only, formatting-only, and development-tooling changes that do not affect shipped behavior do not require an application version bump. Initial creation of these version files establishes the baseline without a further increment.
+
+### Agent Responsibilities
+
+Agents must manage versioning proactively as part of implementation; do not wait for the user to request a bump.
+
+1. Before changing code, read both version files and identify the components and supported contracts affected.
+2. Before completing a logical change, choose and apply the appropriate increment for each affected component, updating any existing metadata mirrors. Include the version update with the implementation when committing.
+3. Increment once per logical change, not once per edited file, intermediate fix, test run, or conversation turn. Check the existing diff and commit history to avoid repeating a bump already made for the same change. If its scope expands before completion, recalculate the increment from its original baseline.
+4. Validate version syntax, the increment relative to the baseline, reset rules, and consistency with existing package/runtime metadata. After merges, reconcile concurrent version changes against the integration branch; never lower a version or reuse a published version for different contents.
+5. In the final report, state each changed component's old and new versions and the reason. If no bump is needed, briefly explain why.
+
+Updating version files does not itself publish a release. When a release is requested, use component-specific Git tags such as `backend/v1.2.3` and `frontend/v1.4.0`; do not automatically tag, push, or publish merely because a version changed.
 
 ## Git Conventions
 
