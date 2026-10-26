@@ -1,0 +1,57 @@
+/* MaBan light theme: central source of color values.
+ * Import once in the future frontend's global stylesheet.
+ * Values are complete CSS colors: use var(--token), never hsl(var(--token)).
+ * No dark theme or framework dependency is introduced here.
+ */
+:root {
+  --brand-teal: #0F766E;
+  --brand-navy: #032D4E;
+  --brand-aqua: #02A8A8;
+  --brand-gold: #D4A72C;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: var(--brand-teal);
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #0B5E58;
+  --primary-active: #094E49;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #1E293B;
+  --secondary-hover: #E2E8F0;
+  --muted: #F1F5F9;
+  --muted-foreground: #475569;
+  --accent: #D9F2EE;
+  --accent-foreground: #0B5E58;
+  --border: #E2E8F0;
+  --input: #64748B;
+  --ring: var(--brand-teal);
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --destructive-hover: #B91C1C;
+  --success: #15803D;
+  --success-bg: #DCFCE7;
+  --warning: #B45309;
+  --warning-bg: #FFFBEB;
+  --error: #B91C1C;
+  --error-bg: #FEE2E2;
+  --info: #1D4ED8;
+  --info-bg: #DBEAFE;
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --chart-1: var(--brand-teal);
+  --chart-2: var(--brand-navy);
+  --chart-3: var(--brand-aqua);
+  --chart-4: var(--brand-gold);
+  --chart-5: var(--muted-foreground);
+  --disabled: var(--muted);
+  --disabled-foreground: var(--muted-foreground);
+}
