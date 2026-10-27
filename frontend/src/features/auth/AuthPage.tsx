@@ -68,6 +68,10 @@ export function AuthPage() {
       return;
     }
     if (!otpFlow) {
+      if (developmentOtp) {
+        window.location.replace("/dashboard");
+        return;
+      }
       setFeedback("ورود با رمز عبور به بک‌اند نیاز داره؛ فعلاً ورود واقعی انجام نمی‌شه.");
       return;
     }
@@ -79,10 +83,13 @@ export function AuthPage() {
       setPhone(enteredPhone);
       issueCode();
     } else if (step === "otp") {
+      if (mode === "login") {
+        window.location.replace("/dashboard");
+        return;
+      }
       setIssuedAt(0);
       setVisible(false);
-      setStep(signup || recovery ? "password" : "done");
-      if (!signup && !recovery) setFeedback("کد آزمایشی تأیید شد. ورود واقعی هنوز به بک‌اند متصل نیست.");
+      setStep("password");
     } else if (step === "password") {
       form.reset();
       setStep("done");
@@ -172,9 +179,12 @@ export function AuthPage() {
                 </div>
                 {errors.password ? <p id="password-error" className="auth-error">{errors.password}</p> : step === "password" && <p id="password-hint" className="auth-hint">حداقل ۸ نویسه؛ بهتره ترکیبی از حروف و عدد باشه.</p>}
               </div>}
-              {mode === "login" && step === "phone" && method === "password" && <a className="auth-forgot" href="/forgot-password">رمزتون رو فراموش کردین؟</a>}
+              {mode === "login" && step === "phone" && method === "password" && <>
+                {developmentOtp && <p className="auth-hint">در محیط توسعه، با شمارهٔ معتبر و هر رمز غیرخالی وارد داشبورد نمونه می‌شین؛ رمز بررسی نمی‌شه و ورود واقعی انجام نمی‌شه.</p>}
+                <a className="auth-forgot" href="/forgot-password">رمزتون رو فراموش کردین؟</a>
+              </>}
               {step !== "done" && <Button type="submit" size="lg" className="auth-submit">{step === "otp" ? "تأیید کد و ادامه" : step === "password" ? recovery ? "ثبت رمز جدید" : "تکمیل ثبت‌نام" : otpFlow ? "دریافت کد تأیید" : "ورود به مابان"}<ArrowLeft aria-hidden="true" /></Button>}
-              {step === "done" && <Button type="button" variant="outline" onClick={restart}>شروع دوباره</Button>}
+              {step === "done" && <><Button asChild><a href="/dashboard">دیدن داشبورد نمونه</a></Button><Button type="button" variant="outline" onClick={restart}>شروع دوباره</Button></>}
               <div role="status" aria-live="polite" tabIndex={-1} ref={feedbackRef} className={feedback ? "auth-feedback" : undefined}>{feedback}</div>
             </form>
             <p className="auth-alternative">{recovery ? <a href="/login"><ArrowRight size={17} aria-hidden="true" />بازگشت به ورود</a> : <>{signup ? "حساب دارین؟" : "هنوز حساب ندارین؟"} <a href={signup ? "/login" : "/signup"}>{signup ? "وارد بشین" : "ثبت‌نام کنین"}</a></>}</p>

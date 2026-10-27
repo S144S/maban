@@ -41,6 +41,18 @@ show only its phone artwork and existing brand marks; copy, cards, navigation,
 and controls are native HTML. Replace these framed assets with standalone brand
 exports when available. The budget demo opens in a dialog from the start buttons.
 
+## Dashboard preview
+
+Open `/dashboard` directly or use the sample-dashboard link after completing
+an authentication preview. The centered mobile app includes financial summaries,
+income/expense entry, transaction search and filters, editable category budgets,
+and amount hiding. All figures belong to a fixed sample month (Mehr 1405).
+New entries and budget edits stay in memory and reset on reload. This route is
+public demo UI, not an authenticated account or a connection to banking data.
+Local/develop login redirects directly to this dashboard after a valid OTP or
+a valid phone number and any nonempty password. The password preview explicitly
+does not authenticate credentials. Production password login remains unavailable.
+
 ## Authentication design previews
 
 Open `/login`, `/signup`, or `/forgot-password`. Forms validate locally and

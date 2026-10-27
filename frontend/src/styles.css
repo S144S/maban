@@ -757,11 +757,38 @@
   top: 10px;
 }
 [data-slot="dialog-content"] {
-  max-height: calc(100dvh - 32px);
+  max-height: calc(100dvh - 16px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--card);
-  border-radius: 22px;
-  padding: 28px 22px;
+  border-radius: 24px 24px 0 0;
+  padding: 36px 22px max(24px, env(safe-area-inset-bottom));
+  scroll-padding-block: 36px 24px;
+}
+.dialog-sheet-handle {
+  position: absolute;
+  top: 10px;
+  inset-inline-start: calc(50% - 20px);
+  width: 40px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--input);
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-slot="dialog-content"][data-state="open"] {
+    animation: sheet-enter 240ms var(--motion-easing);
+  }
+  [data-slot="dialog-content"][data-state="closed"] {
+    animation: sheet-exit 180ms var(--motion-easing);
+  }
+}
+@keyframes sheet-enter {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes sheet-exit {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 [data-slot="dialog-header"] {
   text-align: start;

@@ -5,9 +5,12 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.3.0`. No frontend release has been published.
+Current development version: `0.4.0`. No frontend release has been published.
 
 ### Changed
+
+- Present shared dialogs as bottom sheets with rounded top corners, internal
+  scrolling, safe-area spacing, and reduced-motion-aware slide transitions.
 
 - Unified landing and demo copy with MaBan's friendly, conversational Persian
   voice, keeping product limitations and privacy information explicit.
@@ -23,6 +26,13 @@ Current development version: `0.3.0`. No frontend release has been published.
   the small header mark, preserving its proportions and original design.
 
 ### Added
+
+- Added a Persian mobile-first dashboard at `/dashboard`, with monthly financial
+  summaries, amount privacy controls, transaction creation and filtering, and
+  editable category budgets. Sample data stays in memory and resets on reload.
+  Local/develop login previews redirect directly to the sample dashboard after
+  valid OTP verification or valid phone/nonempty password input (explicitly
+  without password authentication). Signup and recovery previews retain a link.
 
 - Added mobile-first Persian RTL login, signup, and password recovery design
   previews in a centered, full-height app shell capped at 480px on all screens,
