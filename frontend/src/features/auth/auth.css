@@ -1,0 +1,45 @@
+.auth-page { width: min(100%, 480px); min-height: 100svh; margin-inline: auto; display: flex; flex-direction: column; background: var(--card); }
+.auth-header { width: calc(100% - 40px); margin-inline: auto; min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.auth-back { display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; color: var(--muted-foreground); border-radius: 8px; }
+.auth-back:hover { color: var(--primary); }
+.auth-layout { width: 100%; flex: 1; }
+.auth-form-panel { padding: 16px 24px 24px; }
+.auth-form-inner { width: 100%; }
+.auth-brand { width: fit-content; margin: 16px auto 40px; }
+.auth-heading { margin-bottom: 28px; text-align: center; }
+.auth-heading h1 { font-size: 24px; font-weight: 700; color: var(--brand-navy); line-height: 1.6; }
+.auth-heading p { color: var(--muted-foreground); font-size: 15px; margin-top: 8px; }
+.auth-form { display: grid; gap: 20px; }
+.auth-method { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+.auth-method [aria-pressed="true"] { text-decoration: underline; text-underline-offset: 6px; }
+.auth-method button { padding-inline: 8px; }
+.auth-code-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; }
+.auth-code-actions button { padding-inline: 8px; }
+.auth-otp { position: relative; }
+.auth-otp-slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.auth-otp-slot { min-height: 56px; display: grid; place-items: center; border: 1px solid var(--input); border-radius: 12px; background: var(--card); color: var(--card-foreground); font-size: 24px; }
+.auth-otp-placeholder { color: var(--muted-foreground); }
+.auth-field .auth-otp input { position: absolute; inset: 0; height: 100%; opacity: 0; cursor: text; z-index: 1; }
+.auth-otp:focus-within .auth-otp-slot[data-active="true"] { outline: 3px solid var(--ring); outline-offset: 2px; background: var(--accent); color: var(--accent-foreground); }
+.auth-otp[data-invalid="true"] .auth-otp-slot { border-color: var(--error); }
+.auth-field { display: grid; gap: 7px; }
+.auth-field label { font-size: 14px; font-weight: 600; }
+.auth-field input { width: 100%; min-width: 0; min-height: 52px; border: 1px solid var(--input); border-radius: 12px; padding: 11px 15px; background: var(--card); color: var(--card-foreground); font-size: 16px; }
+.auth-field input::placeholder { color: var(--muted-foreground); }
+.auth-field input[aria-invalid="true"] { border-color: var(--error); }
+.auth-password { position: relative; }
+.auth-password input { padding-inline-start: 52px; }
+.auth-password button { position: absolute; inset-inline-end: 4px; top: 4px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--muted-foreground); }
+.auth-password button:hover { background: var(--accent); color: var(--accent-foreground); }
+.auth-error { font-size: 13px; color: var(--error); }
+.auth-hint { font-size: 12px; color: var(--muted-foreground); }
+.auth-forgot { color: var(--primary-active); font-size: 14px; min-height: 44px; display: flex; align-items: center; width: fit-content; margin-block: -12px; }
+.auth-forgot:hover, .auth-alternative a:hover { text-decoration: underline; }
+.auth-submit { width: 100%; font-size: 16px; justify-content: center; }
+.auth-form > [role="status"]:empty { display: none; }
+.auth-feedback { background: var(--info-bg); color: var(--info); border-radius: 12px; padding: 14px; font-size: 14px; }
+.auth-alternative { margin-block: 18px 24px; text-align: center; font-size: 14px; }
+.auth-alternative a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding-inline: 5px; color: var(--primary-active); font-weight: 700; }
+.auth-preview { display: flex; align-items: start; gap: 9px; border-top: 1px solid var(--border); padding-top: 18px; color: var(--muted-foreground); font-size: 12px; line-height: 1.9; }
+.auth-preview svg { flex-shrink: 0; margin-top: 3px; }
+.auth-footer { text-align: center; font-size: 12px; color: var(--muted-foreground); padding: 24px; }

@@ -32,7 +32,6 @@ import { useEntranceMotion } from "./useEntranceMotion";
 type Panel =
   | "demo"
   | "intro"
-  | "login"
   | "faq"
   | "privacy"
   | "terms"
@@ -79,17 +78,13 @@ const questions = [
   ],
 ];
 const info = {
-  login: {
-    title: "به مابان خوش اومدین",
-    text: "ورود و ثبت‌نام هنوز فعال نیست. تا حساب‌های کاربری آماده بشن، می‌تونین بدون واردکردن اطلاعات شخصی، نسخهٔ نمایشی رو امتحان کنین.",
-  },
   intro: {
     title: "یه خونه، یه تصویر روشن از پول‌ها",
     text: "ایدهٔ مابان ساده‌ست: درآمدها و هزینه‌ها رو یک‌جا ببینین، برای ماهتون برنامه بچینین و برای هدف‌های مشترک کنار هم پس‌انداز کنین. توی نسخهٔ نمایشی می‌تونین یه خرید ثبت کنین و تغییر بودجه رو ببینین.",
   },
   privacy: {
     title: "حریم خصوصی در نسخهٔ نمایشی",
-    text: "این صفحه حساب کاربری، فرم اطلاعات شخصی یا اتصال بانکی ندارد. داده‌های دمو ساختگی‌اند، فقط در حافظهٔ صفحه قرار دارند و ذخیره نمی‌شوند. فونت‌ها از سرویس CDN بارگیری می‌شوند. سیاست کامل حریم خصوصی پیش از راه‌اندازی حساب‌های واقعی منتشر خواهد شد.",
+    text: "این پیش‌نمایش حساب کاربری واقعی یا اتصال بانکی ندارد. اطلاعات فرم‌های ورود و ثبت‌نام ارسال یا ذخیره نمی‌شوند. داده‌های دمو ساختگی‌اند، فقط در حافظهٔ صفحه قرار دارند و ذخیره نمی‌شوند. فونت‌ها از سرویس CDN بارگیری می‌شوند. سیاست کامل حریم خصوصی پیش از راه‌اندازی حساب‌های واقعی منتشر خواهد شد.",
   },
   terms: {
     title: "شرایط استفاده از پیش‌نمایش",
@@ -173,11 +168,11 @@ export function LandingPage() {
             <Button
               variant="outline"
               className="login-button"
-              onClick={() => openPanel("login")}
+              asChild
             >
-              ورود
+              <a href="/login">ورود</a>
             </Button>
-            <Button onClick={() => openPanel("demo")}>شروع رایگان</Button>
+            <Button asChild><a href="/signup">ثبت‌نام</a></Button>
             <Button
               variant="ghost"
               size="icon"
@@ -199,7 +194,8 @@ export function LandingPage() {
             aria-label="ناوبری موبایل"
           >
             {navigation}
-            <button onClick={() => openPanel("login")}>ورود به مابان</button>
+            <a href="/login">ورود به مابان</a>
+            <a href="/signup">ثبت‌نام در مابان</a>
           </nav>
         )}
         <main id="main" ref={mainRef}>
@@ -447,7 +443,7 @@ export function LandingPage() {
               ))}
             </div>
           )}
-          {(panel === "intro" || panel === "login") && (
+          {panel === "intro" && (
             <Button onClick={() => setPanel("demo")}>
               امتحان نسخهٔ نمایشی
               <ArrowLeft data-icon="inline-end" />

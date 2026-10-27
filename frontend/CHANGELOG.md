@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.2.1`. No frontend release has been published.
+Current development version: `0.3.0`. No frontend release has been published.
 
 ### Changed
 
@@ -23,6 +23,18 @@ Current development version: `0.2.1`. No frontend release has been published.
   the small header mark, preserving its proportions and original design.
 
 ### Added
+
+- Added mobile-first Persian RTL login, signup, and password recovery design
+  previews in a centered, full-height app shell capped at 480px on all screens,
+  with phone-based signup (OTP then required first name, last name, and password), password or OTP login,
+  phone-based password recovery, Persian/Arabic digit normalization, and accessible
+  validation and password visibility controls. Five visible OTP slots support
+  full-code paste, autofill, keyboard editing, and automatic verification when
+  the fifth digit is entered. Local/develop previews use OTP
+  `12345`, with expiry, retry limits, and resend cooldown; production disables
+  mock verification.
+  Includes direct URLs and landing-page navigation. Forms do not transmit or persist
+  credentials; backend authentication remains unimplemented.
 
 - Established the independent frontend version baseline in `VERSION`.
 - Added a Persian, RTL, mobile-first landing page matching the supplied visual

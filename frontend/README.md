@@ -40,3 +40,24 @@ reference. The original reference image in public/assets is framed with CSS to
 show only its phone artwork and existing brand marks; copy, cards, navigation,
 and controls are native HTML. Replace these framed assets with standalone brand
 exports when available. The budget demo opens in a dialog from the start buttons.
+
+## Authentication design previews
+
+Open `/login`, `/signup`, or `/forgot-password`. Forms validate locally and
+explain that authentication is unavailable; they never submit, store credentials,
+or simulate successful authentication. Login and signup are linked from the
+landing navigation. Production hosting must serve index.html for these paths.
+
+### Phone authentication preview
+
+Signup: Iranian mobile number (09 + nine digits), OTP, then required first name,
+last name, and password. Login
+offers password or OTP. Recovery uses phone + OTP before a new password.
+Persian and Arabic digits are accepted. No credentials or sessions are persisted.
+
+`npm run dev` and `vite build --mode develop` enable the fixed development OTP
+`12345`. Normal production builds disable mock OTP requests and verification.
+The preview expires codes after 2 minutes, allows 5 verification attempts, and
+has a 30-second resend cooldown. These client-side limits are UX simulations,
+not security controls. A backend must implement real verification, SMS, password
+hashing, rate limiting, and sessions before authentication can be enabled.
