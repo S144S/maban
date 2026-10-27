@@ -5,7 +5,22 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.2.0`. No frontend release has been published.
+Current development version: `0.2.1`. No frontend release has been published.
+
+### Changed
+
+- Unified landing and demo copy with MaBan's friendly, conversational Persian
+  voice, keeping product limitations and privacy information explicit.
+- Added restrained decorative emoji, one-time section entrances, button feedback,
+  and budget progress transitions, with reduced-motion support and visible content
+  when animation observers are unavailable.
+
+### Fixed
+
+- Prevented hero artwork from enlarging beyond its source resolution on wide
+  screens while retaining the full-width hero layout.
+- Used the larger reference logo for the closing banner instead of enlarging
+  the small header mark, preserving its proportions and original design.
 
 ### Added
 

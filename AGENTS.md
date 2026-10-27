@@ -177,6 +177,16 @@ MaBan is designed for Persian-speaking users. Persian is the primary UI language
 }
 ```
 
+## Brand Voice, Emoji, and Motion
+
+MaBan speaks like a warm, trustworthy companion: friendly, approachable, and supportive without judging anyone's financial situation. Use natural conversational Persian consistently, including `شما`, `پول‌هاتون`, `می‌تونین`, and `امتحان کنین`; avoid switching between formal and conversational phrasing in the same flow.
+
+- **Copy:** Keep sentences short, clear, and encouraging. Prefer `حساب‌وکتاب خونه، ساده‌تر از همیشه` and `یه خرید ثبت کنین و تغییر بودجه رو ببینین`. Keep financial labels and amounts precise. Never shame spending, pressure users, promise financial outcomes, or imply unfinished features are available.
+- **Context:** Landing pages, onboarding, empty states, and milestones can be warm and playful. Payment errors, deletion confirmations, privacy, and terms must stay calm, explicit, and free of jokes; explain consequences and recovery without blaming the user.
+- **Emoji:** Use a few relevant emoji for welcome, encouragement, goals, and genuine milestones (for example 🌱, 🎯, 🎉). Avoid placing one in every label, financial row, or button. Never communicate a status through emoji alone. Hide decorative emoji from assistive technology with `aria-hidden="true"`; meaningful emoji need an accessible text equivalent. Preserve existing brand marks.
+- **Motion:** Use brief, subtle entrance animations, button feedback, and progress transitions. Celebrate an actual completed goal only once. Avoid continuous floating, flashing, autoplay confetti, animated financial numbers, and distracting movement beside amounts. Define shared timing/easing tokens, prefer transform/opacity animations, and keep content visible and actions usable if animation or observers are unavailable.
+- **Accessibility:** Honor `prefers-reduced-motion`, including changes while the page is open. Remove nonessential motion in that mode; never require motion, hover, or emoji to understand or operate the interface. Check Persian wrapping, RTL, mobile layouts, and keyboard focus after copy or motion changes.
+
 ## Code Design Principles
 
 Follow SOLID principles throughout the backend and frontend, applying them appropriately to classes, modules, services, hooks, and components.

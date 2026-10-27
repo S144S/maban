@@ -252,13 +252,15 @@
   top: -16.667%;
 }
 .reference-symbol {
-  width: 66px;
-  height: 74px;
+  /* Preserve the original CTA tile at its native size, including its logo. */
+  width: 156px;
+  height: 144px;
+  clip-path: path("M 30 15 L 92 1 Q 113 -3 124 19 L 149 69 Q 160 92 144 115 Q 134 127 114 133 L 80 141 Q 50 145 33 124 L 4 65 Q -5 43 12 27 Z");
 }
 .reference-symbol img {
-  width: 2713.33%;
-  left: -2144.444%;
-  top: -17.021%;
+  width: 1221px;
+  left: -224px;
+  top: -1057px;
 }
 .reference-footer-brand {
   width: 112px;
@@ -387,7 +389,9 @@
   flex-shrink: 0;
 }
 .reference-hero {
-  width: 100%;
+  /* This frame shows a 635px-wide region of the reference bitmap. */
+  width: min(100%, 635px);
+  justify-self: center;
   aspect-ratio: 635/500;
 }
 .reference-hero img {
@@ -936,6 +940,7 @@
   }
   .reference-hero {
     margin: 0;
+    justify-self: end;
     align-self: end;
   }
   .benefits {
@@ -1038,20 +1043,12 @@
     margin-top: 3px;
   }
   .app-tile {
-    width: 124px;
-    height: 124px;
+    width: 156px;
+    height: 144px;
     display: grid;
     place-items: center;
-    border-radius: 29px;
-    background: var(--card);
-    transform: rotate(-19deg);
-    box-shadow:
-      0 12px 0 var(--border),
-      0 20px 25px rgb(0 0 0 / 0.2);
+    flex-shrink: 0;
     margin-block: -25px;
-  }
-  .app-tile .reference-symbol {
-    transform: rotate(10deg);
   }
   .footer-inner {
     width: min(1080px, calc(100% - 40px));
@@ -1124,7 +1121,9 @@
   .hero-copy > p {
     font-size: 15px;
   }
-  .hero-copy { padding-inline: 14px; }
+  .hero-copy {
+    padding-inline: 14px;
+  }
   .category-icon {
     width: 22px;
     height: 25px;
@@ -1153,6 +1152,47 @@
   }
   .mini-bars span {
     width: 9px;
+  }
+}
+:root {
+  --motion-feedback: 160ms;
+  --motion-entrance: 480ms;
+  --motion-easing: cubic-bezier(0.2, 0, 0, 1);
+}
+.friendly-emoji {
+  display: inline-block;
+  font-size: 0.85em;
+  vertical-align: baseline;
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-entrance].has-entered {
+    animation: friendly-entrance var(--motion-entrance) var(--motion-easing)
+      both;
+  }
+  [data-slot="button"] {
+    transition:
+      transform var(--motion-feedback) var(--motion-easing),
+      background-color var(--motion-feedback),
+      color var(--motion-feedback);
+  }
+  [data-slot="button"]:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .budget-preview progress::-webkit-progress-value {
+    transition: width var(--motion-entrance) var(--motion-easing);
+  }
+  .budget-preview progress::-moz-progress-bar {
+    transition: width var(--motion-entrance) var(--motion-easing);
+  }
+}
+@keyframes friendly-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -135,8 +135,8 @@ export function BudgetPreview() {
         </div>
         <p className="demo-message" role="status">
           {expenses
-            ? `${number.format(expenses)} خرید نمونه ثبت شد؛ بودجه و موجودی به‌روز شدند.`
-            : "یک خرید ثبت کنید و تغییر بودجه را ببینید."}
+            ? `${number.format(expenses)} خرید نمونه ثبت شد؛ بودجه و موجودی به‌روز شدن.`
+            : "یه خرید ثبت کنین و تغییر بودجه رو ببینین."}
         </p>
       </section>
       <div className="goal-card">

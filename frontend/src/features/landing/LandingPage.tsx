@@ -27,6 +27,7 @@ import {
 import { BudgetPreview } from "./BudgetPreview";
 import { ProductHighlights } from "./ProductHighlights";
 import { ReferenceArtwork } from "./ReferenceArtwork";
+import { useEntranceMotion } from "./useEntranceMotion";
 
 type Panel =
   | "demo"
@@ -41,17 +42,17 @@ const benefits = [
   {
     icon: Users,
     title: "فضای مالی مشترک",
-    text: "مدیریت شفاف هزینه‌ها با عزیزانتان",
+    text: "حساب‌وکتاب روشن، کنار عزیزاتون",
   },
   {
     icon: BarChart3,
     title: "بودجه و هدف‌گذاری",
-    text: "کنترل هزینه‌ها و رسیدن به اهداف مالی",
+    text: "برای خرج‌ها و هدف‌هاتون برنامه بچینین",
   },
   {
     icon: PieChart,
     title: "گزارش‌های ساده و کاربردی",
-    text: "تصویر روشن از وضعیت مالی‌تان",
+    text: "ببینین پول‌هاتون کجا خرج می‌شه",
   },
   {
     icon: LockKeyhole,
@@ -61,30 +62,30 @@ const benefits = [
 ];
 const questions = [
   [
-    "مابان برای چه کسانی است؟",
-    "برای خانواده‌ها، زوج‌ها و هر کسی که می‌خواهد هزینه‌ها و هدف‌های مالی‌اش را با نظم بیشتری مدیریت کند.",
+    "مابان به درد چه کسایی می‌خوره؟",
+    "برای خانواده‌ها، زوج‌ها و هر کسی که می‌خواد حساب‌وکتابش رو راحت‌تر پیش ببره و برای هدف‌هاش برنامه داشته باشه.",
   ],
   [
-    "آیا همین حالا می‌توانم حساب بسازم؟",
-    "مابان در حال توسعه است. فعلاً شروع رایگان، نسخهٔ نمایشی را باز می‌کند؛ ثبت‌نام، ورود و حساب‌های مشترک هنوز فعال نیستند.",
+    "الان می‌تونم حساب بسازم؟",
+    "هنوز داریم مابان رو آماده می‌کنیم. فعلاً با «شروع رایگان» می‌تونین نسخهٔ نمایشی رو امتحان کنین؛ ثبت‌نام، ورود و حساب مشترک هنوز فعال نیست.",
   ],
   [
-    "آیا اطلاعات بانکی لازم است؟",
-    "خیر. این نمونه به هیچ بانکی متصل نیست و فقط با اطلاعات ساختگی کار می‌کند.",
+    "اطلاعات بانکی هم لازمه؟",
+    "نه، هیچ اطلاعات بانکی لازم نیست. این نمونه به هیچ بانکی وصل نیست و اطلاعاتش ساختگیه.",
   ],
   [
-    "اطلاعات نسخهٔ نمایشی ذخیره می‌شوند؟",
-    "خیر. خریدهای نمونه فقط در حافظهٔ همین صفحه می‌مانند و با بستن نمونه یا تازه‌سازی صفحه پاک می‌شوند.",
+    "اطلاعات نسخهٔ نمایشی ذخیره می‌شه؟",
+    "نه، خریدهای نمونه فقط توی حافظهٔ همین صفحه می‌مونن. با بستن نمونه یا تازه‌سازی صفحه پاک می‌شن.",
   ],
 ];
 const info = {
   login: {
-    title: "به مابان خوش آمدید",
-    text: "ورود و ثبت‌نام هنوز فعال نیست. تا آماده‌شدن حساب‌های کاربری، می‌توانید بدون واردکردن اطلاعات شخصی، نسخهٔ نمایشی را امتحان کنید.",
+    title: "به مابان خوش اومدین",
+    text: "ورود و ثبت‌نام هنوز فعال نیست. تا حساب‌های کاربری آماده بشن، می‌تونین بدون واردکردن اطلاعات شخصی، نسخهٔ نمایشی رو امتحان کنین.",
   },
   intro: {
-    title: "یک خانه، یک تصویر روشن از پول‌ها",
-    text: "ایدهٔ مابان ساده است: درآمدها و هزینه‌ها را یک‌جا ببینید، برای ماهتان بودجه تعیین کنید و برای هدف‌های مشترک کنار هم پس‌انداز کنید. در نمونهٔ تعاملی می‌توانید اثر ثبت یک خرید روی بودجه را ببینید.",
+    title: "یه خونه، یه تصویر روشن از پول‌ها",
+    text: "ایدهٔ مابان ساده‌ست: درآمدها و هزینه‌ها رو یک‌جا ببینین، برای ماهتون برنامه بچینین و برای هدف‌های مشترک کنار هم پس‌انداز کنین. توی نسخهٔ نمایشی می‌تونین یه خرید ثبت کنین و تغییر بودجه رو ببینین.",
   },
   privacy: {
     title: "حریم خصوصی در نسخهٔ نمایشی",
@@ -101,6 +102,7 @@ const info = {
 };
 
 export function LandingPage() {
+  const mainRef = useEntranceMotion();
   const [menuOpen, setMenuOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [active, setActive] = useState("#home");
@@ -137,7 +139,7 @@ export function LandingPage() {
         className={active === "#audience" ? "nav-active" : undefined}
         onClick={() => follow("#audience")}
       >
-        برای چه کسانی؟
+        برای کیاست؟
       </a>
       <button onClick={() => openPanel("faq")}>سؤالات متداول</button>
       <a
@@ -200,20 +202,25 @@ export function LandingPage() {
             <button onClick={() => openPanel("login")}>ورود به مابان</button>
           </nav>
         )}
-        <main id="main">
+        <main id="main" ref={mainRef}>
           <section className="hero" aria-labelledby="hero-title">
-            <div className="hero-copy">
-              <span className="section-pill">مدیریت مالی شخصی و خانوادگی</span>
+            <div className="hero-copy" data-entrance>
+              <span className="section-pill">
+                <span className="friendly-emoji" aria-hidden="true">
+                  🌱
+                </span>{" "}
+                حساب‌وکتاب، کنار هم
+              </span>
               <h1 id="hero-title">
                 با مابان،
                 <br />
-                پول‌هاتون رو باهم
+                پول‌هاتون رو با هم
                 <br />
-                بهتر مدیریت کنید
+                بهتر مدیریت کنین
               </h1>
               <p>
-                مابان به شما و عزیزانتان کمک می‌کند درآمدها، هزینه‌ها، بودجه‌ها
-                و اهداف مالی‌تان را ساده، شفاف و در یک فضای مشترک مدیریت کنید.
+                مابان کنارتونه تا درآمدها، خرج‌ها و هدف‌هاتون رو یک‌جا ببینین؛
+                با عزیزاتون برنامه بچینین و راحت‌تر حساب‌وکتاب کنین.
               </p>
               <div className="hero-actions">
                 <Button size="lg" onClick={() => openPanel("demo")}>
@@ -231,8 +238,8 @@ export function LandingPage() {
               </div>
               <div className="hero-notes">
                 {[
-                  "راه‌اندازی سریع",
-                  "استفادهٔ آسان",
+                  "شروع بدون ثبت‌نام",
+                  "ساده و راحت",
                   "ویژهٔ خانواده و زوج‌ها",
                 ].map((text) => (
                   <span key={text}>
@@ -259,21 +266,30 @@ export function LandingPage() {
               ))}
             </div>
           </section>
-          <section className="container features-section" id="features">
+          <section
+            className="container features-section"
+            id="features"
+            data-entrance
+          >
             <div className="features-copy">
-              <span className="section-pill">امکانات مابان</span>
+              <span className="section-pill">
+                <span className="friendly-emoji" aria-hidden="true">
+                  🎯
+                </span>{" "}
+                برای برنامه‌های شما
+              </span>
               <h2>
-                همه‌چیز برای یک مدیریت مالی
+                حساب‌وکتاب خونه،
                 <br />
-                آرام و هوشمند
+                ساده‌تر از همیشه
               </h2>
               <ul>
                 {[
-                  "ثبت سریع و سادهٔ درآمد و هزینه",
-                  "تقسیم هزینه‌ها بین اعضای خانواده",
-                  "تعریف بودجه‌های ماهانه و دسته‌بندی هزینه‌ها",
-                  "هدف‌گذاری برای خریدها و برنامه‌های مهم",
-                  "گزارش‌های تصویری و قابل فهم",
+                  "درآمد و هزینه‌هاتون رو راحت ثبت کنین",
+                  "خرج‌های مشترک رو با هم تقسیم کنین",
+                  "برای خرج‌های هر ماه بودجه بذارین",
+                  "برای هدف‌های کوچیک و بزرگ پس‌انداز کنین",
+                  "با گزارش‌های ساده، از حساب‌هاتون باخبر باشین",
                 ].map((text) => (
                   <li key={text}>
                     <Check />
@@ -284,16 +300,20 @@ export function LandingPage() {
             </div>
             <ProductHighlights />
           </section>
-          <section className="container audience-section" id="audience">
+          <section
+            className="container audience-section"
+            id="audience"
+            data-entrance
+          >
             <div className="audience-copy">
-              <h2>مابان برای چه کسانی است؟</h2>
+              <h2>مابان به درد چه کسایی می‌خوره؟</h2>
               <div className="audience-cards">
                 <article>
                   <UserRound />
                   <p>
-                    هر کسی که به دنبال
+                    هر کسی که می‌خواد
                     <br />
-                    مدیریت بهتر پول است
+                    حواسش به پول‌هاش باشه
                   </p>
                 </article>
                 <article>
@@ -306,9 +326,9 @@ export function LandingPage() {
                 <article>
                   <Sprout />
                   <p>
-                    کسانی که می‌خواهند
+                    کسایی که می‌خوان
                     <br />
-                    به اهداف مالی‌شان برسند
+                    به هدف‌هاشون نزدیک‌تر بشن
                   </p>
                 </article>
               </div>
@@ -316,13 +336,13 @@ export function LandingPage() {
             <blockquote id="about">
               <span aria-hidden="true">”</span>
               <p>
-                با مابان، گفتگو دربارهٔ پول
+                بیاین دربارهٔ پول راحت‌تر حرف بزنیم؛
                 <br />
-                ساده‌تر، شفاف‌تر و بدون استرس می‌شود.
+                قدم‌به‌قدم، بدون قضاوت.
               </p>
             </blockquote>
           </section>
-          <section className="closing">
+          <section className="closing" data-entrance>
             <Button
               variant="inverse"
               size="lg"
@@ -332,8 +352,13 @@ export function LandingPage() {
               شروع رایگان
             </Button>
             <div>
-              <h2>همین حالا مابان را امتحان کنید</h2>
-              <p>مدیریت مالی آگاهانه، کنار کسانی که براتون مهم‌اند.</p>
+              <h2>
+                همین حالا مابان رو امتحان کنین{" "}
+                <span className="friendly-emoji" aria-hidden="true">
+                  ✨
+                </span>
+              </h2>
+              <p>یه قدم کوچیک برای حساب‌وکتاب راحت‌تر، کنار عزیزاتون.</p>
             </div>
             <div className="app-tile" aria-hidden="true">
               <ReferenceArtwork variant="symbol" />
@@ -400,9 +425,9 @@ export function LandingPage() {
             </DialogTitle>
             <DialogDescription>
               {panel === "demo"
-                ? "بدون ثبت‌نام امتحان کنید. اطلاعات نمونه‌اند و ذخیره نمی‌شوند."
+                ? "بدون ثبت‌نام امتحان کنین. اطلاعات نمونه‌ان و ذخیره نمی‌شن."
                 : panel === "faq"
-                  ? "پاسخ‌های روشن، قبل از شروع."
+                  ? "سؤالی دارین؟ از اینجا شروع کنیم."
                   : panel
                     ? info[panel].text
                     : ""}
