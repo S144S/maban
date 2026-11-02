@@ -17,6 +17,7 @@ import {
   Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FinanceIllustration } from "@/components/FinanceIllustration";
 import {
   Dialog,
   DialogContent,
@@ -201,18 +202,8 @@ export function LandingPage() {
         <main id="main" ref={mainRef}>
           <section className="hero" aria-labelledby="hero-title">
             <div className="hero-copy" data-entrance>
-              <span className="section-pill">
-                <span className="friendly-emoji" aria-hidden="true">
-                  🌱
-                </span>{" "}
-                حساب‌وکتاب، کنار هم
-              </span>
               <h1 id="hero-title">
-                با مابان،
-                <br />
-                پول‌هاتون رو با هم
-                <br />
-                بهتر مدیریت کنین
+                حساب‌وکتاب خونه،<br />ساده‌تر از همیشه
               </h1>
               <p>
                 مابان کنارتونه تا درآمدها، خرج‌ها و هدف‌هاتون رو یک‌جا ببینین؛
@@ -245,7 +236,7 @@ export function LandingPage() {
                 ))}
               </div>
             </div>
-            <ReferenceArtwork variant="hero" />
+            <div className="hero-scene"><FinanceIllustration /><p>برای امروز، برای فردا، کنار هم.</p></div>
           </section>
           <section className="benefit-band" aria-label="مزایای مابان">
             <div className="container benefits">
@@ -275,9 +266,9 @@ export function LandingPage() {
                 برای برنامه‌های شما
               </span>
               <h2>
-                حساب‌وکتاب خونه،
+                پول‌هاتون، یک‌جا
                 <br />
-                ساده‌تر از همیشه
+                برنامه‌هاتون، روشن‌تر
               </h2>
               <ul>
                 {[

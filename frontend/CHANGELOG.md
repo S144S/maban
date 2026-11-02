@@ -5,9 +5,14 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.4.0`. No frontend release has been published.
+Current development version: `0.4.1`. No frontend release has been published.
 
 ### Changed
+
+- Restyled all landing, authentication, dashboard, budget, transaction, and
+  bottom-sheet surfaces with a shared pastel rose/lime/peach palette, bold
+  Persian typography, capsule controls, and original scalable line artwork.
+  Preserved mobile-first RTL layouts and existing preview interactions.
 
 - Present shared dialogs as bottom sheets with rounded top corners, internal
   scrolling, safe-area spacing, and reduced-motion-aware slide transitions.

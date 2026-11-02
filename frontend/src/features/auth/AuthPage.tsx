@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FinanceIllustration } from "@/components/FinanceIllustration";
 import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import { normalizeDigits, validPhone, verifyDevelopmentOtp } from "./authValidation";
 import { OtpInput } from "./OtpInput";
@@ -122,19 +123,21 @@ export function AuthPage() {
   }
 
   return (
-    <div className="auth-page">
+    <div className={`auth-page auth-${mode}`}>
       <a className="skip-link" href="#auth-main">رفتن به محتوای اصلی</a>
       <header className="auth-header">
+        <a href="/" className="brand-link" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a>
         <a href="/" className="auth-back">بازگشت به خانه <ArrowRight size={18} aria-hidden="true" /></a>
       </header>
       <main id="auth-main" className="auth-layout">
         <section className="auth-form-panel" aria-labelledby="auth-title">
           <div className="auth-form-inner">
-            <a href="/" className="brand-link auth-brand" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a>
+            {otpFlow && <ol className="auth-progress" aria-label="مراحل تأیید">{["شماره موبایل", "کد تأیید", ...(mode !== "login" ? ["تکمیل اطلاعات"] : [])].map((label, index) => <li key={label} aria-current={index === (step === "phone" ? 0 : step === "otp" ? 1 : 2) ? "step" : undefined}><span />{label}</li>)}</ol>}
             <div className="auth-heading">
-              <h1 id="auth-title">{copy[mode].title}</h1>
-              <p>{copy[mode].description}</p>
+              <h1 id="auth-title">{step === "otp" ? "فقط پنج رقم!" : step === "password" ? signup ? "بیشتر آشنا بشیم" : "یه رمز تازه" : step === "done" ? "همه‌چیز آماده‌ست" : copy[mode].title}</h1>
+              <p>{step === "otp" ? "یه قدم دیگه تا ادامهٔ مسیر." : step === "password" ? "اطلاعاتتون رو اینجا کامل کنین." : step === "done" ? "می‌تونین داشبورد نمونه رو امتحان کنین." : copy[mode].description}</p>
             </div>
+            {step === "phone" && <FinanceIllustration compact />}
             {mode === "login" && step === "phone" && <div className="auth-method" role="group" aria-label="روش ورود">
               <Button type="button" variant={method === "password" ? "default" : "outline"} aria-pressed={method === "password"} onClick={() => { restart(); setMethod("password"); }}>رمز عبور</Button>
               <Button type="button" variant={method === "otp" ? "default" : "outline"} aria-pressed={method === "otp"} onClick={() => { restart(); setMethod("otp"); }}>رمز یک‌بارمصرف</Button>
