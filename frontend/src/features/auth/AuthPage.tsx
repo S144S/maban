@@ -127,7 +127,7 @@ export function AuthPage() {
       <a className="skip-link" href="#auth-main">رفتن به محتوای اصلی</a>
       <header className="auth-header">
         <a href="/" className="brand-link" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a>
-        <a href="/" className="auth-back">بازگشت به خانه <ArrowRight size={18} aria-hidden="true" /></a>
+        {mode !== "login" && <a href="/" className="auth-back">بازگشت به خانه <ArrowRight size={18} aria-hidden="true" /></a>}
       </header>
       <main id="auth-main" className="auth-layout">
         <section className="auth-form-panel" aria-labelledby="auth-title">

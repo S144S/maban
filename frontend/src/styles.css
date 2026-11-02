@@ -247,30 +247,42 @@
   width: 125px;
   height: 48px;
 }
-.reference-brand img {
-  width: 976.8%;
-  left: -772%;
-  top: -16.667%;
-}
 .reference-symbol {
-  /* Preserve the original CTA tile at its native size, including its logo. */
-  width: 156px;
-  height: 144px;
-  clip-path: path("M 30 15 L 92 1 Q 113 -3 124 19 L 149 69 Q 160 92 144 115 Q 134 127 114 133 L 80 141 Q 50 145 33 124 L 4 65 Q -5 43 12 27 Z");
-}
-.reference-symbol img {
-  width: 1221px;
-  left: -224px;
-  top: -1057px;
+  width: 100px;
+  height: 100px;
 }
 .reference-footer-brand {
   width: 112px;
   height: 48px;
+  color: var(--primary-foreground);
 }
-.reference-footer-brand img {
-  width: 1090.179%;
-  left: -904.464%;
-  top: -2529.167%;
+.reference-brand, .reference-footer-brand, .reference-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  direction: ltr;
+  gap: 8px;
+  overflow: visible;
+}
+.brand-mark {
+  display: block;
+  width: 34%;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  background: currentColor;
+  mask: url("/assets/maban-mark.svg") center / contain no-repeat;
+}
+.brand-wordmark {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 27px;
+  line-height: 1.5;
+  direction: rtl;
+}
+.reference-symbol .brand-mark { width: 100%; }
+.reference-footer-brand .brand-wordmark { font-size: 24px; }
+@media (max-width: 380px) {
+  .reference-brand .brand-wordmark { font-size: 23px; }
 }
 .desktop-nav {
   display: none;

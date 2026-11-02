@@ -1,5 +1,6 @@
 .auth-page { width: min(100%, 480px); min-height: 100svh; margin-inline: auto; display: flex; flex-direction: column; background: var(--auth-scene, var(--scene-rose)); }
 .auth-header { width: calc(100% - 40px); margin-inline: auto; min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.auth-login .auth-header { justify-content: center; }
 .auth-back { display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; color: var(--muted-foreground); border-radius: 8px; }
 .auth-back:hover { color: var(--primary); }
 .auth-layout { width: 100%; flex: 1; }

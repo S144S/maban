@@ -5,9 +5,16 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.4.1`. No frontend release has been published.
+Current development version: `0.4.2`. No frontend release has been published.
 
 ### Changed
+
+- Applied the approved monochrome brand treatment throughout the site, with
+  a white footer variant, a squirrel favicon, and matching browser theme color.
+  Rebuilt the squirrel as smooth vector paths and rendered the wordmark with
+  native Persian typography, replacing the low-resolution filtered logo crops.
+- Simplified the login header by removing its separate back-to-home link and
+  centering the logo and wordmark.
 
 - Restyled all landing, authentication, dashboard, budget, transaction, and
   bottom-sheet surfaces with a shared pastel rose/lime/peach palette, bold
