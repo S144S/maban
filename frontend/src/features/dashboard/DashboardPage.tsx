@@ -1,19 +1,24 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowDownLeft, ArrowUpLeft, ArrowRight, House, ListFilter, Wallet, Plus, ShoppingBasket, Coffee, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
+import { ArrowDownLeft, ArrowUpLeft, House, Wallet, Plus, ShoppingBasket, Coffee, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import { TransactionForm } from "./TransactionForm";
 import { categories, initialTransactions, formatMoney, parseAmount, summarize } from "./model";
 import "./dashboard.css";
+import { AccountAvatar } from "@/components/AccountAvatar";
+import { BottomNavigation } from "@/components/BottomNavigation";
 import type { User } from "../auth/api";
 
 const icons = { home: House, groceries: ShoppingBasket, leisure: Coffee };
-const pages = [{ id: "home", label: "خانه", icon: House }, { id: "transactions", label: "تراکنش‌ها", icon: ListFilter }, { id: "budgets", label: "بودجه", icon: Wallet }] as const;
-type Page = typeof pages[number]["id"];
+type Page = "home" | "transactions" | "budgets";
+function initialPage(): Page {
+  const page = new URLSearchParams(window.location.search).get("page");
+  return page === "transactions" || page === "budgets" ? page : "home";
+}
 
 export function DashboardPage({ user }: { user: User }) {
-  const [page, setPage] = useState<Page>("home");
+  const [page, setPage] = useState<Page>(initialPage);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [limits, setLimits] = useState(categories.map(c => c.limit));
   const [filter, setFilter] = useState("all");
@@ -49,10 +54,9 @@ export function DashboardPage({ user }: { user: User }) {
   </section>;
   return <div className="dash-shell">
     <a className="skip-link" href="#dashboard-main">رفتن به محتوای اصلی</a>
-    <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><a className="dash-back" href="/account"><ArrowRight size={16} aria-hidden="true" />حساب کاربری</a></header>
+    <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><a className="dash-account" href="/account" aria-label="حساب کاربری" title="حساب کاربری"><AccountAvatar /></a></header>
     <main id="dashboard-main" className="dash-main">
       <div className="dash-welcome"><div><h1 ref={heading} tabIndex={-1}>{page === "home" ? "حساب‌وکتاب خونه" : page === "transactions" ? "تراکنش‌های شما" : "بودجه‌های شما"}</h1><p className="dash-muted">{page === "home" ? `سلام ${user.first_name}، خوش اومدین!` : "یه تصویر روشن از پول‌هاتون"} <span aria-hidden="true">🌱</span></p></div><span className="dash-month">مهر ۱۴۰۵</span></div>
-      <Button asChild variant="outline" className="dash-add"><a href="/families">خانواده و دعوت اعضا</a></Button>
       <p className="dash-demo">پیش‌نمایش با داده‌های نمونه؛ تغییرات با بستن یا بارگذاری مجدد صفحه پاک می‌شن.</p>
       {page === "home" && <section className="dash-balance" aria-label="خلاصهٔ مالی مهر"><div className="dash-row"><span>باقی‌ماندهٔ این ماه</span><Button variant="ghost" size="icon" aria-label={hidden ? "نمایش مبلغ‌ها" : "پنهان کردن مبلغ‌ها"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div><p className="dash-total"><bdi>{money(totals.balance)}</bdi> <small>تومان</small></p><div className="dash-cashflow"><div><span><ArrowDownLeft size={18} aria-hidden="true" />درآمد ماه</span><strong>{money(totals.income)}</strong><small>تومان</small></div><div><span><ArrowUpLeft size={18} aria-hidden="true" />هزینهٔ ماه</span><strong>{money(totals.expense)}</strong><small>تومان</small></div></div></section>}
       <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button size="lg" className="dash-add"><Plus />ثبت تراکنش</Button></DialogTrigger><DialogContent dir="rtl"><DialogHeader><DialogTitle>ثبت تراکنش جدید</DialogTitle><DialogDescription>یه درآمد یا هزینهٔ نمونه ثبت کنین و تغییر موجودی رو ببینین. اطلاعات ذخیره نمی‌شن.</DialogDescription></DialogHeader><TransactionForm onSave={transaction => { setTransactions(current => [transaction, ...current]); setOpen(false); setNotice("تراکنش نمونه ثبت شد؛ موجودی و بودجه به‌روز شدن."); }} /></DialogContent></Dialog>
@@ -64,6 +68,6 @@ export function DashboardPage({ user }: { user: User }) {
       </section>}
       <p className="dash-end">قدم‌های کوچیک، حساب‌وکتاب روشن‌تر.</p>
     </main>
-    <nav className="dash-nav" data-active={page} aria-label="ناوبری داشبورد">{pages.map(({ id, label, icon: Icon }) => <button type="button" key={id} aria-current={page === id ? "page" : undefined} onClick={() => navigate(id)}><span><Icon size={22} aria-hidden="true" /></span>{label}</button>)}</nav>
+    <BottomNavigation active={page} onNavigate={navigate} />
   </div>;
 }

@@ -5,9 +5,22 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.6.2`. No frontend release has been published.
+Current development version: `0.6.6`. No frontend release has been published.
 
 ### Changed
+
+- Aligned family management with the dashboard theme: shared account avatar,
+  consistent spacing, pastel empty/member/invitation cards, and capsule actions.
+
+- Moved dashboard family access into the shared four-item bottom navigation,
+  keeping navigation available on the family page with its own active indicator.
+
+- Aligned the account page with the dashboard’s mobile layout, shared avatar,
+  pastel section cards, capsule actions, a circular accessible back button,
+  and clearer device session details.
+
+- Replaced the dashboard account text shortcut with a scalable chipmunk avatar,
+  retaining an accessible account label, keyboard focus, and a 48px touch target.
 
 - Added a sliding active capsule to the dashboard bottom navigation, with RTL
   positioning and immediate selection updates when reduced motion is preferred.

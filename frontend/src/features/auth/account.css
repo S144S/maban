@@ -8,3 +8,41 @@
 .account-list li { min-width: 0; overflow-wrap: anywhere; }
 .account-list li > * + * { margin-top: 8px; }
 .auth-field select { min-height: 52px; width: 100%; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--card-foreground); padding: 11px 15px; font: inherit; }
+
+/* Account-specific presentation; shared admin and family surfaces keep their layout. */
+.account-page { padding: 0 24px max(32px, env(safe-area-inset-bottom)); gap: 24px; background: var(--illustration-paper); }
+.account-page > .account-header { margin-inline: -24px; padding: 18px 24px; border-bottom: 1px solid var(--border); flex-wrap: nowrap; }
+.account-page .account-back { justify-content: center; width: 48px; height: 48px; flex-shrink: 0; color: var(--foreground); background: var(--card); border: 1px solid var(--input); border-radius: 50%; }
+.account-page .account-back:hover { background: var(--accent); color: var(--accent-foreground); }
+.account-page .account-back:active { background: var(--secondary); color: var(--secondary-foreground); }
+.account-page .account-back:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.account-intro h1 { font-size: 27px; }
+.account-intro p, .account-copy { color: var(--muted-foreground); font-size: 14px; margin-top: 4px; }
+.account-summary { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 24px; background: var(--scene-lime); min-width: 0; }
+.account-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.account-summary h2 { font-size: 20px; font-weight: 800; }
+.account-summary p { margin-block: 4px; }
+.account-avatar { width: 72px; height: 72px; flex-shrink: 0; }
+.account-avatar svg { display: block; width: 100%; height: 100%; }
+.account-verified { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.account-family { display: flex; align-items: center; gap: 12px; border-radius: 24px; background: var(--scene-peach); padding: 16px; min-height: 72px; }
+.account-family > span:nth-child(2) { flex: 1; min-width: 0; }
+.account-family strong, .account-family small { display: block; }
+.account-family small { font-size: 12px; margin-top: 4px; }
+.account-family > svg { flex-shrink: 0; }
+.account-family:hover, .account-family:active { background: var(--accent); color: var(--accent-foreground); }
+.account-symbol { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; background: var(--illustration-paper); border-radius: 50%; }
+.account-section-title { display: flex; align-items: center; gap: 10px; }
+.account-section-title svg { flex-shrink: 0; }
+.account-page .account-card { gap: 16px; padding: 20px; }
+.account-page .account-security { background: var(--scene-rose); border-color: transparent; }
+.account-page .account-copy { margin: 0; }
+.account-page [data-slot="button"] { white-space: normal; min-height: 48px; text-align: center; }
+.account-page .account-list { gap: 0; }
+.account-page .account-list li + li { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.account-device-title { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.account-device-badge { background: var(--accent); color: var(--accent-foreground); padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.account-browser summary { cursor: pointer; min-height: 44px; align-content: center; font-size: 13px; color: var(--muted-foreground); }
+.account-page .account-logout { color: var(--destructive); }
+.account-page > [role="status"]:empty { display: none; }
+@media (max-width: 360px) { .account-page { padding-inline: 18px; } .account-page > .account-header { margin-inline: -18px; padding-inline: 18px; } .account-summary { gap: 12px; padding: 16px; } .account-avatar { width: 60px; height: 60px; } }
