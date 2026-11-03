@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: maban
+      POSTGRES_PASSWORD: maban_local
+      POSTGRES_DB: maban
+    ports:
+      - "127.0.0.1:54339:5432"
+    volumes:
+      - maban_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maban -d maban"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  maban_postgres:

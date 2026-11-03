@@ -5,9 +5,17 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.4.2`. No frontend release has been published.
+Current development version: `0.6.1`. No frontend release has been published.
 
 ### Changed
+
+- Moved login and signup OTP entry into an accessible bottom sheet, preserving
+  the phone form, five-digit auto-submit, resend cooldown, and inline recovery.
+  Removed the authentication step indicator and focus the profile form after
+  successful signup verification.
+- Removed the general design-preview notice beneath authentication forms and
+  shortened the login button label, and removed the password-recovery link from
+  login, where one-time-code entry is already offered.
 
 - Applied the approved monochrome brand treatment throughout the site, with
   a white footer variant, a squirrel favicon, and matching browser theme color.
@@ -32,6 +40,11 @@ Current development version: `0.4.2`. No frontend release has been published.
 
 ### Fixed
 
+- Removed unnecessary text underlines from selected login-method and transaction-type toggle buttons.
+
+- Require server-side account verification before entering the dashboard;
+  unknown or inactive phone numbers cannot sign in with development OTPs.
+
 - Prevented hero artwork from enlarging beyond its source resolution on wide
   screens while retaining the full-width hero layout.
 - Used the larger reference logo for the closing banner instead of enlarging
@@ -39,24 +52,25 @@ Current development version: `0.4.2`. No frontend release has been published.
 
 ### Added
 
+- Added mobile-first family creation, member lists, invitation creation/copy/revocation
+  in bottom sheets, and explicit invitation acceptance. Preserve invitation context
+  through login/signup using URL fragments, without open redirects.
+- Added family entry points from dashboard and account settings.
+
 - Added a Persian mobile-first dashboard at `/dashboard`, with monthly financial
   summaries, amount privacy controls, transaction creation and filtering, and
   editable category budgets. Sample data stays in memory and resets on reload.
-  Local/develop login previews redirect directly to the sample dashboard after
-  valid OTP verification or valid phone/nonempty password input (explicitly
-  without password authentication). Signup and recovery previews retain a link.
+  Dashboard access now requires an authenticated session; financial data remains
+  a clearly labeled sample rather than personal persisted transactions.
 
-- Added mobile-first Persian RTL login, signup, and password recovery design
-  previews in a centered, full-height app shell capped at 480px on all screens,
-  with phone-based signup (OTP then required first name, last name, and password), password or OTP login,
-  phone-based password recovery, Persian/Arabic digit normalization, and accessible
-  validation and password visibility controls. Five visible OTP slots support
-  full-code paste, autofill, keyboard editing, and automatic verification when
-  the fifth digit is entered. Local/develop previews use OTP
-  `12345`, with expiry, retry limits, and resend cooldown; production disables
-  mock verification.
-  Includes direct URLs and landing-page navigation. Forms do not transmit or persist
-  credentials; backend authentication remains unimplemented.
+- Connected phone signup, password/OTP login and password recovery to the
+  FastAPI backend. Five-digit OTP auto-submit, Persian/Arabic digits, busy states,
+  errors and the login bottom sheet work with server-owned verification.
+- Added account profile editing, password changes, current/other session
+  management and logout. Added admin-only paginated user search, role changes
+  and activation/suspension, with server authorization on every operation.
+- Added authenticated page guards and same-origin API integration; updated
+  landing privacy/FAQ copy to describe actual account persistence.
 
 - Established the independent frontend version baseline in `VERSION`.
 - Added a Persian, RTL, mobile-first landing page matching the supplied visual

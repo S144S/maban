@@ -1,0 +1,93 @@
+# Modular monolith boundaries
+
+One FastAPI deployment and one PostgreSQL database. A schema is an ownership
+namespace, not a separate service or a separate runtime security role.
+
+## Module interfaces
+
+`app/users/` owns authentication, account profiles, sessions and administrator
+user management. All other business modules may import only `users.public`:
+`CurrentUser` supplies a frozen `UserIdentity(id, role)`, never a mutable ORM
+entity, database session, password hash or authentication token. Authentication
+and revocation remain evaluated by the owning module on each request.
+
+Composition-only entry points are explicit:
+
+- `main.py` calls `users.bootstrap.install` to install routes, SMS adapter and
+  module error handling. Business modules cannot use this startup interface.
+- `cli.py` dispatches to `users.commands.run`. User administration/cleanup logic
+  and SQL remain owned by the users module.
+- Alembic imports `users.persistence` to register owned tables. This interface
+  is reserved for migration tooling, not domain queries.
+
+Within users, `routes.py` handles HTTP input/output and cookies, `dependencies.py`
+handles request transactions/authentication, `service.py` owns application
+operations and database queries, `models.py` owns persistence, and `security.py`
+contains password/token primitives and SMS adapters. The service currently uses
+SQLAlchemy directly inside its own boundary; a speculative repository layer is
+not required for modularity. Shared `config.py` and `database.py` contain no
+business rules. Test code may inspect internals to verify security invariants.
+
+## Data ownership
+
+All four user tables live in schema `users`: `users`, `user_sessions`,
+`user_otp_challenges`, and `user_rate_buckets`. Names remain stable across the
+schema move. Session foreign keys stay inside the owning schema. Alembic's
+version table stays in `public`, with one ordered migration chain for the
+single deployment. Autogeneration includes registered module schemas.
+
+Future modules (for example transactions and budgets) must own their own
+schemas, models and migrations in the same migration chain. They must access
+users through public application contracts, never by importing its ORM models,
+writing its tables, or adding cross-module ORM relationships. Store an opaque
+user UUID when required and obtain authorization/existence decisions through
+the owning module's interface. New interfaces should be small, typed and
+acyclic; cross-domain workflows must coordinate through them.
+
+Schema separation alone does not prevent SQL access with the shared application
+DB role. Architectural enforcement is provided by code ownership and import
+checks; this is not claimed as PostgreSQL privilege isolation. Migrations and
+operator tools are intentionally trusted composition infrastructure.
+
+## Verification
+
+`uv run pytest -q` checks import boundaries, HTTP persistence separation,
+immutable public identities, table/schema ownership, real migration round trips
+with existing accounts and sessions, and all authentication security flows.
+`uv run alembic check` catches metadata/migration drift. Run checks before adding
+or changing a module. Runtime dynamic imports and handwritten cross-schema SQL
+also require code review; static import tests are not a sandbox.
+
+## Families module
+
+`app/families` owns the `families` schema with `families`, `memberships` and
+`invitations` tables. Ownership is distinct from relationship: the creator
+manages invitations, while spouse/child/friend are relationship labels only.
+Each user can own one family and join others (maximum 20 memberships, 100 members
+per family). The creator has a membership with no relationship label. User IDs
+are opaque UUIDs without foreign keys into the users schema.
+
+Families depends only on `users.public.CurrentUser` and `Directory`. After
+family-level authorization, Directory supplies immutable `UserProfile` values
+containing only ID and names (100 maximum), never phones or credentials.
+Dependency direction is families -> users; users does not depend on families.
+Family HTTP handlers contain no persistence queries. Composition registers the
+family router through `families.bootstrap`; migration metadata is exported by
+`families.persistence`. No external family business interface is needed yet.
+
+Invitation creation is owner-only, limited to 20 links per family per hour.
+Each random 256-bit token is stored as a SHA-256 digest and returned once.
+Links expire after seven days, can be revoked, and are accepted explicitly by
+an authenticated active user. Possession of a link grants its bearer the ability
+to accept it first; links are not bound to a phone number. Existing members and
+the owner cannot consume them. Concurrent acceptance/revocation is serialized
+per family; membership creation is also serialized per user. Repeated acceptance
+by the winning user is idempotent while the invite is valid.
+
+Tokens travel in URL fragments (`/invite#token=...`, `/login#invite=...`) and
+POST bodies, never API paths/query strings. Do not log bodies containing secrets.
+The frontend only accepts validated invitation tokens and allowlisted auth return
+paths. Family names and member names are visible only to family members; valid
+invite holders can preview the family name and their relationship after login.
+No transaction/budget data is shared by this module yet. Membership removal,
+family deletion/transfer and relationship edits are not exposed in this version.

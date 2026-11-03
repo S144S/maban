@@ -12,7 +12,6 @@
 .auth-heading p { color: var(--muted-foreground); font-size: 15px; margin-top: 8px; }
 .auth-form { display: grid; gap: 20px; }
 .auth-method { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
-.auth-method [aria-pressed="true"] { text-decoration: underline; text-underline-offset: 6px; }
 .auth-method button { padding-inline: 8px; }
 .auth-code-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; }
 .auth-code-actions button { padding-inline: 8px; }
@@ -48,13 +47,11 @@
 .auth-signup { --auth-scene: var(--scene-lime); }
 .auth-forgot-password { --auth-scene: var(--scene-peach); }
 .auth-heading { margin-bottom: 20px; }
-.auth-progress { display: flex; list-style: none; gap: 10px; padding: 0; margin: 0 0 28px; }
-.auth-progress li { flex: 1; font-size: 11px; color: var(--muted-foreground); }
-.auth-progress li span { display: block; height: 4px; border-radius: 9px; margin-bottom: 7px; background: var(--input); }
-.auth-progress [aria-current="step"] { font-weight: 700; color: var(--foreground); }
-.auth-progress [aria-current="step"] span { background: var(--foreground); height: 6px; margin-bottom: 5px; }
 .auth-method { padding: 5px; background: var(--illustration-paper); border-radius: 32px; }
 .auth-method [data-variant="outline"] { border-color: transparent; background: transparent; }
 .auth-submit { min-height: 56px; }
 .auth-preview { border-color: var(--input); }
 @media (max-width: 360px) { .auth-form-panel { padding-inline: 18px; } .auth-back { font-size: 11px; } }
+
+.auth-fields { display: contents; border: 0; padding: 0; margin: 0; min-width: 0; }
+.auth-error { overflow-wrap: anywhere; }

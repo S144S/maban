@@ -56,7 +56,6 @@
 .dash-form input[aria-invalid="true"] { border-color: var(--error); }
 .dash-error { color: var(--error); font-size: 12px; }
 .dash-segments { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.dash-segments [aria-pressed="true"] { text-decoration: underline; text-underline-offset: 5px; }
 .dash-filters { margin-block: 16px; }
 .dash-empty { padding-block: 28px; text-align: center; color: var(--muted-foreground); font-size: 14px; }
 

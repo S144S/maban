@@ -1,0 +1,144 @@
+# MaBan backend
+
+Python 3.14+, FastAPI, SQLAlchemy, Alembic and PostgreSQL. The `users` business
+module owns its tables in the `users` PostgreSQL schema, rules and HTTP routes.
+Future modules consume `app.users.public.CurrentUser`, an immutable identity
+containing only `id` and `role`; never import user persistence models across
+module boundaries. See [architecture](ARCHITECTURE.md) for enforced boundaries. Application version is derived from `VERSION` at packaging.
+
+## Run locally (PowerShell)
+
+From the repository root:
+
+```powershell
+docker compose up -d db
+cd backend
+Copy-Item .env.example .env # first setup only; preserve existing configuration
+uv sync --python 3.14
+uv run alembic upgrade head
+uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 6202 --no-proxy-headers
+```
+
+In another terminal: `cd frontend; npm ci; npm run dev`. Visit
+http://127.0.0.1:6201. Vite proxies `/api` to port 6202 so browser requests and
+cookies are same-origin. PostgreSQL is bound only to `127.0.0.1:54339` and uses
+a named Docker volume. `.env.example` credentials are local-only.
+
+Register a new phone at `/signup`, enter `12345`, then supply first name,
+last name and an 8–128-character password. Existing users sign in with a
+password or OTP. Both create a real server session and lead to `/dashboard`.
+An unknown/inactive phone can never sign in. Login OTP requests reject unknown/inactive accounts before issuing a challenge,
+so the UI stays on the phone form. Signup/recovery issuance keeps uniform responses.
+
+`/account` manages names, passwords and active sessions. Phone numbers remain
+immutable verified account identifiers. Password changes/reset invalidate all
+sessions. `/forgot-password` remains available for OTP-based password reset,
+but the login screen does not advertise it. Financial dashboards still contain
+sample data; this change persists accounts, not transactions or family budgets.
+
+## Administration
+
+Register and verify the intended administrator, then run the operator command:
+
+```powershell
+uv run python -m app.cli make-admin 09xxxxxxxxx
+```
+
+Sign in again, then open `/admin/users` or the link in account settings. Admins
+can search users, paginate, activate/suspend accounts and assign user/admin
+roles. Access changes revoke the target's sessions. Admins cannot change their
+own role/status, preventing removal of the final active admin through the API.
+No default administrator or password is seeded. Suspended accounts retain their
+profile for reactivation; permanent deletion and phone-number replacement are
+not exposed as account actions.
+
+## Production configuration
+
+- Use `MABAN_ENVIRONMENT=production` (the safe default), a dedicated PostgreSQL
+  database, a random `MABAN_SECRET_KEY` of at least 32 characters, HTTPS-only
+  `MABAN_ALLOWED_ORIGINS`, and `MABAN_COOKIE_SECURE=true`.
+- Set `MABAN_SMS_API_KEY` and `MABAN_SMS_TEMPLATE` for an approved Kavenegar
+  verification template accepting `token`. The server generates five random
+  digits and sends them only for eligible requests. No production fixed code
+  exists. Real provider delivery needs valid operator credentials and was not
+  exercised by the automated suite (the provider interface is substituted).
+- Serve the frontend and `/api` under the same HTTPS origin. Route `/api` to
+  Uvicorn, and other frontend paths to `index.html`. Do not serve protected
+  financial data as static frontend assets when that future module is added.
+- Trust only your reverse proxy when enabling proxy headers. Without a trusted
+  forwarded peer address, IP limits apply to the proxy as a whole. Add edge
+  request/body limits and TLS; do not expose Uvicorn directly to the Internet.
+- Run migrations before startup. Schedule `uv run python -m app.cli cleanup`
+  periodically to delete expired sessions, rate buckets and OTP proofs. Back up
+  PostgreSQL according to the deployment's retention policy.
+- Never use local/develop configuration on a public deployment. Changing the
+  secret invalidates existing sessions/codes/proofs and resets rate keys.
+
+## Security behavior
+
+Passwords use Argon2id. Sessions and proofs contain 256-bit random secrets;
+only HMAC-SHA256 digests are persisted. Sessions expire after seven days and
+are revocable in the database. Cookies are HttpOnly, SameSite=Lax, Path=/ and
+Secure in production; tokens are never stored in browser local storage.
+
+Every mutation requires an allowed `Origin` and `X-Maban-Request: 1`; no
+cross-origin CORS access is enabled. API responses use `Cache-Control: no-store`.
+OTP verification expires in 120 seconds with at most five guesses. Issuance has
+a 30-second phone cooldown, five requests per phone/15 minutes and 30 per
+peer IP/15 minutes. Password attempts allow ten per phone/15 minutes and 40
+per peer IP/15 minutes. Verification allows 60 per IP/15 minutes. Successful
+password attempts also count. Signup/reset proofs expire after five minutes,
+are bound to their purpose, and can be consumed only once. PostgreSQL advisory
+locks serialize counters, code issuance/consumption and account changes across
+workers. OTP requests, codes, proofs and passwords are not logged.
+
+## Tests and checks
+
+```powershell
+docker exec maban-db-1 createdb -U maban maban_test # once
+uv run pytest -q
+uv run ruff check app tests migrations
+uv run alembic check
+uv run python scripts/check_version.py
+```
+
+Tests require a dedicated database ending in `_test`; override the default with
+`MABAN_TEST_DATABASE_URL`. The test database role needs CREATEDB. Each test creates a uniquely named
+`maban_<uuid>_test` database, runs real migrations with fixed module schemas,
+then drops only that generated database (also after failures). Tests cover unknown/inactive login, duplicate and concurrent
+signup, expiry, replay, purpose binding, rate limits, session ownership/revocation,
+CSRF, profile validation, administration and production OTP isolation.
+
+API documentation: http://127.0.0.1:6202/docs. Browser clients use `/api/auth/*`,
+`/api/users/me`, `/api/users/me/password`, `/api/users/me/sessions` and
+`/api/admin/users`. Unsafe requests made by command-line clients also need the
+same Origin/custom headers and should keep the returned session cookie private.
+
+## Upgrade existing local installations
+
+Stop the backend, run `uv run alembic upgrade head`, then restart it. Revision
+`7b31e920af01` moves the four existing user tables from `public` into `users`
+using transactional `ALTER TABLE ... SET SCHEMA`; it preserves rows, IDs,
+password hashes, sessions, indexes and constraints. It does not rebuild tables.
+The migration fails if a `users` schema already exists, requiring operator
+inspection rather than silently adopting unrelated objects. It requires schema
+creation/table ownership privileges. `public.alembic_version` stays central.
+Downgrade to `54574e5efd16` moves the tables back; deploy the matching old code
+when downgrading. Operator SQL must use schema-qualified table names.
+
+## Families
+
+Visit `/families` after signing in to create a family and invite a spouse, child
+or friend. Each account may create one family and can also accept invitations
+to other families. Only the creator manages invitation links; relationship labels
+do not grant administrative privileges. Links are single-use, expire in seven
+days, and can be revoked. Share each link privately with its intended recipient.
+The link survives login/signup, and joining always requires explicit acceptance.
+
+Endpoints: `GET/POST /api/families`, `GET /api/families/{id}`, owner-only
+`GET/POST /api/families/{id}/invitations`,
+`DELETE /api/families/{id}/invitations/{invite_id}`, and authenticated
+`POST /api/families/invitations/preview` or `/accept` with `{ "token": "..." }`.
+Run migrations before startup; revision `f897737fa02e` creates the `families`
+schema and its three tables without changing existing user data. Downgrading
+this feature migration removes family data, so back it up before a rollback.

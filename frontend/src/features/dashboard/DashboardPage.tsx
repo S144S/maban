@@ -6,12 +6,13 @@ import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import { TransactionForm } from "./TransactionForm";
 import { categories, initialTransactions, formatMoney, parseAmount, summarize } from "./model";
 import "./dashboard.css";
+import type { User } from "../auth/api";
 
 const icons = { home: House, groceries: ShoppingBasket, leisure: Coffee };
 const pages = [{ id: "home", label: "خانه", icon: House }, { id: "transactions", label: "تراکنش‌ها", icon: ListFilter }, { id: "budgets", label: "بودجه", icon: Wallet }] as const;
 type Page = typeof pages[number]["id"];
 
-export function DashboardPage() {
+export function DashboardPage({ user }: { user: User }) {
   const [page, setPage] = useState<Page>("home");
   const [transactions, setTransactions] = useState(initialTransactions);
   const [limits, setLimits] = useState(categories.map(c => c.limit));
@@ -48,9 +49,10 @@ export function DashboardPage() {
   </section>;
   return <div className="dash-shell">
     <a className="skip-link" href="#dashboard-main">رفتن به محتوای اصلی</a>
-    <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><a className="dash-back" href="/"><ArrowRight size={16} aria-hidden="true" />صفحهٔ اصلی</a></header>
+    <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><a className="dash-back" href="/account"><ArrowRight size={16} aria-hidden="true" />حساب کاربری</a></header>
     <main id="dashboard-main" className="dash-main">
-      <div className="dash-welcome"><div><h1 ref={heading} tabIndex={-1}>{page === "home" ? "حساب‌وکتاب خونه" : page === "transactions" ? "تراکنش‌های شما" : "بودجه‌های شما"}</h1><p className="dash-muted">{page === "home" ? "سلام، خوش اومدین!" : "یه تصویر روشن از پول‌هاتون"} <span aria-hidden="true">🌱</span></p></div><span className="dash-month">مهر ۱۴۰۵</span></div>
+      <div className="dash-welcome"><div><h1 ref={heading} tabIndex={-1}>{page === "home" ? "حساب‌وکتاب خونه" : page === "transactions" ? "تراکنش‌های شما" : "بودجه‌های شما"}</h1><p className="dash-muted">{page === "home" ? `سلام ${user.first_name}، خوش اومدین!` : "یه تصویر روشن از پول‌هاتون"} <span aria-hidden="true">🌱</span></p></div><span className="dash-month">مهر ۱۴۰۵</span></div>
+      <Button asChild variant="outline" className="dash-add"><a href="/families">خانواده و دعوت اعضا</a></Button>
       <p className="dash-demo">پیش‌نمایش با داده‌های نمونه؛ تغییرات با بستن یا بارگذاری مجدد صفحه پاک می‌شن.</p>
       {page === "home" && <section className="dash-balance" aria-label="خلاصهٔ مالی مهر"><div className="dash-row"><span>باقی‌ماندهٔ این ماه</span><Button variant="ghost" size="icon" aria-label={hidden ? "نمایش مبلغ‌ها" : "پنهان کردن مبلغ‌ها"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div><p className="dash-total"><bdi>{money(totals.balance)}</bdi> <small>تومان</small></p><div className="dash-cashflow"><div><span><ArrowDownLeft size={18} aria-hidden="true" />درآمد ماه</span><strong>{money(totals.income)}</strong><small>تومان</small></div><div><span><ArrowUpLeft size={18} aria-hidden="true" />هزینهٔ ماه</span><strong>{money(totals.expense)}</strong><small>تومان</small></div></div></section>}
       <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button size="lg" className="dash-add"><Plus />ثبت تراکنش</Button></DialogTrigger><DialogContent dir="rtl"><DialogHeader><DialogTitle>ثبت تراکنش جدید</DialogTitle><DialogDescription>یه درآمد یا هزینهٔ نمونه ثبت کنین و تغییر موجودی رو ببینین. اطلاعات ذخیره نمی‌شن.</DialogDescription></DialogHeader><TransactionForm onSave={transaction => { setTransactions(current => [transaction, ...current]); setOpen(false); setNotice("تراکنش نمونه ثبت شد؛ موجودی و بودجه به‌روز شدن."); }} /></DialogContent></Dialog>

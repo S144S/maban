@@ -1,11 +1,12 @@
 # MaBan frontend
 
-Persian RTL landing page built with React, TypeScript, Vite, Tailwind CSS 4,
-and shadcn/ui buttons and dialogs adapted to MaBan's semantic theme.
+React, TypeScript, Vite, Tailwind CSS and shadcn/ui. Persian RTL, mobile-first
+layouts use the shared semantic colors and Persian fonts.
 
 ## Local development
 
-Requires Node.js 22.12+ and npm.
+Requires Node.js 22.12+ and npm. Start PostgreSQL and the backend first using
+[backend setup](../backend/README.md), then:
 
 ```powershell
 cd frontend
@@ -13,10 +14,11 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:6201. Development and preview use this fixed port and fail
-if it is occupied instead of silently choosing another port. Port 6202 is reserved
-for the future backend; no backend application exists yet. Port 6000 is avoided
-because browsers block it.
+Open http://127.0.0.1:6201. Vite development and preview proxy `/api` to the
+backend at http://127.0.0.1:6202. Both use strict ports. Production hosting must
+serve `index.html` for frontend routes and proxy `/api` to FastAPI on the same
+HTTPS origin. Cookies authenticate API calls; no credentials or session tokens
+are persisted in local storage.
 
 ```powershell
 npm run check
@@ -25,51 +27,46 @@ npm run preview
 ```
 
 `VERSION` is authoritative; synchronize package.json, package-lock.json and the
-Unreleased changelog when changing versions. `npm run check` checks consistency.
+Unreleased changelog when changing versions. `npm run check` validates them.
 
-## Scope
+## Authentication and account management
 
-The sample purchase button updates the remaining balance, spending, and grocery
-budget. Reset restores the sample. Changes live only in React memory and are
-cleared on reload. Authentication, persistence, bank connections and family
-accounts are not implemented. The FAQ makes this limitation explicit.
+- `/signup`: mobile number, five-digit OTP, then first name, last name and
+  password. Registration is persisted in PostgreSQL and opens the dashboard.
+- `/login`: phone/password or phone/OTP. Login OTP opens in a bottom sheet,
+  verifies automatically on digit five, retains the phone on close, and shows
+  server validation/rate-limit errors. Unknown/inactive accounts cannot sign in.
+- `/account`: edit names, change password, view/revoke sessions and sign out.
+- `/admin/users`: administrator-only user search, pagination, role changes and
+  activation/suspension. Bootstrap an admin using the documented backend CLI.
+- `/forgot-password`: OTP-based password reset; retained as a direct route.
+  No forgot-password link is shown on the login screen.
 
-Colors come from ../styles/colors.css. Global font faces use the supplied CDN
-with swap and sans-serif fallbacks. The layout follows the supplied landing-page
-reference. The original reference image in public/assets is framed with CSS to
-show only its phone artwork and existing brand marks; copy, cards, navigation,
-and controls are native HTML. Replace these framed assets with standalone brand
-exports when available. The budget demo opens in a dialog from the start buttons.
+The backend environment, not the Vite mode, controls development OTP `12345`.
+Production uses random server-generated codes sent through the configured SMS
+provider. Client validation is only for usability; the backend enforces every
+account, expiry, rate, ownership and authorization rule.
 
-## Dashboard preview
+## Financial UI scope
 
-Open `/dashboard` directly or use the sample-dashboard link after completing
-an authentication preview. The centered mobile app includes financial summaries,
-income/expense entry, transaction search and filters, editable category budgets,
-and amount hiding. All figures belong to a fixed sample month (Mehr 1405).
-New entries and budget edits stay in memory and reset on reload. This route is
-public demo UI, not an authenticated account or a connection to banking data.
-Local/develop login redirects directly to this dashboard after a valid OTP or
-a valid phone number and any nonempty password. The password preview explicitly
-does not authenticate credentials. Production password login remains unavailable.
+`/dashboard` now requires a server session and shows the user's first name.
+Its financial summaries, transactions and editable budgets still use sample
+figures in React memory and reset on reload. They are not personal persisted
+financial records. The landing-page budget demo remains available without
+registration. Banking connections and shared family accounts are not implemented.
 
-## Authentication design previews
+## Design
 
-Open `/login`, `/signup`, or `/forgot-password`. Forms validate locally and
-explain that authentication is unavailable; they never submit, store credentials,
-or simulate successful authentication. Login and signup are linked from the
-landing navigation. Production hosting must serve index.html for these paths.
+Colors come from `../styles/colors.css`. Font faces use the supplied CDN with
+swap/fallbacks. Forms retain Persian/Arabic digit support, keyboard controls,
+44px touch targets and mobile layouts. Dialogs open as bottom sheets with focus
+trapping, internal scrolling and reduced-motion support.
 
-### Phone authentication preview
+## Family flows
 
-Signup: Iranian mobile number (09 + nine digits), OTP, then required first name,
-last name, and password. Login
-offers password or OTP. Recovery uses phone + OTP before a new password.
-Persian and Arabic digits are accepted. No credentials or sessions are persisted.
-
-`npm run dev` and `vite build --mode develop` enable the fixed development OTP
-`12345`. Normal production builds disable mock OTP requests and verification.
-The preview expires codes after 2 minutes, allows 5 verification attempts, and
-has a 30-second resend cooldown. These client-side limits are UX simulations,
-not security controls. A backend must implement real verification, SMS, password
-hashing, rate limiting, and sessions before authentication can be enabled.
+`/families` supports family creation, member lists, owner-managed invitations,
+and invite revocation. `/invite#token=...` requires login and explicit acceptance.
+Login/signup preserve the validated token in the URL fragment; only `/families`
+is an allowed non-default auth return path. Family creation and invitation forms
+reuse the RTL bottom sheet and shared controls. Financial dashboard data is still
+sample data; family membership is persisted by the backend.

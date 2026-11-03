@@ -1,0 +1,10 @@
+.account-shell { width: min(100%, 480px); min-height: 100svh; margin-inline: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; background: var(--background); }
+.account-header, .account-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.account-header a { min-height: 44px; display: inline-flex; align-items: center; color: var(--primary); }
+.account-shell h1 { font-size: 26px; font-weight: 800; }
+.account-shell h2 { font-size: 20px; font-weight: 700; }
+.account-card { display: grid; gap: 18px; padding: 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--card); color: var(--card-foreground); min-width: 0; }
+.account-list { list-style: none; display: grid; gap: 16px; padding: 0; }
+.account-list li { min-width: 0; overflow-wrap: anywhere; }
+.account-list li > * + * { margin-top: 8px; }
+.auth-field select { min-height: 52px; width: 100%; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--card-foreground); padding: 11px 15px; font: inherit; }
