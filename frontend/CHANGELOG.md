@@ -5,9 +5,12 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.6.1`. No frontend release has been published.
+Current development version: `0.6.2`. No frontend release has been published.
 
 ### Changed
+
+- Added a sliding active capsule to the dashboard bottom navigation, with RTL
+  positioning and immediate selection updates when reduced motion is preferred.
 
 - Moved login and signup OTP entry into an accessible bottom sheet, preserving
   the phone form, five-digit auto-submit, resend cooldown, and inline recovery.

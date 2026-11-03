@@ -45,11 +45,22 @@
 .dash-transaction-copy span, .dash-transaction-money small { font-size: 11px; color: var(--muted-foreground); }
 .dash-transaction-money { display: flex; flex-direction: column; text-align: end; max-width: 45%; overflow-wrap: anywhere; font-size: 14px; font-weight: 600; }
 .dash-end { margin-top: 28px; text-align: center; color: var(--muted-foreground); font-size: 12px; }
-.dash-nav { position: fixed; bottom: 0; inset-inline: 0; width: min(100%, 480px); margin-inline: auto; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); background: var(--card); padding: 8px 12px max(8px, env(safe-area-inset-bottom)); z-index: 20; }
-.dash-nav button { display: flex; align-items: center; flex-direction: column; gap: 3px; min-height: 60px; color: var(--muted-foreground); font-size: 12px; border-radius: 12px; }
+/* A single capsule follows the selected item in the RTL navigation. */
+.dash-nav { position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); inset-inline: 0; width: min(calc(100% - 24px), 456px); margin-inline: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 32px; background: var(--card); padding: 8px; z-index: 20; isolation: isolate; }
+.dash-nav::before { content: ""; position: absolute; inset-inline-start: 8px; top: 8px; width: calc((100% - 16px) / 3); height: 32px; background: var(--primary); border-radius: 16px; clip-path: inset(0 calc((100% - 60px) / 2) round 16px); pointer-events: none; z-index: -1; transform: translateX(0); }
+.dash-nav[data-active="transactions"]::before { transform: translateX(-100%); }
+.dash-nav[data-active="budgets"]::before { transform: translateX(-200%); }
+.dash-nav button { display: flex; align-items: center; flex-direction: column; gap: 3px; min-height: 60px; min-width: 0; color: var(--muted-foreground); font-size: 12px; border-radius: 24px; }
 .dash-nav button span { display: grid; place-items: center; width: 60px; height: 32px; border-radius: 16px; }
-.dash-nav [aria-current="page"] { color: var(--primary-active); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
-.dash-nav [aria-current="page"] span, .dash-nav button:hover span { background: var(--accent); color: var(--accent-foreground); }
+.dash-nav [aria-current="page"] { color: var(--primary-active); font-weight: 700; }
+.dash-nav [aria-current="page"] span { color: var(--primary-foreground); }
+@media (hover: hover) {
+  .dash-nav button:not([aria-current="page"]):hover span { background: var(--accent); color: var(--accent-foreground); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dash-nav::before { transition: transform var(--motion-entrance) var(--motion-easing); }
+  .dash-nav button span { transition: color var(--motion-feedback) var(--motion-easing); }
+}
 .dash-form { display: grid; gap: 18px; }
 .dash-form label { display: grid; gap: 6px; font-size: 14px; }
 .dash-form input, .dash-form select { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--foreground); font-size: 16px; }
@@ -59,9 +70,6 @@
 .dash-filters { margin-block: 16px; }
 .dash-empty { padding-block: 28px; text-align: center; color: var(--muted-foreground); font-size: 14px; }
 
-.dash-nav { width: min(calc(100% - 24px), 456px); bottom: max(10px, env(safe-area-inset-bottom)); border: 1px solid var(--border); border-radius: 32px; padding: 8px; }
-.dash-nav [aria-current="page"] span { background: var(--primary); color: var(--primary-foreground); }
-.dash-nav button { border-radius: 24px; }
 .dash-transaction-icon { border-radius: 50%; background: var(--scene-peach); }
 .dash-income { background: var(--scene-lime); }
 .dash-main { padding-bottom: 130px; }

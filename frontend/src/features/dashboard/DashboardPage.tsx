@@ -64,6 +64,6 @@ export function DashboardPage({ user }: { user: User }) {
       </section>}
       <p className="dash-end">قدم‌های کوچیک، حساب‌وکتاب روشن‌تر.</p>
     </main>
-    <nav className="dash-nav" aria-label="ناوبری داشبورد">{pages.map(({ id, label, icon: Icon }) => <button type="button" key={id} aria-current={page === id ? "page" : undefined} onClick={() => navigate(id)}><span><Icon size={22} aria-hidden="true" /></span>{label}</button>)}</nav>
+    <nav className="dash-nav" data-active={page} aria-label="ناوبری داشبورد">{pages.map(({ id, label, icon: Icon }) => <button type="button" key={id} aria-current={page === id ? "page" : undefined} onClick={() => navigate(id)}><span><Icon size={22} aria-hidden="true" /></span>{label}</button>)}</nav>
   </div>;
 }
