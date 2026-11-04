@@ -62,7 +62,7 @@
 .dash-main { padding-bottom: 130px; }
 .dash-add { min-height: 54px; }
 
-.dash-home-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.dash-home-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
 
 .wallet-family { display: grid; gap: 6px; margin-block: 12px; font-size: 14px; }
 
@@ -81,3 +81,15 @@
 @media (max-width: 360px) { .wallet-balance { padding: 16px; gap: 12px; } .wallet-balance-heading { gap: 8px; } .wallet-balance-heading h1 { font-size: 14px; } }
 
 .wallet-balance-amount-compact bdi { font-size: clamp(20px, 5vw, 26px); }
+
+.dash-home-actions > .home-action { min-width: 0; min-height: 80px; flex-direction: column; gap: 8px; padding: 10px 2px; border-radius: 20px; font-size: 12px; line-height: 1.7; white-space: normal; overflow-wrap: anywhere; text-align: center; }
+.dash-home-actions > .home-action svg { width: 22px; height: 22px; }
+
+.dash-home-actions > .home-action-income { --home-action-bg: var(--scene-lime); }
+.dash-home-actions > .home-action-expense { --home-action-bg: var(--scene-peach); }
+.dash-home-actions > .home-action-investment { --home-action-bg: var(--scene-rose); }
+.dash-home-actions > .home-action-assets { --home-action-bg: var(--secondary); }
+.dash-home-actions > .home-action:not(:disabled) { background: var(--home-action-bg); color: var(--foreground); }
+.dash-home-actions > .home-action:not(:disabled):hover { background: var(--accent); color: var(--accent-foreground); }
+.dash-home-actions > .home-action:not(:disabled):active { background: var(--secondary-hover); color: var(--secondary-foreground); }
+.dash-home-actions > .home-action span { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }

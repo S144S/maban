@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.11.0`. No frontend release has been published.
+Current development version: `0.11.1`. No frontend release has been published.
 
 ### Added
+
+- Added investment and asset buttons to the single-row mobile home actions using stable action classes so dialog triggers retain their styling, with icons above readable 12px wrapping labels and distinct muted theme colors, with bottom sheets explicitly indicating these sections are not yet available.
 
 - Management page for family accounts (banks, cash and gift cards) and required “Deposit to” selection in income forms, including empty, loading, error and read-only states. Match Management to the family screen with a rounded account card, shared-color overview, consistent account rows and an actionable empty state. Keep the deposit field visible while loading or when no accounts exist, with guidance to add an account in Management.
 

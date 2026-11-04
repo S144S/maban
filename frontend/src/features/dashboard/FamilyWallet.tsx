@@ -1,6 +1,6 @@
 import { LocationField } from "../money-locations/LocationField";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { HandCoins, CreditCard, Eye, EyeOff, Wallet } from "lucide-react";
+import { HandCoins, CreditCard, Eye, EyeOff, Wallet, TrendingUp, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -100,8 +100,16 @@ export function FamilyWallet({ userId }: { userId: string }) {
     </section>
     <Dialog open={open} onOpenChange={value => { if (!pending.current) setOpen(value); }}>
       <div className="dash-home-actions">
-        <DialogTrigger asChild><Button size="lg" disabled={!canWrite || loading || busy} onClick={() => prepare("income")}><HandCoins aria-hidden="true" />دخل</Button></DialogTrigger>
-        <DialogTrigger asChild><Button size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("expenses")}><CreditCard aria-hidden="true" />خرج</Button></DialogTrigger>
+        <DialogTrigger asChild><Button className="home-action home-action-income" size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("income")}><HandCoins aria-hidden="true" /><span>دخل</span></Button></DialogTrigger>
+        <DialogTrigger asChild><Button className="home-action home-action-expense" size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("expenses")}><CreditCard aria-hidden="true" /><span>خرج</span></Button></DialogTrigger>
+        <Dialog>
+          <DialogTrigger asChild><Button className="home-action home-action-investment" size="lg" variant="outline"><TrendingUp aria-hidden="true" /><span>سرمایه‌گذاری</span></Button></DialogTrigger>
+          <DialogContent dir="rtl"><DialogHeader><DialogTitle>سرمایه‌گذاری</DialogTitle><DialogDescription>این بخش هنوز فعال نیست. امکان ثبت و مدیریت سرمایه‌گذاری‌ها در ادامه اضافه می‌شه.</DialogDescription></DialogHeader></DialogContent>
+        </Dialog>
+        <Dialog>
+          <DialogTrigger asChild><Button className="home-action home-action-assets" size="lg" variant="outline"><Gem aria-hidden="true" /><span>دارایی‌ها</span></Button></DialogTrigger>
+          <DialogContent dir="rtl"><DialogHeader><DialogTitle>دارایی‌ها</DialogTitle><DialogDescription>این بخش هنوز فعال نیست. امکان ثبت و مدیریت دارایی‌ها در ادامه اضافه می‌شه.</DialogDescription></DialogHeader></DialogContent>
+        </Dialog>
       </div>
       <DialogContent dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}>
         <DialogHeader><DialogTitle>{kind === "income" ? "ثبت دخل" : "ثبت خرج"}</DialogTitle><DialogDescription>برای خانوادهٔ {families.find(f => f.id === wallet?.familyId)?.name} ثبت می‌شه و اعضای خانواده می‌تونن ببیننش. همهٔ مبلغ‌ها به تومان هستن.</DialogDescription></DialogHeader>
