@@ -191,3 +191,15 @@ GET supports offset pagination (50 entries). No family balance or investment rec
 is modified. Apply Alembic head; downgrade refuses to remove a nonempty assets table.
 
 Property forms use optional `price_per_sqm_toman` (positive whole tomans, up to 1,000,000,000,000). Historical `purchase_price_toman` totals retain their meaning and remain supported; cars cannot submit a per-square-metre price. Apply Alembic head.
+
+
+### Fund summaries
+
+The general fund remains family income minus expenses. Personal GET `/api/investments/summary`
+and `/api/assets/summary` aggregate all current-user records in their owning module using
+exact PostgreSQL NUMERIC arithmetic. Responses contain decimal-string `total_toman`, `count`,
+`unpriced_count` and `valuation_basis: recorded_purchase_prices`. Unknown prices are excluded,
+not treated as a known zero. Gold uses a supplied total first, otherwise grams × unit price;
+other investments use quantity × unit price. Property uses area × per-square-metre price first,
+otherwise its historical purchase total; cars use their purchase total. These are recorded
+purchase values, not live market valuations. Empty totals are zero. No migration is required.

@@ -18,3 +18,8 @@ def list_investments(current: CurrentUser, service: Service,
 @router.post("", status_code=201)
 def create_investment(data: CreateInvestment, current: CurrentUser, service: Service):
     return {"entry": service.create(current.id, data)}
+
+
+@router.get("/summary")
+def summary(current: CurrentUser, service: Service):
+    return service.summary(current.id)

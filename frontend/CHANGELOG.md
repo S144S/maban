@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.15.0`. No frontend release has been published.
+Current development version: `0.16.0`. No frontend release has been published.
 
 ### Added
+
+- Added a three-way home card selector for the everyday family fund, personal investment fund and personal asset fund. Shows recorded-price values, unpriced/empty states, privacy scope, retry controls and refreshed summaries after saving.
 
 - Car entry uses one combined model field and defaults to the solar calendar without a calendar selector; separate historical brand values remain supported.
 

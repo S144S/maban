@@ -18,3 +18,8 @@ def list_assets(current: CurrentUser, service: Service,
 @router.post("", status_code=201)
 def create_asset(data: CreateAsset, current: CurrentUser, service: Service):
     return {"entry": service.create(current.id, data)}
+
+
+@router.get("/summary")
+def summary(current: CurrentUser, service: Service):
+    return service.summary(current.id)

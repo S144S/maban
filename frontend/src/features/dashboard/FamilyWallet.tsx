@@ -1,8 +1,9 @@
+import { PersonalFundValue } from "./PersonalFundValue";
 import { AssetDialog } from "../assets/AssetDialog";
 import { InvestmentDialog } from "../investments/InvestmentDialog";
 import { LocationField } from "../money-locations/LocationField";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { HandCoins, CreditCard, Eye, EyeOff, Wallet } from "lucide-react";
+import { HandCoins, CreditCard, Eye, EyeOff, Wallet, TrendingUp, Gem, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +14,8 @@ import { parseAmount } from "./model";
 const sources = [{ value: "salary", label: "حقوق" }, { value: "subsidy", label: "یارانه" }, { value: "voucher", label: "کالابرگ" }, { value: "gift", label: "هدیه" }];
 const categories = [{ value: "home", label: "خانه" }, { value: "groceries", label: "خرید روزمره" }, { value: "leisure", label: "تفریح" }, { value: "other", label: "سایر" }];
 type Wallet = { familyId: string; members: Member[]; balance: string };
+const funds = [{ value: "general", label: "روزمره" }, { value: "investments", label: "سرمایه" }, { value: "assets", label: "دارایی" }] as const;
+type Fund = typeof funds[number]["value"];
 type Kind = "income" | "expenses";
 function report(error: unknown) {
   if (error instanceof ApiError && error.status === 401) window.location.replace("/login");
@@ -20,6 +23,7 @@ function report(error: unknown) {
 }
 
 export function FamilyWallet({ userId }: { userId: string }) {
+  const [fund, setFund] = useState<Fund>("general");
   const [families, setFamilies] = useState<Family[]>([]);
   const [selected, setSelected] = useState("");
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -87,25 +91,34 @@ export function FamilyWallet({ userId }: { userId: string }) {
     finally { pending.current = false; setBusy(false); }
   }
 
+  function personalSaved(message: string) {
+    setNotice(message);
+    if (message) setRevision(n => n + 1);
+  }
+  const FundIcon = fund === "general" ? Wallet : fund === "investments" ? TrendingUp : Gem;
   const balanceLabel = wallet ? BigInt(wallet.balance).toLocaleString("fa-IR") : "";
   const activeFamily = families.find(f => f.id === (wallet?.familyId ?? selected)) ?? families[0];
 
   return <>
-    <section className="wallet-balance" aria-label="موجودی خانواده" aria-busy={loading}>
-      <div className="wallet-balance-heading"><span className="wallet-balance-icon" aria-hidden="true"><Wallet /></span><h1>موجودی خانواده{activeFamily && <> <bdi>{activeFamily.name}</bdi></>}</h1><Button variant="ghost" size="icon" className="wallet-visibility" aria-label={hidden ? "نمایش موجودی" : "پنهان کردن موجودی"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div>
+    <section className="wallet-balance" aria-label="صندوق‌ها">
+      <div className="wallet-fund-switch" role="group" aria-label="انتخاب صندوق">{funds.map(item => <button key={item.value} type="button" aria-pressed={fund === item.value} onClick={() => setFund(item.value)}>{fund === item.value && <Check size={14} aria-hidden="true" />}{item.label}</button>)}</div>
+      <div className="wallet-balance-heading"><span className="wallet-balance-icon" aria-hidden="true"><FundIcon /></span><h1>صندوق {funds.find(item => item.value === fund)?.label}</h1><Button variant="ghost" size="icon" className="wallet-visibility" aria-label={hidden ? "نمایش مبلغ" : "پنهان کردن مبلغ"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div>
+      <p className="wallet-fund-note">{fund === "general" ? <>مشترک با خانواده{activeFamily && <>ٔ <bdi>{activeFamily.name}</bdi></>}</> : "شخصی · فقط برای شما"}</p>
+      {fund === "general" ? <>
       {families.length > 1 && <label className="wallet-family">خانواده<Select id="wallet-family" value={wallet?.familyId ?? (families.some(f => f.id === selected) ? selected : families[0].id)} disabled={busy} onValueChange={value => { setSelected(value); setWallet(null); setLoading(true); setNotice(""); }} options={families.map(f => ({ value: f.id, label: f.name }))} /></label>}
       {loading ? <p role="status">در حال دریافت موجودی…</p> : error ? <div role="alert"><p className="dash-error">{error}</p><Button variant="ghost" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : wallet ? <>
         <p className={`wallet-balance-amount${!hidden && balanceLabel.length > 13 ? " wallet-balance-amount-compact" : ""}`}><bdi>{hidden ? "••••••" : balanceLabel}</bdi> <small>تومان</small></p>
         {!canWrite && <p className="dash-small">دسترسی شما فقط دیدن است.</p>}
       </> : <p>برای ثبت دخل‌وخرج، اول از <a href="/families" className="underline">صفحهٔ خانواده</a> یه خانواده بسازین یا عضو خانواده بشین.</p>}
+      </> : <PersonalFundValue key={fund} fund={fund} revision={revision} hidden={hidden} />}
       <p className="wallet-balance-notice" role="status">{notice}</p>
     </section>
     <Dialog open={open} onOpenChange={value => { if (!pending.current) setOpen(value); }}>
       <div className="dash-home-actions">
         <DialogTrigger asChild><Button className="home-action home-action-income" size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("income")}><HandCoins aria-hidden="true" /><span>دخل</span></Button></DialogTrigger>
         <DialogTrigger asChild><Button className="home-action home-action-expense" size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("expenses")}><CreditCard aria-hidden="true" /><span>خرج</span></Button></DialogTrigger>
-        <InvestmentDialog onSaved={setNotice} />
-        <AssetDialog onSaved={setNotice} />
+        <InvestmentDialog onSaved={personalSaved} />
+        <AssetDialog onSaved={personalSaved} />
       </div>
       <DialogContent dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}>
         <DialogHeader><DialogTitle>{kind === "income" ? "ثبت دخل" : "ثبت خرج"}</DialogTitle><DialogDescription>برای خانوادهٔ {families.find(f => f.id === wallet?.familyId)?.name} ثبت می‌شه و اعضای خانواده می‌تونن ببیننش. همهٔ مبلغ‌ها به تومان هستن.</DialogDescription></DialogHeader>

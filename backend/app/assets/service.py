@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import Numeric, case, cast, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -42,3 +42,16 @@ class Assets:
                                .offset(offset).limit(50)).all()
         count = self.db.scalar(select(func.count()).select_from(Asset).where(Asset.user_id == user_id))
         return {"entries": [self.view(row) for row in rows], "count": count, "offset": offset}
+
+
+    def summary(self, user_id):
+        value = case(
+            (Asset.price_per_sqm_toman.is_not(None), Asset.area_sqm * cast(Asset.price_per_sqm_toman, Numeric)),
+            else_=cast(Asset.purchase_price_toman, Numeric),
+        )
+        count, priced_count, total = self.db.execute(
+            select(func.count(), func.count(value), func.coalesce(func.sum(value), 0))
+            .select_from(Asset).where(Asset.user_id == user_id)
+        ).one()
+        return {"total_toman": format(total, "f"), "count": count,
+                "unpriced_count": count - priced_count, "valuation_basis": "recorded_purchase_prices"}

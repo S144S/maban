@@ -93,3 +93,11 @@
 .dash-home-actions > .home-action:not(:disabled):hover { background: var(--accent); color: var(--accent-foreground); }
 .dash-home-actions > .home-action:not(:disabled):active { background: var(--secondary-hover); color: var(--secondary-foreground); }
 .dash-home-actions > .home-action span { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
+
+
+.wallet-fund-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 18px; background: var(--muted); }
+.wallet-fund-switch button { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; min-width: 0; padding: 6px; border: 1px solid transparent; border-radius: 14px; font-size: 14px; font-weight: 600; color: var(--muted-foreground); cursor: pointer; }
+.wallet-fund-switch button:hover { background: var(--accent); color: var(--accent-foreground); }
+.wallet-fund-switch button[aria-pressed="true"] { background: var(--card); color: var(--foreground); border-color: var(--input); }
+.wallet-fund-switch button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.wallet-fund-note { color: var(--muted-foreground); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }

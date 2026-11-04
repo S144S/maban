@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.11.0`. No backend release has been published.
+Current development version: `0.12.0`. No backend release has been published.
 
 ### Added
+
+- Added private investment and asset summary APIs with exact database aggregation over all records, recorded-price valuation and explicit unpriced counts. Gold total purchase price takes precedence over gram price; property per-square-metre price takes precedence over historical purchase totals.
 
 - Car entry uses one combined model field; separate historical brand values remain supported.
 
