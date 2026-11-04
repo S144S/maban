@@ -3,8 +3,8 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { categories, parseAmount, type Transaction, type Category } from "./model";
 
-export function TransactionForm({ onSave }: { onSave: (transaction: Transaction) => void }) {
-  const [kind, setKind] = useState<"expense" | "income">("expense");
+export function TransactionForm({ onSave, initialKind = "expense" }: { initialKind?: "expense" | "income"; onSave: (transaction: Transaction) => void }) {
+  const [kind, setKind] = useState<"expense" | "income">(initialKind);
   const [errors, setErrors] = useState<Record<string, string>>({});
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

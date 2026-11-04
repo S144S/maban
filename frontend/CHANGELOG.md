@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.9.1`. No frontend release has been published.
+Current development version: `0.10.0`. No frontend release has been published.
 
 ### Added
+
+- Connected the simplified home balance and income/expense sheets to persisted family records, with family selection, permissions, loading/error states and idempotent writes. Redesigned the compact balance card without a footer divider or explanatory caption, with a neutral surface, a wallet emblem, readable family heading and prominent amounts that wrap on narrow screens. Income and expense actions use receiving-coins and payment-card icons. Existing income entries contribute to the balance; budget and transaction tabs remain explicitly labeled previews.
 
 - Added an accessible RTL account menu to dashboard and family headers with profile navigation and quick sign-out, including pending and error feedback. Align the menu inward from the header avatar and keep page scrolling unlocked to prevent fixed bottom navigation from shifting.
 

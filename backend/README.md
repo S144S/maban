@@ -33,8 +33,9 @@ so the UI stays on the phone form. Signup/recovery issuance keeps uniform respon
 `/account` manages names, passwords and active sessions. Phone numbers remain
 immutable verified account identifiers. Password changes/reset invalidate all
 sessions. `/forgot-password` remains available for OTP-based password reset,
-but the login screen does not advertise it. Financial dashboards still contain
-sample data; this change persists accounts, not transactions or family budgets.
+but the login screen does not advertise it. Home now shows the selected family’s persisted income minus expenses and provides
+real income/expense entry sheets. Transaction and budget tabs remain labeled
+previews and do not affect the persisted balance. Run migrations before startup.
 
 ## Administration
 

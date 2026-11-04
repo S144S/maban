@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.5.0`. No backend release has been published.
+Current development version: `0.6.0`. No backend release has been published.
 
 ### Added
+
+- Added the expenses module with its own schema, family-scoped totals and history, member attribution, full/view authorization and idempotent whole-toman writes. Run Alembic upgrade head.
 
 - Family income inbox in its own schema with whole-toman amounts, four sources, member attribution, permission checks and idempotent creation. Run Alembic upgrade head.
 

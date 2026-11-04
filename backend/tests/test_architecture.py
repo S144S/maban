@@ -29,7 +29,7 @@ def imports(path):
 def test_module_import_boundaries():
     modules = {p.name for p in APP.iterdir() if p.is_dir() and (p / "__init__.py").exists()}
     exceptions = {
-        "main.py": {"app.users.bootstrap", "app.families.bootstrap", "app.income.bootstrap"},
+        "main.py": {"app.users.bootstrap", "app.families.bootstrap", "app.income.bootstrap", "app.expenses.bootstrap"},
         "cli.py": {"app.users.commands"},
     }
     for path in APP.rglob("*.py"):
@@ -51,7 +51,7 @@ def test_module_import_boundaries():
 
 
 def test_http_and_cli_do_not_access_persistence():
-    for path in (APP / "users/routes.py", APP / "families/routes.py", APP / "income/routes.py", APP / "cli.py"):
+    for path in (APP / "users/routes.py", APP / "families/routes.py", APP / "income/routes.py", APP / "expenses/routes.py", APP / "cli.py"):
         names = list(imports(path))
         assert not any(n.startswith("sqlalchemy") or ".models" in n for n in names)
         tree = ast.parse(path.read_text(encoding="utf-8"))

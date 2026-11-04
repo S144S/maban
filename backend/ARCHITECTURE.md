@@ -109,3 +109,20 @@ GET `/api/families/{id}/income` returns up to 50 entries with offset pagination.
 POST requires a UUID `request_id`: identical retries return the original entry;
 reusing a key with different data returns 409. No edit/delete endpoints exist yet.
 Run Alembic upgrade head to create the schema.
+
+## Expenses module and home balance
+
+`app/expenses` owns `expenses.entries` and depends only on families/public
+authorization and users/public identity contracts. It never accesses income
+persistence. Entries store a positive whole-toman amount, title, category,
+current family member attribution and optional description. Full-access members
+can write; all family members can read. Family/request uniqueness makes retries
+idempotent. GET/POST `/api/families/{id}/expenses` use the same pagination and
+precision-preserving aggregate conventions as income. No edit/delete API is exposed.
+
+Home reads the selected family's income and expense aggregates through their
+HTTP APIs and subtracts using BigInt. This is a recorded net balance, including
+vouchers, not a bank account balance. The two reads are refreshed after writes,
+on mounting and on window focus; they are not a cross-module transactional snapshot.
+No family is created implicitly. Existing budget/transaction preview tabs do not
+write to this balance. Run Alembic upgrade head before starting the new API.

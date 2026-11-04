@@ -2,6 +2,7 @@ from alembic import context
 
 from app.config import Settings
 from app.database import Base, database
+from app.expenses.persistence import SCHEMA as EXPENSES_SCHEMA
 from app.families.persistence import SCHEMA as FAMILY_SCHEMA
 from app.income.persistence import SCHEMA as INCOME_SCHEMA
 from app.users.persistence import SCHEMA, TABLES  # noqa: F401
@@ -14,7 +15,7 @@ with engine.connect() as connection:
         compare_type=True,
         include_schemas=True,
         include_name=lambda name, kind, parent: (
-            kind != "schema" or name in (None, SCHEMA, FAMILY_SCHEMA, INCOME_SCHEMA)
+            kind != "schema" or name in (None, SCHEMA, FAMILY_SCHEMA, INCOME_SCHEMA, EXPENSES_SCHEMA)
         ),
     )
     with context.begin_transaction():

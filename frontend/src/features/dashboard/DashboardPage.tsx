@@ -1,31 +1,31 @@
+import { FamilyWallet } from "./FamilyWallet";
 import { Select } from "@/components/ui/select";
 import { useRef, useState, type FormEvent } from "react";
-import { ArrowDownLeft, ArrowUpLeft, House, Wallet, Plus, ShoppingBasket, Coffee, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
+import { House, Wallet, Plus, ShoppingBasket, Coffee, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import { TransactionForm } from "./TransactionForm";
-import { categories, initialTransactions, formatMoney, parseAmount, summarize } from "./model";
+import { categories, initialTransactions, formatMoney, parseAmount } from "./model";
 import "./dashboard.css";
 import { AccountMenu } from "../auth/AccountMenu";
 import type { User } from "../auth/api";
 
 const icons = { home: House, groceries: ShoppingBasket, leisure: Coffee };
 type Page = "home" | "transactions" | "budgets";
-export function DashboardPage({ user, page, onNavigate }: { user: User; page: Page; onNavigate: (page: Page) => void }) {
+export function DashboardPage({ user, page }: { user: User; page: Page; onNavigate: (page: Page) => void }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [limits, setLimits] = useState(categories.map(c => c.limit));
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [hidden, setHidden] = useState(false);
+  const hidden = false;
   const [open, setOpen] = useState(false);
+  const [entryKind, setEntryKind] = useState<"income" | "expense">("expense");
   const [budgetOpen, setBudgetOpen] = useState(false);
   const [budgetError, setBudgetError] = useState("");
   const [notice, setNotice] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
-  const totals = summarize(transactions);
   const money = (value: number) => hidden ? "••••••" : formatMoney(value);
-  function navigate(next: Page) { onNavigate(next); window.scrollTo({ top: 0, behavior: "instant" }); requestAnimationFrame(() => heading.current?.focus()); }
   function saveBudgets(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -49,17 +49,15 @@ export function DashboardPage({ user, page, onNavigate }: { user: User; page: Pa
     <a className="skip-link" href="#dashboard-main">رفتن به محتوای اصلی</a>
     <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><AccountMenu /></header>
     <main id="dashboard-main" className="dash-main">
-      <div className="dash-welcome"><div><h1 ref={heading} tabIndex={-1}>{page === "home" ? "حساب‌وکتاب خونه" : page === "transactions" ? "تراکنش‌های شما" : "بودجه‌های شما"}</h1><p className="dash-muted">{page === "home" ? `سلام ${user.first_name}، خوش اومدین!` : "یه تصویر روشن از پول‌هاتون"} <span aria-hidden="true">🌱</span></p></div><span className="dash-month">مهر ۱۴۰۵</span></div>
-      <p className="dash-demo">پیش‌نمایش با داده‌های نمونه؛ تغییرات با بستن یا بارگذاری مجدد صفحه پاک می‌شن.</p>
-      {page === "home" && <section className="dash-balance" aria-label="خلاصهٔ مالی مهر"><div className="dash-row"><span>باقی‌ماندهٔ این ماه</span><Button variant="ghost" size="icon" aria-label={hidden ? "نمایش مبلغ‌ها" : "پنهان کردن مبلغ‌ها"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div><p className="dash-total"><bdi>{money(totals.balance)}</bdi> <small>تومان</small></p><div className="dash-cashflow"><div><span><ArrowDownLeft size={18} aria-hidden="true" />درآمد ماه</span><strong>{money(totals.income)}</strong><small>تومان</small></div><div><span><ArrowUpLeft size={18} aria-hidden="true" />هزینهٔ ماه</span><strong>{money(totals.expense)}</strong><small>تومان</small></div></div></section>}
-      <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button size="lg" className="dash-add"><Plus />ثبت تراکنش</Button></DialogTrigger><DialogContent dir="rtl"><DialogHeader><DialogTitle>ثبت تراکنش جدید</DialogTitle><DialogDescription>یه درآمد یا هزینهٔ نمونه ثبت کنین و تغییر موجودی رو ببینین. اطلاعات ذخیره نمی‌شن.</DialogDescription></DialogHeader><TransactionForm onSave={transaction => { setTransactions(current => [transaction, ...current]); setOpen(false); setNotice("تراکنش نمونه ثبت شد؛ موجودی و بودجه به‌روز شدن."); }} /></DialogContent></Dialog>
-      <p className="dash-status" role="status">{notice}</p>
-      {page !== "transactions" && budgetSection}
-      {page !== "budgets" && <section className="dash-section" aria-labelledby="transactions-heading"><div className="dash-section-heading"><h2 id="transactions-heading">{page === "home" ? "آخرین تراکنش‌ها" : "فهرست تراکنش‌ها"}</h2>{page === "home" && <Button variant="ghost" onClick={() => navigate("transactions")}>همه</Button>}</div>
+      {page !== "home" && <><div className="dash-welcome"><h1 ref={heading} tabIndex={-1}>{page === "transactions" ? "تراکنش‌های شما" : "بودجه‌های شما"}</h1></div><p className="dash-demo">پیش‌نمایش با داده‌های نمونه؛ تغییرات با بستن یا بارگذاری مجدد صفحه پاک می‌شن.</p></>}
+      {page === "home" ? <FamilyWallet userId={user.id} /> : <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button size="lg" className="dash-add" onClick={() => setEntryKind("expense")}><Plus />ثبت تراکنش نمونه</Button></DialogTrigger><DialogContent dir="rtl"><DialogHeader><DialogTitle>ثبت تراکنش نمونه</DialogTitle><DialogDescription>این فرم فقط برای پیش‌نمایشه و روی موجودی واقعی خانواده تأثیر نداره. برای ثبت واقعی از دخل و خرج صفحهٔ خانه استفاده کنین.</DialogDescription></DialogHeader><TransactionForm initialKind={entryKind} onSave={transaction => { setTransactions(current => [transaction, ...current]); setOpen(false); setNotice("تراکنش نمونه ثبت شد."); }} /></DialogContent></Dialog>}
+      <p className={page === "home" ? "sr-only" : "dash-status"} role="status">{notice}</p>
+      {page === "budgets" && budgetSection}
+      {page === "transactions" && <section className="dash-section" aria-labelledby="transactions-heading"><div className="dash-section-heading"><h2 id="transactions-heading">فهرست تراکنش‌ها</h2></div>
         {page === "transactions" && <div className="dash-form dash-filters"><label htmlFor="transaction-search">جست‌وجوی عنوان<input id="transaction-search" type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="مثلاً خرید خانه" /></label><label htmlFor="transaction-filter">نوع تراکنش<Select id="transaction-filter" value={filter} onValueChange={setFilter} options={[{ value: "all", label: "همهٔ تراکنش‌ها" }, { value: "expense", label: "هزینه‌ها" }, { value: "income", label: "درآمدها" }]} /></label></div>}
-        <ul className="dash-transactions">{(page === "home" ? transactions.slice(0, 3) : rows).map(t => { const Icon = t.kind === "income" ? Wallet : icons[t.category]; return <li key={t.id}><span className={`dash-transaction-icon ${t.kind === "income" ? "dash-income" : ""}`}><Icon size={20} aria-hidden="true" /></span><div className="dash-transaction-copy"><strong>{t.title}</strong><span>{t.date} · {t.kind === "income" ? "درآمد" : "هزینه"}</span></div><div className="dash-transaction-money"><bdi>{money(t.amount)}</bdi><small>تومان</small></div></li>; })}</ul>{page === "transactions" && rows.length === 0 && <p className="dash-empty">تراکنشی پیدا نشد؛ جست‌وجو یا فیلتر رو تغییر بدین.</p>}
+        <ul className="dash-transactions">{rows.map(t => { const Icon = t.kind === "income" ? Wallet : icons[t.category]; return <li key={t.id}><span className={`dash-transaction-icon ${t.kind === "income" ? "dash-income" : ""}`}><Icon size={20} aria-hidden="true" /></span><div className="dash-transaction-copy"><strong>{t.title}</strong><span>{t.date} · {t.kind === "income" ? "درآمد" : "هزینه"}</span></div><div className="dash-transaction-money"><bdi>{money(t.amount)}</bdi><small>تومان</small></div></li>; })}</ul>{page === "transactions" && rows.length === 0 && <p className="dash-empty">تراکنشی پیدا نشد؛ جست‌وجو یا فیلتر رو تغییر بدین.</p>}
       </section>}
-      <p className="dash-end">قدم‌های کوچیک، حساب‌وکتاب روشن‌تر.</p>
+      {page !== "home" && <p className="dash-end">قدم‌های کوچیک، حساب‌وکتاب روشن‌تر.</p>}
     </main>
   </div>;
 }
