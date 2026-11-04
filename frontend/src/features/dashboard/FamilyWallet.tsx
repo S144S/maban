@@ -80,7 +80,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
     const payload = {
       amount_toman: amount,
       description: String(fields.get("description") ?? "").trim() || null,
-      ...(kind === "income" ? { source: fields.get("source"), location_id: fields.get("location"), from_member_id: fields.get("member") } : { title: String(fields.get("title") ?? "").trim(), category_id: fields.get("category_id"), paid_by_member_id: fields.get("member") }),
+      ...(kind === "income" ? { source: fields.get("source"), location_id: fields.get("location"), from_member_id: fields.get("member") } : { title: "خرج", category_id: fields.get("category_id"), paid_by_member_id: fields.get("member") }),
     };
     const fingerprint = JSON.stringify({ familyId, kind, payload });
     if (request.current.fingerprint !== fingerprint) request.current = { fingerprint, id: crypto.randomUUID() };
@@ -128,7 +128,6 @@ export function FamilyWallet({ userId }: { userId: string }) {
         <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
           <label htmlFor="wallet-amount">مبلغ (تومان)<input id="wallet-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} /></label>
           {kind === "income" ? <label htmlFor="wallet-source">منبع درآمد<Select id="wallet-source" name="source" defaultValue="salary" options={sources} disabled={busy} required /></label> : <>
-            <label htmlFor="wallet-title">عنوان خرج<input id="wallet-title" name="title" required maxLength={80} /></label>
             {wallet && <CategoryField key={wallet.familyId} familyId={wallet.familyId} disabled={busy} />}
           </>}
           <label htmlFor="wallet-member">{kind === "income" ? "از جانب" : "پرداخت‌کننده"}<Select id="wallet-member" name="member" defaultValue={userId} options={(wallet?.members ?? []).map(m => ({ value: m.user_id, label: m.name }))} disabled={busy} required /></label>

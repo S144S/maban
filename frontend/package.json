@@ -1,7 +1,7 @@
 {
   "name": "maban-frontend",
   "private": true,
-  "version": "0.17.0",
+  "version": "0.17.1",
   "type": "module",
   "scripts": {
     "test": "node --test scripts/*.test.mjs",
