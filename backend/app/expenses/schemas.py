@@ -33,3 +33,8 @@ class UpdateCategory(BaseModel):
 
 class CreateCategory(UpdateCategory):
     request_id: UUID
+
+
+class SetCategoryMonthlyLimit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    monthly_limit_toman: Annotated[int, Field(strict=True, gt=0, le=1000000000000)] | None

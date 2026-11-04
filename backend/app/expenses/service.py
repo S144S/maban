@@ -109,7 +109,8 @@ class Expense:
 
     @staticmethod
     def category_view(row):
-        return {"id": str(row.id), "name": row.name, "icon": row.icon, "is_default": row.name == "سایر"}
+        return {"id": str(row.id), "name": row.name, "icon": row.icon, "is_default": row.name == "سایر",
+                "monthly_limit_toman": row.monthly_limit_toman}
 
     def categories(self, family_id, user_id):
         self.access.authorize(family_id, user_id)
@@ -184,3 +185,16 @@ class Expense:
         ).values(category_id=default.id, category_name=default.name))
         self.db.delete(row)
         self.db.flush()
+
+    def set_category_monthly_limit(self, family_id, user_id, category_id, data):
+        self.access.require_owner(family_id, user_id)
+        self.lock_categories(family_id)
+        row = self.db.scalar(select(ExpenseCategory).where(
+            ExpenseCategory.family_id == family_id, ExpenseCategory.id == category_id))
+        if row is None:
+            raise ExpenseError("دسته‌بندی پیدا نشد.", 404)
+        # A recurring monthly target, not a transaction-blocking limit.
+        # The default category can have a target while its identity stays protected.
+        row.monthly_limit_toman = data.monthly_limit_toman
+        self.db.flush()
+        return self.category_view(row)

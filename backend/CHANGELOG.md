@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.0.0`. No backend release has been published.
+Current development version: `1.1.0`. No backend release has been published.
 
 ### Added
+
+- Added owner-managed recurring monthly expense-category limits in whole tomans, including Other. Null means unlimited; members can read limits. Limits do not block expenses or send alerts. Run Alembic upgrade head; existing categories remain unlimited.
 
 - Every family has a protected default Other category; deleting a custom category atomically reassigns its expenses to Other without changing totals. Expense retries remain safe after category edits/deletion.
 

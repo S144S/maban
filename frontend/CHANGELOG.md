@@ -5,13 +5,15 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.17.1`. No frontend release has been published.
+Current development version: `0.18.0`. No frontend release has been published.
 
 ### Changed
 
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added a Management settings icon alongside category edit/delete actions, opening a bottom sheet to set, edit or remove each category’s recurring monthly spending limit, including Other, with Persian-digit input and clear no-alert/no-blocking semantics.
 
 - Every family has a protected default Other category; deleting a custom category atomically reassigns its expenses to Other without changing totals. Expense retries remain safe after category edits/deletion.
 

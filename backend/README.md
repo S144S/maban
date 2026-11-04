@@ -254,3 +254,18 @@ Supply exactly one of `category` or `category_id`; responses add `category_id` a
 `category_name` without removing the legacy code. Custom entries use legacy `other`.
 Apply Alembic head before deployment. Existing expenses and totals are unchanged;
 downgrade refuses to discard defined categories. Families start with no custom categories.
+
+
+### Category monthly limits
+
+Owners set or clear a category's recurring monthly target with
+PUT `/api/families/{id}/expenses/categories/{category_id}/monthly-limit`
+and `{"monthly_limit_toman": 5000000}` (or null for no limit).
+Amounts are strict positive integers up to 1,000,000,000,000 tomans.
+Category responses include this nullable field; existing categories default to null.
+Other supports limits while its name/icon and deletion remain protected.
+The setting applies to the family's category, repeats each Persian calendar month
+(Asia/Tehran), and does not roll over. This version stores the target only:
+monthly aggregation, threshold alerts and notifications are future work.
+Expense recording is never blocked by the target. Category edits retain it;
+deletion discards that category's target and does not alter Other's target.

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import "./category-field.css";
 import { Button } from "@/components/ui/button";
 import { api, errorMessage } from "@/lib/http";
-export type ExpenseCategory = { id: string; name: string; is_default: boolean; icon: string };
+export type ExpenseCategory = { id: string; name: string; is_default: boolean; monthly_limit_toman: number | null; icon: string };
 
 export function CategoryField({ familyId, disabled }: { familyId: string; disabled: boolean }) {
   const [items, setItems] = useState<ExpenseCategory[]>([]);

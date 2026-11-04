@@ -33,12 +33,14 @@ class ExpenseEntry(Base):
 class ExpenseCategory(Base):
     __tablename__ = "categories"
     __table_args__ = (
+        CheckConstraint("monthly_limit_toman IS NULL OR (monthly_limit_toman > 0 AND monthly_limit_toman <= 1000000000000)", name="expense_category_monthly_limit"),
         UniqueConstraint("family_id", "name", name="expense_category_name"),
         UniqueConstraint("family_id", "request_id", name="expense_category_request"),
         {"schema": "expenses"},
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     family_id: Mapped[UUID] = mapped_column(index=True)
+    monthly_limit_toman: Mapped[int | None] = mapped_column(BigInteger)
     icon: Mapped[str] = mapped_column(String(32), default="tag", server_default="tag")
     name: Mapped[str] = mapped_column(String(80))
     created_by: Mapped[UUID] = mapped_column()

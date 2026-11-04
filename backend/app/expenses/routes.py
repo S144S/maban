@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 
 from app.expenses.dependencies import Service
-from app.expenses.schemas import CreateCategory, CreateExpense, UpdateCategory
+from app.expenses.schemas import CreateCategory, CreateExpense, SetCategoryMonthlyLimit, UpdateCategory
 from app.users.public import CurrentUser
 
 router = APIRouter(prefix="/api/families/{family_id}/expenses", tags=["expenses"])
@@ -44,3 +44,9 @@ def update_category(family_id: UUID, category_id: UUID, data: UpdateCategory,
 @router.delete("/categories/{category_id}", status_code=204)
 def delete_category(family_id: UUID, category_id: UUID, current: CurrentUser, service: Service):
     service.delete_category(family_id, current.id, category_id)
+
+
+@router.put("/categories/{category_id}/monthly-limit")
+def set_category_monthly_limit(family_id: UUID, category_id: UUID, data: SetCategoryMonthlyLimit,
+                               current: CurrentUser, service: Service):
+    return {"category": service.set_category_monthly_limit(family_id, current.id, category_id, data)}

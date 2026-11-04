@@ -43,3 +43,6 @@
 .category-icon-option input:focus-visible + span { outline: 2px solid var(--ring); outline-offset: 2px; }
 .category-icon-option input:not(:disabled):hover + span { background: var(--accent); }
 .category-icon-option input:disabled + span { color: var(--muted-foreground); cursor: default; }
+
+
+.category-management-actions { display: flex; align-items: center; flex-shrink: 0; }
