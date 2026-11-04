@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.9.0`. No frontend release has been published.
+Current development version: `0.9.1`. No frontend release has been published.
 
 ### Added
 
@@ -16,6 +16,10 @@ Current development version: `0.9.0`. No frontend release has been published.
 - Added full/view access selection on family invitations and permission labels on members and invitation previews.
 
 ### Fixed
+
+- Redrew the family empty-state illustration with complete chipmunk characters, simpler facial details and a balanced family composition.
+
+- Removed the white circular background and border from family invitation delete buttons while preserving their touch targets and interaction feedback.
 
 - Replaced native dropdown menus across the app with shared RTL select controls, styled options, selected indicators and keyboard navigation.
 
