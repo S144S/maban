@@ -5,8 +5,8 @@ import { fileURLToPath, URL } from "node:url";
 import { readFileSync } from "node:fs";
 
 export default defineConfig({
-  server: { host: "127.0.0.1", port: 6201, strictPort: true },
-  preview: { host: "127.0.0.1", port: 6201, strictPort: true },
+  server: { host: "127.0.0.1", port: 6201, strictPort: true, proxy: { "/api": "http://127.0.0.1:6202" } },
+  preview: { host: "127.0.0.1", port: 6201, strictPort: true, proxy: { "/api": "http://127.0.0.1:6202" } },
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   define: {

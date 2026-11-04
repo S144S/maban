@@ -17,6 +17,7 @@ import {
   Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FinanceIllustration } from "@/components/FinanceIllustration";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,6 @@ import { useEntranceMotion } from "./useEntranceMotion";
 type Panel =
   | "demo"
   | "intro"
-  | "login"
   | "faq"
   | "privacy"
   | "terms"
@@ -67,7 +67,7 @@ const questions = [
   ],
   [
     "الان می‌تونم حساب بسازم؟",
-    "هنوز داریم مابان رو آماده می‌کنیم. فعلاً با «شروع رایگان» می‌تونین نسخهٔ نمایشی رو امتحان کنین؛ ثبت‌نام، ورود و حساب مشترک هنوز فعال نیست.",
+    "بله، می‌تونین با شماره موبایل و کد تأیید ثبت‌نام کنین. بخش مالی هنوز با داده‌های نمونه کار می‌کنه و حساب مشترک هنوز آماده نیست.",
   ],
   [
     "اطلاعات بانکی هم لازمه؟",
@@ -79,25 +79,21 @@ const questions = [
   ],
 ];
 const info = {
-  login: {
-    title: "به مابان خوش اومدین",
-    text: "ورود و ثبت‌نام هنوز فعال نیست. تا حساب‌های کاربری آماده بشن، می‌تونین بدون واردکردن اطلاعات شخصی، نسخهٔ نمایشی رو امتحان کنین.",
-  },
   intro: {
     title: "یه خونه، یه تصویر روشن از پول‌ها",
     text: "ایدهٔ مابان ساده‌ست: درآمدها و هزینه‌ها رو یک‌جا ببینین، برای ماهتون برنامه بچینین و برای هدف‌های مشترک کنار هم پس‌انداز کنین. توی نسخهٔ نمایشی می‌تونین یه خرید ثبت کنین و تغییر بودجه رو ببینین.",
   },
   privacy: {
-    title: "حریم خصوصی در نسخهٔ نمایشی",
-    text: "این صفحه حساب کاربری، فرم اطلاعات شخصی یا اتصال بانکی ندارد. داده‌های دمو ساختگی‌اند، فقط در حافظهٔ صفحه قرار دارند و ذخیره نمی‌شوند. فونت‌ها از سرویس CDN بارگیری می‌شوند. سیاست کامل حریم خصوصی پیش از راه‌اندازی حساب‌های واقعی منتشر خواهد شد.",
+    title: "حریم خصوصی حساب شما",
+    text: "برای حساب کاربری، شماره موبایل، نام و نام خانوادگی روی سرور ذخیره می‌شن. رمز عبور به‌صورت هش نگهداری می‌شه و نشست ورود با کوکی امن مدیریت می‌شه. در محیط عملیاتی، شماره برای ارسال کد به سرویس پیامک فرستاده می‌شه. داده‌های مالی فعلاً نمونه‌ان و ذخیره نمی‌شن؛ اتصال بانکی نداریم. فونت‌ها از CDN بارگیری می‌شن.",
   },
   terms: {
     title: "شرایط استفاده از پیش‌نمایش",
-    text: "این نسخه برای آشنایی با مابان است و خدمات مالی یا بانکی ارائه نمی‌دهد. اعداد و گزارش‌ها نمونه‌اند. شرایط استفادهٔ محصول نهایی پیش از شروع ثبت‌نام منتشر خواهد شد.",
+    text: "حساب کاربری برای ورود و مدیریت دسترسی شماست. بخش مالی هنوز برای آشنایی با مابانه و خدمات مالی یا بانکی ارائه نمی‌ده؛ اعداد و گزارش‌ها نمونه‌ان.",
   },
   contact: {
     title: "ارتباط با مابان",
-    text: "مابان هنوز در مرحلهٔ توسعه است. مسیر رسمی پشتیبانی هم‌زمان با راه‌اندازی حساب‌های کاربری در همین صفحه اعلام می‌شود.",
+    text: "مابان هنوز در حال توسعه‌ست. مسیر رسمی پشتیبانی بعد از آماده‌شدن در همین صفحه اعلام می‌شه.",
   },
 };
 
@@ -173,11 +169,11 @@ export function LandingPage() {
             <Button
               variant="outline"
               className="login-button"
-              onClick={() => openPanel("login")}
+              asChild
             >
-              ورود
+              <a href="/login">ورود</a>
             </Button>
-            <Button onClick={() => openPanel("demo")}>شروع رایگان</Button>
+            <Button asChild><a href="/signup">ثبت‌نام</a></Button>
             <Button
               variant="ghost"
               size="icon"
@@ -199,24 +195,15 @@ export function LandingPage() {
             aria-label="ناوبری موبایل"
           >
             {navigation}
-            <button onClick={() => openPanel("login")}>ورود به مابان</button>
+            <a href="/login">ورود به مابان</a>
+            <a href="/signup">ثبت‌نام در مابان</a>
           </nav>
         )}
         <main id="main" ref={mainRef}>
           <section className="hero" aria-labelledby="hero-title">
             <div className="hero-copy" data-entrance>
-              <span className="section-pill">
-                <span className="friendly-emoji" aria-hidden="true">
-                  🌱
-                </span>{" "}
-                حساب‌وکتاب، کنار هم
-              </span>
               <h1 id="hero-title">
-                با مابان،
-                <br />
-                پول‌هاتون رو با هم
-                <br />
-                بهتر مدیریت کنین
+                حساب‌وکتاب خونه،<br />ساده‌تر از همیشه
               </h1>
               <p>
                 مابان کنارتونه تا درآمدها، خرج‌ها و هدف‌هاتون رو یک‌جا ببینین؛
@@ -249,7 +236,7 @@ export function LandingPage() {
                 ))}
               </div>
             </div>
-            <ReferenceArtwork variant="hero" />
+            <div className="hero-scene"><FinanceIllustration /><p>برای امروز، برای فردا، کنار هم.</p></div>
           </section>
           <section className="benefit-band" aria-label="مزایای مابان">
             <div className="container benefits">
@@ -279,9 +266,9 @@ export function LandingPage() {
                 برای برنامه‌های شما
               </span>
               <h2>
-                حساب‌وکتاب خونه،
+                پول‌هاتون، یک‌جا
                 <br />
-                ساده‌تر از همیشه
+                برنامه‌هاتون، روشن‌تر
               </h2>
               <ul>
                 {[
@@ -447,7 +434,7 @@ export function LandingPage() {
               ))}
             </div>
           )}
-          {(panel === "intro" || panel === "login") && (
+          {panel === "intro" && (
             <Button onClick={() => setPanel("demo")}>
               امتحان نسخهٔ نمایشی
               <ArrowLeft data-icon="inline-end" />
