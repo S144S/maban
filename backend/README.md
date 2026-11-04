@@ -34,8 +34,8 @@ so the UI stays on the phone form. Signup/recovery issuance keeps uniform respon
 immutable verified account identifiers. Password changes/reset invalidate all
 sessions. `/forgot-password` remains available for OTP-based password reset,
 but the login screen does not advertise it. Home now shows the selected family’s persisted income minus expenses and provides
-real income/expense entry sheets. Transaction and budget tabs remain labeled
-previews and do not affect the persisted balance. Run migrations before startup.
+real income/expense entry sheets. Management defines family money storage locations for income attribution. The transaction tab remains a labeled
+preview and do not affect the persisted balance. Run migrations before startup.
 
 ## Administration
 
@@ -143,3 +143,15 @@ Endpoints: `GET/POST /api/families`, `GET /api/families/{id}`, owner-only
 Run migrations before startup; revision `f897737fa02e` creates the `families`
 schema and its three tables without changing existing user data. Downgrading
 this feature migration removes family data, so back it up before a rollback.
+
+## Money storage locations
+
+GET/POST `/api/families/{family_id}/money-locations` lists/creates family-owned
+locations (for example a bank, cash or a gift card). Creation accepts a trimmed
+`name` (1–80 characters) and UUID `request_id`, requires full access and rejects
+duplicate family names. Identical retries return the original location.
+Income forms require a location; POST income accepts `location_id` and validates
+it against the same family. Responses include `location_id` and the recorded
+`location_name`. Existing entries remain unassigned; legacy API clients may
+omit the field. Locations do not change amounts, currency or balance calculations.
+Run `alembic upgrade head` before starting the updated API.

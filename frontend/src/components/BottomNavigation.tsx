@@ -1,10 +1,10 @@
-import { House, ListFilter, Wallet, Users } from "lucide-react";
+import { House, ListFilter, Settings2, Users } from "lucide-react";
 import "./bottom-navigation.css";
 
 const items = [
   { id: "home", label: "خانه", icon: House, href: "/dashboard" },
   { id: "transactions", label: "تراکنش‌ها", icon: ListFilter, href: "/dashboard?page=transactions" },
-  { id: "budgets", label: "بودجه", icon: Wallet, href: "/dashboard?page=budgets" },
+  { id: "budgets", label: "مدیریت", icon: Settings2, href: "/dashboard?page=budgets" },
   { id: "families", label: "خانواده", icon: Users, href: "/families" },
 ] as const;
 export type Destination = typeof items[number]["id"];

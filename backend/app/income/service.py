@@ -14,14 +14,18 @@ class FamilyAccess(Protocol):
     def require_member(self, family_id: UUID, member_id: UUID) -> None: ...
 
 
+class LocationDirectory(Protocol):
+    def require(self, family_id: UUID, user_id: UUID, location_id: UUID) -> str: ...
+
+
 class IncomeError(Exception):
     def __init__(self, message: str, status: int = 409):
         self.message, self.status = message, status
 
 
 class Income:
-    def __init__(self, db: Session, access: FamilyAccess):
-        self.db, self.access = db, access
+    def __init__(self, db: Session, access: FamilyAccess, locations: LocationDirectory):
+        self.db, self.access, self.locations = db, access, locations
 
     @staticmethod
     def view(row):
@@ -30,6 +34,8 @@ class Income:
             "amount_toman": row.amount_toman,
             "source": row.source,
             "from_member_id": str(row.from_member_id),
+            "location_id": str(row.location_id) if row.location_id else None,
+            "location_name": row.location_name,
             "description": row.description,
             "created_at": row.created_at.isoformat(),
         }
@@ -37,11 +43,15 @@ class Income:
     def create(self, family_id, user_id, data):
         self.access.authorize(family_id, user_id, write=True)
         self.access.require_member(family_id, data.from_member_id)
+        location_name = (self.locations.require(family_id, user_id, data.location_id)
+                         if data.location_id else None)
         values = {
             "family_id": family_id,
             "amount_toman": data.amount_toman,
             "source": data.source,
             "from_member_id": data.from_member_id,
+            "location_id": data.location_id,
+            "location_name": location_name,
             "description": data.description or None,
             "created_by": user_id,
             "request_id": data.request_id,

@@ -94,8 +94,8 @@ family deletion/transfer and relationship edits are not exposed in this version.
 
 ## Income module
 
-`app/income` owns `income.entries`. It depends only on the public families
-authorization interface and users identity/directory contracts. Family and user
+`app/income` owns `income.entries`. It depends on public families authorization, users identity/directory and
+money_locations lookup contracts. Family and user
 IDs are opaque references without cross-schema foreign keys. Full-access members
 can record income; all family members can read their family inbox. Attribution
 must refer to a current member of the same family.
@@ -124,5 +124,17 @@ Home reads the selected family's income and expense aggregates through their
 HTTP APIs and subtracts using BigInt. This is a recorded net balance, including
 vouchers, not a bank account balance. The two reads are refreshed after writes,
 on mounting and on window focus; they are not a cross-module transactional snapshot.
-No family is created implicitly. Existing budget/transaction preview tabs do not
+No family is created implicitly. The transaction preview does not
 write to this balance. Run Alembic upgrade head before starting the new API.
+
+## Money locations module
+
+`app/money_locations` owns `money_locations.locations` in a separate PostgreSQL
+schema. It uses only the public family access and user identity interfaces.
+`money_locations.public.Directory` resolves a same-family location to its name;
+income calls this contract and stores the opaque ID and name snapshot. There are
+no cross-schema foreign keys or imports of another module's persistence.
+Names are unique per family. Full-access members create locations, all members
+may list them, and outsiders receive 404. No editing or deletion is exposed.
+The migration adds nullable income columns, preserving old records and legacy
+API clients. Current UI forms require a location for new income entries.

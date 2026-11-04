@@ -1,3 +1,4 @@
+import { LocationField } from "../money-locations/LocationField";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { HandCoins, CreditCard, Eye, EyeOff, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,11 +68,12 @@ export function FamilyWallet({ userId }: { userId: string }) {
     const fields = new FormData(event.currentTarget);
     const amount = parseAmount(String(fields.get("amount") ?? ""));
     if (amount === null) { setFormError("مبلغ رو به تومان و بین ۱ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰٬۰۰۰ وارد کنین."); return; }
+    if (kind === "income" && !fields.get("location")) { setFormError("حساب مقصد رو انتخاب کنین؛ اگر حسابی ندارین، از مدیریت اضافه کنین."); return; }
     const familyId = wallet.familyId;
     const payload = {
       amount_toman: amount,
       description: String(fields.get("description") ?? "").trim() || null,
-      ...(kind === "income" ? { source: fields.get("source"), from_member_id: fields.get("member") } : { title: String(fields.get("title") ?? "").trim(), category: fields.get("category"), paid_by_member_id: fields.get("member") }),
+      ...(kind === "income" ? { source: fields.get("source"), location_id: fields.get("location"), from_member_id: fields.get("member") } : { title: String(fields.get("title") ?? "").trim(), category: fields.get("category"), paid_by_member_id: fields.get("member") }),
     };
     const fingerprint = JSON.stringify({ familyId, kind, payload });
     if (request.current.fingerprint !== fingerprint) request.current = { fingerprint, id: crypto.randomUUID() };
@@ -110,6 +112,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
             <label htmlFor="wallet-category">دسته‌بندی<Select id="wallet-category" name="category" defaultValue="groceries" options={categories} disabled={busy} required /></label>
           </>}
           <label htmlFor="wallet-member">{kind === "income" ? "از جانب" : "پرداخت‌کننده"}<Select id="wallet-member" name="member" defaultValue={userId} options={(wallet?.members ?? []).map(m => ({ value: m.user_id, label: m.name }))} disabled={busy} required /></label>
+          {kind === "income" && wallet && <LocationField familyId={wallet.familyId} disabled={busy} />}
           <label htmlFor="wallet-description">توضیح (اختیاری)<input id="wallet-description" name="description" maxLength={500} /></label>
           {formError && <p className="dash-error" role="alert">{formError}</p>}
           <Button type="submit">{busy ? "در حال ثبت…" : kind === "income" ? "ثبت دخل" : "ثبت خرج"}</Button>

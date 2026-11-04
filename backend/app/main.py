@@ -10,6 +10,7 @@ from app.database import database
 from app.expenses.bootstrap import install as install_expenses
 from app.families.bootstrap import install as install_families
 from app.income.bootstrap import install as install_income
+from app.money_locations.bootstrap import install as install_locations
 from app.users.bootstrap import install
 
 
@@ -26,6 +27,7 @@ def create_app(settings: Settings | None = None, sms=None):
     app.state.settings, app.state.engine, app.state.sessions = settings, engine, sessions
     install(app, settings, sms)
     install_families(app)
+    install_locations(app)
     install_income(app)
     install_expenses(app)
 

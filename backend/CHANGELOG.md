@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.6.0`. No backend release has been published.
+Current development version: `0.7.0`. No backend release has been published.
 
 ### Added
+
+- Family-scoped money storage locations (presented as accounts in user-facing messages) with full/view permissions, idempotent creation and income attribution through a public module interface. Run Alembic upgrade head; existing income remains unassigned and legacy API clients may omit location_id.
 
 - Added the expenses module with its own schema, family-scoped totals and history, member attribution, full/view authorization and idempotent whole-toman writes. Run Alembic upgrade head.
 

@@ -1,3 +1,4 @@
+import { LocationField } from "../money-locations/LocationField";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Plus, Inbox, ShieldCheck } from "lucide-react";
@@ -8,7 +9,7 @@ import type { Member } from "../families/api";
 import "./income.css";
 
 const sources = { salary: "حقوق", subsidy: "یارانه", voucher: "کالابرگ", gift: "هدیه" };
-type Entry = { id: string; amount_toman: number; source: keyof typeof sources; from_member_name: string; description: string | null; created_at: string };
+type Entry = { id: string; amount_toman: number; source: keyof typeof sources; from_member_name: string; location_name: string | null; description: string | null; created_at: string };
 type Listing = { entries: Entry[]; total_toman: string; count: number };
 const money = (value: string | number) => BigInt(value).toLocaleString("fa-IR");
 function amountOf(value: string) {
@@ -41,7 +42,8 @@ export function IncomeInbox({ familyId, members, canWrite, userId }: { familyId:
     const form = new FormData(event.currentTarget);
     const amount = amountOf(String(form.get("amount")));
     if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 1e12) { setFormError("مبلغ رو به تومان، عدد صحیح و بین ۱ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰٬۰۰۰ وارد کنین."); return; }
-    const payload = { amount_toman: amount, source: form.get("source"), from_member_id: form.get("member"), description: String(form.get("description")).trim() || null };
+    if (!form.get("location")) { setFormError("حساب مقصد رو انتخاب کنین."); return; }
+    const payload = { amount_toman: amount, source: form.get("source"), location_id: form.get("location"), from_member_id: form.get("member"), description: String(form.get("description")).trim() || null };
     const fingerprint = JSON.stringify(payload);
     if (request.current.fingerprint !== fingerprint) request.current = { fingerprint, id: crypto.randomUUID() };
     pending.current = true; setBusy(true); setFormError("");
@@ -58,7 +60,7 @@ export function IncomeInbox({ familyId, members, canWrite, userId }: { familyId:
     {canWrite ? <Button onClick={() => { request.current = { fingerprint: "", id: "" }; setFormError(""); setNotice(""); setOpen(true); }}><Plus size={18} aria-hidden="true" />ثبت درآمد</Button> : <p className="auth-hint">دسترسی شما «فقط دیدن» است.</p>}
     {notice && <p role="status">{notice}</p>}
     {loading ? <p role="status">در حال دریافت ورودی‌ها…</p> : error ? <div role="alert"><p className="auth-error">{error}</p><Button variant="outline" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : data && <>
-      {!data.count ? <p className="income-empty">هنوز درآمدی ثبت نشده؛ ورودی‌های خانواده رو اینجا نگه دارین.</p> : <ul className="income-list">{data.entries.map(entry => <li key={entry.id}><div className="income-row"><strong>{sources[entry.source]}</strong><strong>{money(entry.amount_toman)} <small>تومان</small></strong></div><p>از جانب {entry.from_member_name}</p>{entry.description && <p className="income-description">{entry.description}</p>}<time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleDateString("fa-IR")}</time></li>)}</ul>}
+      {!data.count ? <p className="income-empty">هنوز درآمدی ثبت نشده؛ ورودی‌های خانواده رو اینجا نگه دارین.</p> : <ul className="income-list">{data.entries.map(entry => <li key={entry.id}><div className="income-row"><strong>{sources[entry.source]}</strong><strong>{money(entry.amount_toman)} <small>تومان</small></strong></div><p>از جانب {entry.from_member_name}</p><p>واریز به: {entry.location_name ?? "مشخص نشده"}</p>{entry.description && <p className="income-description">{entry.description}</p>}<time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleDateString("fa-IR")}</time></li>)}</ul>}
       {(offset > 0 || offset + 50 < data.count) && <div className="income-pagination"><Button variant="outline" disabled={offset === 0} onClick={() => setOffset(n => Math.max(0, n - 50))}>جدیدتر</Button><Button variant="outline" disabled={offset + 50 >= data.count} onClick={() => setOffset(n => n + 50)}>قدیمی‌تر</Button></div>}
     </>}
     <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value); }}><DialogContent className="family-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>ثبت درآمد خانواده</DialogTitle><DialogDescription>مبلغ رو به تومان وارد کنین. این ورودی برای اعضای خانواده نمایش داده می‌شه.</DialogDescription></DialogHeader>
@@ -66,6 +68,7 @@ export function IncomeInbox({ familyId, members, canWrite, userId }: { familyId:
         <div className="auth-field"><label htmlFor="income-amount">مبلغ (تومان)</label><input id="income-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} placeholder="مثلاً ۱۵٬۰۰۰٬۰۰۰" /></div>
         <div className="auth-field"><label htmlFor="income-source">منبع درآمد</label><Select id="income-source" name="source" disabled={busy} options={Object.entries(sources).map(([value, label]) => ({ value, label }))} /></div>
         <div className="auth-field"><label htmlFor="income-member">از جانب</label><Select id="income-member" name="member" required defaultValue={userId} disabled={busy} options={members.map(member => ({ value: member.user_id, label: member.name }))} /></div>
+        <LocationField familyId={familyId} disabled={busy} />
         <div className="auth-field"><label htmlFor="income-description">توضیح (اختیاری)</label><textarea id="income-description" name="description" maxLength={500} rows={3} /></div>
         {formError && <p role="alert" className="auth-error">{formError}</p>}
         <Button type="submit">{busy ? "در حال ثبت…" : "ثبت درآمد"}</Button>

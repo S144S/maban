@@ -20,6 +20,8 @@ class IncomeEntry(Base):
     amount_toman: Mapped[int] = mapped_column(BigInteger)
     source: Mapped[str] = mapped_column(String(16))
     from_member_id: Mapped[UUID] = mapped_column()
+    location_id: Mapped[UUID | None] = mapped_column()
+    location_name: Mapped[str | None] = mapped_column(String(80))
     description: Mapped[str | None] = mapped_column(String(500))
     created_by: Mapped[UUID] = mapped_column()
     request_id: Mapped[UUID] = mapped_column()
