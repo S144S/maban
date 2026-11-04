@@ -7,7 +7,7 @@ import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import { TransactionForm } from "./TransactionForm";
 import { categories, initialTransactions, formatMoney, parseAmount, summarize } from "./model";
 import "./dashboard.css";
-import { AccountAvatar } from "@/components/AccountAvatar";
+import { AccountMenu } from "../auth/AccountMenu";
 import type { User } from "../auth/api";
 
 const icons = { home: House, groceries: ShoppingBasket, leisure: Coffee };
@@ -47,7 +47,7 @@ export function DashboardPage({ user, page, onNavigate }: { user: User; page: Pa
   </section>;
   return <div className="dash-shell">
     <a className="skip-link" href="#dashboard-main">رفتن به محتوای اصلی</a>
-    <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><a className="dash-account" href="/account" aria-label="حساب کاربری" title="حساب کاربری"><AccountAvatar /></a></header>
+    <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><AccountMenu /></header>
     <main id="dashboard-main" className="dash-main">
       <div className="dash-welcome"><div><h1 ref={heading} tabIndex={-1}>{page === "home" ? "حساب‌وکتاب خونه" : page === "transactions" ? "تراکنش‌های شما" : "بودجه‌های شما"}</h1><p className="dash-muted">{page === "home" ? `سلام ${user.first_name}، خوش اومدین!` : "یه تصویر روشن از پول‌هاتون"} <span aria-hidden="true">🌱</span></p></div><span className="dash-month">مهر ۱۴۰۵</span></div>
       <p className="dash-demo">پیش‌نمایش با داده‌های نمونه؛ تغییرات با بستن یا بارگذاری مجدد صفحه پاک می‌شن.</p>

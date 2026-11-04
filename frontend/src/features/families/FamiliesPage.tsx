@@ -2,7 +2,7 @@ import { SquirrelFamily } from "./SquirrelFamily";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Users, UserPlus, Plus, Copy, Mail, Trash2, Check } from "lucide-react";
-import { AccountAvatar } from "@/components/AccountAvatar";
+import { AccountMenu } from "../auth/AccountMenu";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api, ApiError, errorMessage } from "@/lib/http";
@@ -79,7 +79,7 @@ export function FamiliesPage({ user }: { user: User }) {
   }
   function open(next: "create" | "invite") { setModalError(""); setLink(""); setMessage(""); setModal(next); }
   return <main className="account-shell family-shell family-with-nav" dir="rtl">
-    <header className="account-header"><a href="/dashboard" aria-label="مابان، داشبورد"><ReferenceArtwork variant="brand" /></a><a className="family-account" href="/account" aria-label="حساب کاربری" title="حساب کاربری"><AccountAvatar /></a></header>
+    <header className="account-header"><a href="/dashboard" aria-label="مابان، داشبورد"><ReferenceArtwork variant="brand" /></a><AccountMenu /></header>
     <div className="family-page-heading"><h1>خانواده‌های من</h1><p>کنار هم، همه چی آسون‌تره <span aria-hidden="true">😊❤️</span></p></div>
     {error && <div className="family-error" role="alert"><p className="auth-error">{error}</p><Button variant="outline" disabled={busy} onClick={() => setReload(n => n + 1)}>تلاش دوباره</Button></div>}
     {message && <p role="status" className="auth-feedback">{message}</p>}

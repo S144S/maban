@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.8.1`. No frontend release has been published.
+Current development version: `0.9.0`. No frontend release has been published.
 
 ### Added
+
+- Added an accessible RTL account menu to dashboard and family headers with profile navigation and quick sign-out, including pending and error feedback. Align the menu inward from the header avatar and keep page scrolling unlocked to prevent fixed bottom navigation from shifting.
 
 - Family income inbox with toman totals, paginated history and a bottom-sheet form for full-access members.
 
