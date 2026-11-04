@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { useRef, useState, type FormEvent } from "react";
 import { Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ export function AssetDialog({ onSaved }: { onSaved: (message: string) => void })
             <label htmlFor="asset-area">مساحت (مترمربع)<input id="asset-area" name="area" inputMode="decimal" dir="ltr" required maxLength={16} placeholder="مثلاً ۸۵٫۵" aria-describedby="asset-area-hint" /></label>
             <p id="asset-area-hint" className="dash-small">تا دو رقم اعشار می‌تونین وارد کنین.</p>
           </>}
-          <label htmlFor="asset-price">{kind === "car" ? "قیمت خرید (اختیاری)" : "قیمت هر متر مربع (اختیاری)"}<input id="asset-price" name="price" inputMode="numeric" dir="ltr" maxLength={24} placeholder={kind === "car" ? "مثلاً 1.000.000.000 تومان" : "مثلاً 100.000.000 تومان"} /></label>
+          <label htmlFor="asset-price">{kind === "car" ? "قیمت خرید (اختیاری)" : "قیمت هر متر مربع (اختیاری)"}<MoneyInput id="asset-price" name="price" inputMode="numeric" dir="ltr" maxLength={24} placeholder={kind === "car" ? "مثلاً 1.000.000.000 تومان" : "مثلاً 100.000.000 تومان"} /></label>
         </div>
         <label htmlFor="asset-description">توضیحات (اختیاری)<input id="asset-description" name="description" maxLength={500} /></label>
         {error && <p id="asset-error" className="dash-error" role="alert">{error}</p>}

@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { CategoryField } from "../expenses/CategoryField";
 import { PersonalFundValue } from "./PersonalFundValue";
 import { AssetDialog } from "../assets/AssetDialog";
@@ -126,7 +127,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
       <DialogContent dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}>
         <DialogHeader><DialogTitle>{kind === "income" ? "ثبت دخل" : "ثبت خرج"}</DialogTitle><DialogDescription>برای خانوادهٔ {families.find(f => f.id === wallet?.familyId)?.name} ثبت می‌شه و اعضای خانواده می‌تونن ببیننش. همهٔ مبلغ‌ها به تومان هستن.</DialogDescription></DialogHeader>
         <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
-          <label htmlFor="wallet-amount">مبلغ (تومان)<input id="wallet-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} /></label>
+          <label htmlFor="wallet-amount">مبلغ (تومان)<MoneyInput id="wallet-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} /></label>
           {kind === "income" ? <label htmlFor="wallet-source">منبع درآمد<Select id="wallet-source" name="source" defaultValue="salary" options={sources} disabled={busy} required /></label> : <>
             {wallet && <CategoryField key={wallet.familyId} familyId={wallet.familyId} disabled={busy} />}
           </>}

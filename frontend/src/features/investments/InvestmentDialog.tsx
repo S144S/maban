@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { useRef, useState, type FormEvent } from "react";
 import { TrendingUp } from "lucide-react";
 import { Select } from "@/components/ui/select";
@@ -84,9 +85,9 @@ export function InvestmentDialog({ onSaved }: { onSaved: (message: string) => vo
           {config.symbol && <label htmlFor="investment-symbol">{config.symbol}{kind === "currency" ? <Select id="investment-symbol" name="symbol" defaultValue="USD" options={currencies} required disabled={busy} /> : <input id="investment-symbol" name="symbol" required maxLength={40} placeholder={config.example} />}</label>}
           <label htmlFor="investment-quantity">{config.amount}<input id="investment-quantity" name="quantity" inputMode={config.digits ? "decimal" : "numeric"} dir="ltr" required maxLength={30} placeholder={config.digits ? "مثلاً ۲٫۵" : "مثلاً ۱۰۰"} aria-describedby="investment-quantity-hint" /></label>
           <p id="investment-quantity-hint" className="dash-small">{config.digits ? `تا ${config.digits.toLocaleString("fa-IR")} رقم اعشار می‌تونین وارد کنین.` : "تعداد رو بدون اعشار وارد کنین."}</p>
-          <label htmlFor="investment-unit">قیمت خرید هر {config.unit} (اختیاری)<input id="investment-unit" name="unit" inputMode="numeric" dir="ltr" maxLength={24} placeholder="مثلاً 10.000 تومان" /></label>
+          <label htmlFor="investment-unit">قیمت خرید هر {config.unit} (اختیاری)<MoneyInput id="investment-unit" name="unit" inputMode="numeric" dir="ltr" maxLength={24} placeholder="مثلاً 10.000 تومان" /></label>
         </div>
-        {kind === "gold" && <label htmlFor="investment-total">قیمت کل (اختیاری)<input id="investment-total" name="total" inputMode="numeric" dir="ltr" maxLength={24} placeholder="مثلاً 100.000 تومان" /></label>}
+        {kind === "gold" && <label htmlFor="investment-total">قیمت کل (اختیاری)<MoneyInput id="investment-total" name="total" inputMode="numeric" dir="ltr" maxLength={24} placeholder="مثلاً 100.000 تومان" /></label>}
         <label htmlFor="investment-description">توضیحات (اختیاری)<input id="investment-description" name="description" maxLength={500} /></label>
         {error && <p id="investment-error" className="dash-error" role="alert">{error}</p>}
         <Button type="submit">{busy ? "در حال ثبت…" : "ثبت سرمایه"}</Button>

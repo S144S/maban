@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { LocationField } from "../money-locations/LocationField";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -65,7 +66,7 @@ export function IncomeInbox({ familyId, members, userId }: { familyId: string; m
     </>}
     <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value); }}><DialogContent className="family-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>ثبت درآمد خانواده</DialogTitle><DialogDescription>مبلغ رو به تومان وارد کنین. این ورودی برای اعضای خانواده نمایش داده می‌شه.</DialogDescription></DialogHeader>
       <form className="auth-form" onSubmit={submit}><fieldset className="auth-fields" disabled={busy}>
-        <div className="auth-field"><label htmlFor="income-amount">مبلغ (تومان)</label><input id="income-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} placeholder="مثلاً ۱۵٬۰۰۰٬۰۰۰" /></div>
+        <div className="auth-field"><label htmlFor="income-amount">مبلغ (تومان)</label><MoneyInput id="income-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} placeholder="مثلاً ۱۵٬۰۰۰٬۰۰۰" /></div>
         <div className="auth-field"><label htmlFor="income-source">منبع درآمد</label><Select id="income-source" name="source" disabled={busy} options={Object.entries(sources).map(([value, label]) => ({ value, label }))} /></div>
         <div className="auth-field"><label htmlFor="income-member">از جانب</label><Select id="income-member" name="member" required defaultValue={userId} disabled={busy} options={members.map(member => ({ value: member.user_id, label: member.name }))} /></div>
         <LocationField familyId={familyId} disabled={busy} />

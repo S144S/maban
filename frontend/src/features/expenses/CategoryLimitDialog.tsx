@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { useRef, useState, type FormEvent } from "react";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export function CategoryLimitDialog({ familyId, category, onSaved }: {
           <DialogDescription>این حد برای مجموع خرج‌های خانواده در این دسته‌بندی و برای هر ماه شمسی تکرار می‌شه. فعلاً هشدار ارسال نمی‌شه و ثبت خرج محدود نمی‌شه.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
-          <label htmlFor="category-monthly-limit">حد خرج ماهانه (تومان)<input id="category-monthly-limit" name="limit" inputMode="numeric" dir="ltr" maxLength={24}
+          <label htmlFor="category-monthly-limit">حد خرج ماهانه (تومان)<MoneyInput id="category-monthly-limit" name="limit" inputMode="numeric" dir="ltr" maxLength={24}
             defaultValue={category.monthly_limit_toman == null ? "" : formatMoney(category.monthly_limit_toman)} placeholder="مثلاً ۵٬۰۰۰٬۰۰۰" aria-describedby="category-limit-help" /></label>
           <p id="category-limit-help" className="text-sm text-muted-foreground">برای نداشتن حد ماهانه، این کادر رو خالی بذارین.</p>
           {error && <p className="dash-error" role="alert">{error}</p>}

@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.18.0`. No frontend release has been published.
+Current development version: `0.18.1`. No frontend release has been published.
 
 ### Changed
+
+- Reduced the balance label, icon and currency label sizes and sized amounts against available space to keep currency alongside large mobile balances.
+
+- Format all toman amount inputs with live three-digit separators, preserving Persian/Arabic/Latin digits, cursor editing and existing numeric API payloads.
 
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 

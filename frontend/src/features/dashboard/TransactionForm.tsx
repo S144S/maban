@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/ui/money-input";
 import { Select } from "@/components/ui/select";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export function TransactionForm({ onSave, initialKind = "expense" }: { initialKi
       <Button type="button" variant={kind === "income" ? "default" : "outline"} aria-pressed={kind === "income"} onClick={() => setKind("income")}>درآمد</Button>
     </div>
     <div><label htmlFor="transaction-title">عنوان<input id="transaction-title" name="title" maxLength={80} required aria-invalid={!!errors.title} aria-describedby={errors.title ? "title-error" : undefined} onChange={() => setErrors(current => ({ ...current, title: "" }))} /></label>{errors.title && <p className="dash-error" id="title-error">{errors.title}</p>}</div>
-    <div><label htmlFor="transaction-amount">مبلغ (تومان)<input id="transaction-amount" name="amount" inputMode="numeric" dir="ltr" required aria-invalid={!!errors.amount} aria-describedby={errors.amount ? "amount-error" : undefined} onChange={() => setErrors(current => ({ ...current, amount: "" }))} /></label>{errors.amount && <p className="dash-error" id="amount-error">{errors.amount}</p>}</div>
+    <div><label htmlFor="transaction-amount">مبلغ (تومان)<MoneyInput id="transaction-amount" name="amount" inputMode="numeric" dir="ltr" required aria-invalid={!!errors.amount} aria-describedby={errors.amount ? "amount-error" : undefined} onChange={() => setErrors(current => ({ ...current, amount: "" }))} /></label>{errors.amount && <p className="dash-error" id="amount-error">{errors.amount}</p>}</div>
     {kind === "expense" && <label htmlFor="transaction-category">دسته‌بندی<Select id="transaction-category" name="category" defaultValue="groceries" options={categories.map(c => ({ value: c.id, label: c.title }))} /></label>}
     <Button size="lg" type="submit">ثبت {kind === "expense" ? "هزینه" : "درآمد"}</Button>
   </form>;
