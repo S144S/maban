@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.9.0`. No backend release has been published.
+Current development version: `0.10.0`. No backend release has been published.
 
 ### Added
+
+- Extended the pending investment-type feature with silver (grams), crypto (up to 18 decimal places), foreign currency (up to 2 decimal places), and bonds (whole units). Each has typed validation, exact derived totals, personal ownership and lossless migration guards.
+
+- Added personal stock investments with a required symbol and whole share count, optional unit purchase price and notes. Total cost is derived exactly as a decimal string; clients cannot submit a stock total or gold fields. Existing gold records are preserved; run Alembic upgrade head.
 
 - Added a private per-user investment fund with gold quantities precise to 0.001 grams, optional whole-toman purchase prices and notes, idempotent creation and paginated history. Isolated investments schema; run Alembic upgrade head. Family cash balances remain unchanged.
 

@@ -179,3 +179,24 @@ positive whole-toman amounts up to 1,000,000,000,000. No price is inferred autom
 Creation is idempotent per user/request UUID; history is paginated with `offset` (50 per page).
 Investments do not change income, expenses or family cash balances. Apply `alembic upgrade head`
 before running the new API. Downgrading this migration removes all investment records.
+
+
+Stock investments use `kind: "stock"`, `symbol` (trimmed, 1–40 characters) and
+`shares` (whole count, 1–1,000,000,000). Optional `unit_price_toman` and description
+follow the gold rules. Stock input rejects `grams` and `total_price_toman`.
+Responses include `symbol`, `shares` and `calculated_total_toman`: an exact decimal
+string of shares × unit price, or null when no price was supplied. Stock records
+store no total price; gold fields and behavior remain unchanged. The stock migration
+preserves existing entries and refuses downgrade while stock records exist, avoiding
+silent data loss. Ownership remains personal, with no effect on family balances.
+
+
+Additional personal investment types: `silver` requires `grams` (same precision as gold).
+`crypto` requires `symbol` and decimal-string `quantity` (up to 18 decimal places);
+`currency` requires currency name/code in `symbol` and decimal-string `quantity` (up to 2 decimals).
+`bond` requires instrument name/code in `symbol` and strict integer `quantity`.
+Quantities are positive and capped at 1,000,000,000, except silver's 1,000,000 grams.
+Optional unit prices remain whole tomans. These types reject input total prices;
+`calculated_total_toman` is derived with exact decimal arithmetic when a unit price exists.
+No market-price lookup, interest accrual or currency conversion is performed.
+Apply Alembic head; downgrade refuses to discard any of the new investment types.

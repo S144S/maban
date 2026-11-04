@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.13.0`. No frontend release has been published.
+Current development version: `0.14.0`. No frontend release has been published.
 
 ### Added
+
+- Extended investment selection with silver, crypto, currency and bonds, with type-specific labels, identifiers and quantities. Unit purchase price and notes are optional; only the existing gold form exposes a total-price input. Currency selection offers USD, EUR, CNY and IQD with Persian labels.
+
+- Added gold/stock selection in the investment sheet. Stock entries request symbol, whole share count, optional per-share price in tomans and notes, without a total-price input.
 
 - Replaced the investment placeholder with a personal gold entry bottom sheet, supporting Persian/Arabic digits, decimal grams, optional purchase prices and notes, validation, save feedback and retry protection. Purchase price labels use per-gram and total wording with toman examples; dot-separated thousands are accepted.
 

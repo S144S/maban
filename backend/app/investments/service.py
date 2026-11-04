@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from decimal import Decimal, localcontext
 from uuid import uuid4
 
 from sqlalchemy import func, select
@@ -19,7 +20,16 @@ class Investments:
 
     @staticmethod
     def view(row):
-        return {"id": str(row.id), "kind": row.kind, "grams": str(row.grams),
+        amount = row.shares if row.kind == "stock" else row.grams if row.kind == "silver" else row.quantity
+        total = None
+        if amount is not None and row.unit_price_toman is not None:
+            with localcontext() as context:
+                context.prec = 60
+                total = format(Decimal(amount) * row.unit_price_toman, "f")
+        return {"id": str(row.id), "kind": row.kind, "grams": str(row.grams) if row.grams is not None else None,
+                "symbol": row.symbol, "shares": row.shares,
+                "quantity": format(row.quantity, "f") if row.quantity is not None else None,
+                "calculated_total_toman": total,
                 "unit_price_toman": row.unit_price_toman, "total_price_toman": row.total_price_toman,
                 "description": row.description, "created_at": row.created_at.isoformat()}
 
