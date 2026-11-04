@@ -1,6 +1,7 @@
-import { IncomeInbox } from "../income/IncomeInbox";
+import { SquirrelFamily } from "./SquirrelFamily";
+import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Users, UserPlus, Plus, Copy, Mail, ShieldCheck } from "lucide-react";
+import { Users, UserPlus, Plus, Copy, Mail, Trash2, Check } from "lucide-react";
 import { AccountAvatar } from "@/components/AccountAvatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,7 +9,7 @@ import { api, ApiError, errorMessage } from "@/lib/http";
 import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import type { User } from "../auth/api";
 import { authHref } from "../auth/navigation";
-import { accessLabels, relationships, invitationStatus, type Family, type Member, type Invitation, type Relationship } from "./api";
+import { accessLabels, relationships, invitationStatus, type Family, type Member, type Invitation } from "./api";
 import "../auth/auth.css";
 import "../auth/account.css";
 import "./families.css";
@@ -79,29 +80,38 @@ export function FamiliesPage({ user }: { user: User }) {
   function open(next: "create" | "invite") { setModalError(""); setLink(""); setMessage(""); setModal(next); }
   return <main className="account-shell family-shell family-with-nav" dir="rtl">
     <header className="account-header"><a href="/dashboard" aria-label="مابان، داشبورد"><ReferenceArtwork variant="brand" /></a><a className="family-account" href="/account" aria-label="حساب کاربری" title="حساب کاربری"><AccountAvatar /></a></header>
-    <div className="family-page-heading"><h1>خانوادهٔ شما</h1><p>کنار هم، حساب‌وکتاب خونه ساده‌تره.</p></div>
+    <div className="family-page-heading"><h1>خانواده‌های من</h1><p>کنار هم، همه چی آسون‌تره <span aria-hidden="true">😊❤️</span></p></div>
     {error && <div className="family-error" role="alert"><p className="auth-error">{error}</p><Button variant="outline" disabled={busy} onClick={() => setReload(n => n + 1)}>تلاش دوباره</Button></div>}
     {message && <p role="status" className="auth-feedback">{message}</p>}
     {loading ? <p role="status">در حال دریافت خانواده‌ها…</p> : <>
-      {families.length === 0 && !error && <section className="account-card family-empty"><span className="family-empty-art" aria-hidden="true"><Users size={64} strokeWidth={1.5} /></span><h2>جای عزیزانتون اینجاست</h2><p>یه خانواده بسازین و همسر، فرزند یا دوستتون رو با لینک دعوت کنین.</p><Button disabled={busy} onClick={() => open("create")}><Plus aria-hidden="true" />ساخت خانواده</Button></section>}
+      {families.length === 0 && !error && <section className="account-card family-empty"><span className="family-empty-art" aria-hidden="true"><SquirrelFamily /></span><h2>جای عزیزانتون اینجاست</h2><p>یه خانواده بسازین و همسر، فرزند یا دوستتون رو با لینک دعوت کنین.</p><Button disabled={busy} onClick={() => open("create")}><Plus aria-hidden="true" />ساخت خانواده</Button></section>}
       {canCreate && families.length > 0 && !error && <Button disabled={busy} onClick={() => open("create")}><Plus size={18} aria-hidden="true" />ساخت خانواده</Button>}
-      {families.length === 0 && !error && <aside className="family-invite-note"><Mail size={22} aria-hidden="true" /><div><strong>به خانواده دعوت شدین؟</strong><p>لینکی که براتون فرستادن رو باز کنین و به خانواده بپیوندین.</p></div></aside>}
-      {families.length > 1 && <div className="auth-field"><label htmlFor="family-select">انتخاب خانواده</label><select id="family-select" value={selected} disabled={busy} onChange={e => { setError(""); setSelected(e.target.value); }}>{families.map(f => <option value={f.id} key={f.id}>{f.name}</option>)}</select></div>}
-      {detailLoading && <p role="status">در حال دریافت اعضا…</p>}
-      {detail && <>
-        <IncomeInbox key={detail.family.id} familyId={detail.family.id} members={detail.members} canWrite={Boolean(own)} userId={user.id} />
-        <section className="account-card family-member-card"><div className="family-overview"><span className="family-symbol" aria-hidden="true"><Users size={28} /></span><div><p className="family-eyebrow">خانوادهٔ ما</p><h2>{detail.family.name}</h2></div><span className="family-count">{detail.members.length.toLocaleString("fa-IR")} عضو</span></div><div className="family-section-heading"><h3>اعضای خانواده</h3><span className="family-private"><ShieldCheck size={16} aria-hidden="true" />فقط اعضا</span></div>
+      {families.length > 0 && <section className="family-picker" aria-label="انتخاب خانواده">
+        <div className="family-section-heading"><h2>خانواده‌های شما</h2></div>
+        <ul className="family-picker-list">{families.map(family => <li key={family.id} className="family-combined-card">
+          <button type="button" className="family-picker-card" aria-expanded={selected === family.id} aria-controls={`family-members-${family.id}`} disabled={busy} onClick={() => { if (selected !== family.id) { setDetail(null); setInvites([]); setDetailLoading(true); setMessage(""); setError(""); setSelected(family.id); } }}>
+            <span className="family-avatar" aria-hidden="true"><Users size={22} /></span>
+            <span className="family-picker-copy"><strong>{family.name}</strong><span>{family.owner_id === user.id ? "سازندهٔ خانواده" : "عضو خانواده"}</span></span>
+            {selected === family.id && <span className="family-picker-selected"><Check size={18} aria-hidden="true" /><span>انتخاب‌شده</span></span>}
+          </button>
+          <div id={`family-members-${family.id}`} hidden={selected !== family.id}>
+            {selected === family.id && detailLoading && <p className="family-card-loading" role="status">در حال دریافت اعضا…</p>}
+            {detail?.family.id === family.id && <div className="family-card-members"><div className="family-section-heading"><h3>اعضای خانواده</h3></div>
           <ul className="family-members">{detail.members.map(member => <li key={member.user_id}><span className="family-avatar" aria-hidden="true">{Array.from(member.name)[0]}</span><div><strong>{member.name}{member.user_id === user.id ? " (شما)" : ""}</strong><p className="auth-hint">{member.user_id === detail.family.owner_id ? "سازندهٔ خانواده" : member.relationship ? relationships[member.relationship] : "عضو"} · {accessLabels[member.access]}</p></div></li>)}</ul>
           {own ? <Button disabled={busy} onClick={() => open("invite")}><UserPlus size={18} aria-hidden="true" />دعوت عضو جدید</Button> : <p className="auth-hint">دسترسی شما «فقط دیدن» است؛ دعوت اعضا با افراد دارای دسترسی «همه‌چی» است.</p>}
-        </section>
+        </div>}
+          </div>
+        </li>)}</ul>
+      </section>}
+      {detail && <>
         {own && <section className="account-card family-invites-card"><div className="family-section-heading"><h2>دعوت‌ها</h2><Mail size={22} aria-hidden="true" /></div><p className="auth-hint">هر لینک برای یک نفره و ۷ روز اعتبار داره. فقط برای فرد موردنظرتون بفرستین.</p>
-          {invites.length ? <ul className="account-list">{invites.map(invite => <li className="family-invitation" key={invite.id}><div><strong>دعوت {relationships[invite.relationship]}</strong><p className="auth-hint">{accessLabels[invite.access]} · {invitationStatus[invite.status]} · اعتبار تا {new Date(invite.expires_at).toLocaleDateString("fa-IR")}</p></div>{invite.status === "pending" && <Button variant="outline" disabled={busy} aria-label={`لغو دعوت ${relationships[invite.relationship]}`} onClick={() => void perform(async () => { await api(`/families/${selected}/invitations/${invite.id}`, {method: "DELETE"}); setInvites(current => current.map(i => i.id === invite.id ? {...i, status: "revoked"} : i)); setMessage("دعوت لغو شد و لینک دیگه قابل استفاده نیست."); })}>لغو دعوت</Button>}</li>)}</ul> : <p className="family-no-invites">هنوز دعوتی نفرستادین؛ از «دعوت عضو جدید» شروع کنین.</p>}
+          {invites.length ? <ul className="account-list">{invites.map(invite => <li className="family-invitation" key={invite.id}><div><strong>دعوت {relationships[invite.relationship]}</strong><p className="auth-hint">{accessLabels[invite.access]} · {invitationStatus[invite.status]} · اعتبار تا {new Date(invite.expires_at).toLocaleDateString("fa-IR")}</p></div>{invite.status === "pending" && <Button variant="outline" size="icon" className="family-revoke" title="لغو دعوت" disabled={busy} aria-label={`لغو دعوت ${relationships[invite.relationship]}`} onClick={() => void perform(async () => { await api(`/families/${selected}/invitations/${invite.id}`, {method: "DELETE"}); setInvites(current => current.map(i => i.id === invite.id ? {...i, status: "revoked"} : i)); setMessage("دعوت لغو شد و لینک دیگه قابل استفاده نیست."); })}><Trash2 size={20} aria-hidden="true" /></Button>}</li>)}</ul> : <p className="family-no-invites">هنوز دعوتی نفرستادین؛ از «دعوت عضو جدید» شروع کنین.</p>}
         </section>}
       </>}
     </>}
     <Dialog open={modal !== null} onOpenChange={value => { if (!busy && !value) setModal(null); }}><DialogContent className="family-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>{modal === "create" ? "ساخت خانواده" : "دعوت عضو جدید"}</DialogTitle><DialogDescription>{modal === "create" ? "یه نام برای خانواده انتخاب کنین. شما سازنده و مدیر دعوت‌ها می‌شین." : "نسبت فرد دعوت‌شده با شما رو انتخاب کنین. دسترسی عضو رو جدا از نسبت انتخاب کنین."}</DialogDescription></DialogHeader>
       {link ? <div className="auth-form"><p>لینک آماده‌ست؛ کپی کنین و برای فرد موردنظرتون بفرستین.</p><div className="auth-field"><label htmlFor="invitation-link">لینک دعوت</label><input id="invitation-link" value={link} readOnly dir="ltr" onFocus={e => e.target.select()} /></div><Button onClick={() => void perform(async () => { try { await navigator.clipboard.writeText(link); setMessage("لینک کپی شد."); } catch { setModalError("کپی خودکار انجام نشد؛ لینک رو انتخاب و دستی کپی کنین."); } }, true)} disabled={busy}><Copy size={18} aria-hidden="true" />کپی لینک دعوت</Button><p className="auth-hint">لینک فقط همین‌بار نمایش داده می‌شه. اگه گمش کردین، دعوت قبلی رو لغو و لینک تازه بسازین.</p>{message && <p role="status">{message}</p>}</div>
-      : <form onSubmit={submit} className="auth-form"><fieldset className="auth-fields" disabled={busy}>{modal === "create" ? <div className="auth-field"><label htmlFor="family-name">نام خانواده</label><input id="family-name" name="name" required maxLength={80} placeholder="مثلاً خانوادهٔ ما" /></div> : <><div className="auth-field"><label htmlFor="relationship">نسبت با شما</label><select id="relationship" name="relationship" defaultValue="spouse">{(Object.keys(relationships) as Relationship[]).map(role => <option key={role} value={role}>{relationships[role]}</option>)}</select></div><div className="auth-field"><label htmlFor="member-access">دسترسی عضو</label><select id="member-access" name="access" defaultValue="view"><option value="view">فقط دیدن</option><option value="full">همه‌چی</option></select><p className="auth-hint">«همه‌چی» اجازهٔ مدیریت خانواده و دعوت اعضا رو می‌ده. «فقط دیدن» امکان تغییر اطلاعات خانواده رو نداره.</p></div></>}<Button type="submit">{busy ? "در حال ذخیره…" : modal === "create" ? "ساخت خانواده" : "ساخت لینک دعوت"}</Button></fieldset></form>}
+      : <form onSubmit={submit} className="auth-form"><fieldset className="auth-fields" disabled={busy}>{modal === "create" ? <div className="auth-field"><label htmlFor="family-name">نام خانواده</label><input id="family-name" name="name" required maxLength={80} placeholder="مثلاً خانوادهٔ ما" /></div> : <><div className="auth-field"><label htmlFor="relationship">نسبت با شما</label><Select id="relationship" name="relationship" defaultValue="spouse" disabled={busy} options={Object.entries(relationships).map(([value, label]) => ({ value, label }))} /></div><div className="auth-field"><label htmlFor="member-access">دسترسی عضو</label><Select id="member-access" name="access" defaultValue="view" disabled={busy} options={[{ value: "view", label: "فقط دیدن" }, { value: "full", label: "همه‌چی" }]} /><p className="auth-hint">«همه‌چی» اجازهٔ مدیریت خانواده و دعوت اعضا رو می‌ده. «فقط دیدن» امکان تغییر اطلاعات خانواده رو نداره.</p></div></>}<Button type="submit">{busy ? "در حال ذخیره…" : modal === "create" ? "ساخت خانواده" : "ساخت لینک دعوت"}</Button></fieldset></form>}
       {modalError && <p role="alert" className="auth-error">{modalError}</p>}
     </DialogContent></Dialog>
   </main>;

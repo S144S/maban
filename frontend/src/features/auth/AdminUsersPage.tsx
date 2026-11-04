@@ -1,3 +1,4 @@
+import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,8 +49,8 @@ export function AdminUsersPage({ user }: { user: User }) {
     </>}
     <Dialog open={!!selected} onOpenChange={open => { if (!open && !busy) setSelected(null); }}><DialogContent dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>ویرایش دسترسی کاربر</DialogTitle><DialogDescription>تغییر نقش یا وضعیت، نشست‌های کاربر رو می‌بنده. مدیر به فهرست کاربران و تغییر دسترسی اون‌ها دسترسی داره. حساب غیرفعال نمی‌تونه وارد بشه.</DialogDescription></DialogHeader>
       {selected && <form className="auth-form" onSubmit={save}><fieldset className="auth-fields" disabled={busy}><p>{selected.first_name} {selected.last_name} · <bdi>{selected.phone}</bdi></p>
-        <div className="auth-field"><label htmlFor="user-role">نقش</label><select id="user-role" name="role" defaultValue={selected.role}><option value="user">کاربر</option><option value="admin">مدیر</option></select></div>
-        <div className="auth-field"><label htmlFor="user-active">وضعیت</label><select id="user-active" name="active" defaultValue={String(selected.active)}><option value="true">فعال</option><option value="false">غیرفعال</option></select></div>
+        <div className="auth-field"><label htmlFor="user-role">نقش</label><Select id="user-role" name="role" defaultValue={selected.role} disabled={busy} options={[{ value: "user", label: "کاربر" }, { value: "admin", label: "مدیر" }]} /></div>
+        <div className="auth-field"><label htmlFor="user-active">وضعیت</label><Select id="user-active" name="active" defaultValue={String(selected.active)} disabled={busy} options={[{ value: "true", label: "فعال" }, { value: "false", label: "غیرفعال" }]} /></div>
         <Button type="submit">ذخیرهٔ دسترسی</Button>{saveError && <p role="alert" className="auth-error">{saveError}</p>}
       </fieldset></form>}
     </DialogContent></Dialog>

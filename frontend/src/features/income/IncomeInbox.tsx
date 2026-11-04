@@ -1,3 +1,4 @@
+import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Plus, Inbox, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,8 +64,8 @@ export function IncomeInbox({ familyId, members, canWrite, userId }: { familyId:
     <Dialog open={open} onOpenChange={value => { if (!busy) setOpen(value); }}><DialogContent className="family-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>ثبت درآمد خانواده</DialogTitle><DialogDescription>مبلغ رو به تومان وارد کنین. این ورودی برای اعضای خانواده نمایش داده می‌شه.</DialogDescription></DialogHeader>
       <form className="auth-form" onSubmit={submit}><fieldset className="auth-fields" disabled={busy}>
         <div className="auth-field"><label htmlFor="income-amount">مبلغ (تومان)</label><input id="income-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} placeholder="مثلاً ۱۵٬۰۰۰٬۰۰۰" /></div>
-        <div className="auth-field"><label htmlFor="income-source">منبع درآمد</label><select id="income-source" name="source">{Object.entries(sources).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
-        <div className="auth-field"><label htmlFor="income-member">از جانب</label><select id="income-member" name="member" required defaultValue={userId}>{members.map(member => <option key={member.user_id} value={member.user_id}>{member.name}</option>)}</select></div>
+        <div className="auth-field"><label htmlFor="income-source">منبع درآمد</label><Select id="income-source" name="source" disabled={busy} options={Object.entries(sources).map(([value, label]) => ({ value, label }))} /></div>
+        <div className="auth-field"><label htmlFor="income-member">از جانب</label><Select id="income-member" name="member" required defaultValue={userId} disabled={busy} options={members.map(member => ({ value: member.user_id, label: member.name }))} /></div>
         <div className="auth-field"><label htmlFor="income-description">توضیح (اختیاری)</label><textarea id="income-description" name="description" maxLength={500} rows={3} /></div>
         {formError && <p role="alert" className="auth-error">{formError}</p>}
         <Button type="submit">{busy ? "در حال ثبت…" : "ثبت درآمد"}</Button>

@@ -1,3 +1,4 @@
+import { Select } from "@/components/ui/select";
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpLeft, House, Wallet, Plus, ShoppingBasket, Coffee, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ export function DashboardPage({ user, page, onNavigate }: { user: User; page: Pa
       <p className="dash-status" role="status">{notice}</p>
       {page !== "transactions" && budgetSection}
       {page !== "budgets" && <section className="dash-section" aria-labelledby="transactions-heading"><div className="dash-section-heading"><h2 id="transactions-heading">{page === "home" ? "آخرین تراکنش‌ها" : "فهرست تراکنش‌ها"}</h2>{page === "home" && <Button variant="ghost" onClick={() => navigate("transactions")}>همه</Button>}</div>
-        {page === "transactions" && <div className="dash-form dash-filters"><label htmlFor="transaction-search">جست‌وجوی عنوان<input id="transaction-search" type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="مثلاً خرید خانه" /></label><label htmlFor="transaction-filter">نوع تراکنش<select id="transaction-filter" value={filter} onChange={e => setFilter(e.target.value)}><option value="all">همهٔ تراکنش‌ها</option><option value="expense">هزینه‌ها</option><option value="income">درآمدها</option></select></label></div>}
+        {page === "transactions" && <div className="dash-form dash-filters"><label htmlFor="transaction-search">جست‌وجوی عنوان<input id="transaction-search" type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="مثلاً خرید خانه" /></label><label htmlFor="transaction-filter">نوع تراکنش<Select id="transaction-filter" value={filter} onValueChange={setFilter} options={[{ value: "all", label: "همهٔ تراکنش‌ها" }, { value: "expense", label: "هزینه‌ها" }, { value: "income", label: "درآمدها" }]} /></label></div>}
         <ul className="dash-transactions">{(page === "home" ? transactions.slice(0, 3) : rows).map(t => { const Icon = t.kind === "income" ? Wallet : icons[t.category]; return <li key={t.id}><span className={`dash-transaction-icon ${t.kind === "income" ? "dash-income" : ""}`}><Icon size={20} aria-hidden="true" /></span><div className="dash-transaction-copy"><strong>{t.title}</strong><span>{t.date} · {t.kind === "income" ? "درآمد" : "هزینه"}</span></div><div className="dash-transaction-money"><bdi>{money(t.amount)}</bdi><small>تومان</small></div></li>; })}</ul>{page === "transactions" && rows.length === 0 && <p className="dash-empty">تراکنشی پیدا نشد؛ جست‌وجو یا فیلتر رو تغییر بدین.</p>}
       </section>}
       <p className="dash-end">قدم‌های کوچیک، حساب‌وکتاب روشن‌تر.</p>

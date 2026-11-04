@@ -25,10 +25,6 @@
 .family-empty-art { display: grid; place-items: center; width: 112px; height: 112px; margin: 0 auto 4px; border-radius: 50%; background: var(--illustration-paper); color: var(--foreground); }
 .family-empty p { font-size: 14px; line-height: 1.9; }
 .family-with-nav [data-slot="button"], .family-sheet [data-slot="button"] { min-height: 48px; white-space: normal; text-align: center; }
-.family-invite-note { display: flex; gap: 12px; align-items: flex-start; padding: 20px; border-radius: 24px; background: var(--scene-peach); }
-.family-invite-note > svg { flex-shrink: 0; margin-top: 3px; }
-.family-invite-note strong { font-size: 15px; }
-.family-invite-note p { margin-top: 6px; font-size: 14px; line-height: 1.9; }
 .family-overview { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 20px; margin: -20px -20px 4px; border-radius: 24px 24px 0 0; background: var(--scene-lime); }
 .family-overview > div { min-width: 0; flex: 1; }
 .family-overview .family-symbol { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: var(--illustration-paper); }
@@ -45,3 +41,28 @@
 .family-no-invites { padding: 16px; border-radius: 18px; background: var(--illustration-paper); font-size: 14px; }
 .family-error { display: grid; gap: 12px; padding: 16px; border-radius: 18px; background: var(--error-bg); }
 @media (max-width: 360px) { .family-with-nav { padding-inline: 18px; } .family-with-nav > .account-header { margin-inline: -18px; padding-inline: 18px; } }
+
+.family-picker { display: grid; gap: 12px; }
+.family-picker h2 { font-size: 16px; }
+.family-picker-list { display: grid; gap: 12px; padding: 0; list-style: none; }
+.family-picker-card { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 80px; padding: 16px; border: 1px solid var(--input); border-radius: 24px; background: var(--card); color: var(--card-foreground); text-align: start; cursor: pointer; scroll-margin-block: 24px 130px; }
+.family-picker-card:hover { background: var(--accent); color: var(--accent-foreground); }
+.family-picker-card[aria-expanded="true"] { background: var(--accent); color: var(--accent-foreground); border-color: var(--primary); }
+.family-picker-card:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.family-picker-card:disabled { cursor: default; }
+.family-picker-copy { display: grid; flex: 1; min-width: 0; gap: 4px; overflow-wrap: anywhere; }
+.family-picker-copy > span { font-size: 12px; }
+.family-picker-selected { display: grid; justify-items: center; gap: 4px; font-size: 10px; flex-shrink: 0; }
+
+.family-combined-card { border: 1px solid var(--input); border-radius: 24px; background: var(--card); color: var(--card-foreground); }
+.family-combined-card > .family-picker-card { border: 0; }
+.family-combined-card > .family-picker-card[aria-expanded="true"] { border-radius: 23px 23px 0 0; }
+.family-card-members { display: grid; gap: 16px; padding: 20px; }
+.family-card-loading { padding: 20px; font-size: 14px; }
+.family-combined-card .family-count { flex-shrink: 0; }
+@media (max-width: 380px) { .family-combined-card .family-picker-card { gap: 8px; padding: 12px; } .family-picker-selected > span { display: none; } }
+
+.family-empty-art { width: 180px; height: 140px; background: transparent; border-radius: 0; }
+.family-empty-art > svg { width: 100%; height: 100%; }
+.family-with-nav .family-revoke { width: 48px; height: 48px; min-height: 48px; color: var(--destructive); }
+.family-with-nav .family-revoke:hover { background: var(--error-bg); color: var(--error); }

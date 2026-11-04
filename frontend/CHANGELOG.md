@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.8.0`. No frontend release has been published.
+Current development version: `0.8.1`. No frontend release has been published.
 
 ### Added
 
@@ -15,10 +15,16 @@ Current development version: `0.8.0`. No frontend release has been published.
 
 ### Fixed
 
+- Replaced native dropdown menus across the app with shared RTL select controls, styled options, selected indicators and keyboard navigation.
+
 - Prevented full-page reloads when switching between family and dashboard tabs;
   preserve the floating navigation, in-memory views, and browser back/forward.
 
 ### Changed
+
+- Simplified family cards by removing count/privacy badges, using an accessible trash icon for invitation revocation, and adding a scalable squirrel-family empty-state illustration.
+
+- Updated the family page heading and welcome copy with decorative smile and heart emoji, removed the redundant invitation guidance card, and replaced the family dropdown with a visible list of owned and joined families, including the current selection. Combined each family selector and its member details into one card to avoid repeating the family heading. Removed the income inbox from the family page to keep it focused on family management.
 
 - Aligned family management with the dashboard theme: shared account avatar,
   consistent spacing, pastel empty/member/invitation cards, and capsule actions.
