@@ -1,0 +1,17 @@
+.maban-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-width: 0; min-height: 52px; padding: 11px 15px; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--card-foreground); font: inherit; font-size: 16px; text-align: start; cursor: pointer; }
+.maban-select-trigger > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.maban-select-trigger > svg { flex-shrink: 0; }
+.maban-select-trigger:hover:not(:disabled) { background: var(--accent); color: var(--accent-foreground); }
+.maban-select-trigger:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.maban-select-trigger:disabled { background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
+.maban-select-content { z-index: 100; width: var(--radix-select-trigger-width); max-width: calc(100vw - 24px); max-height: min(320px, var(--radix-select-content-available-height)); overflow: hidden; border: 1px solid var(--input); border-radius: 20px; background: var(--popover); color: var(--popover-foreground); font-family: var(--font-sans, bakh, sans-serif); }
+.maban-select-viewport { padding: 6px; }
+.maban-select-item { position: relative; display: flex; align-items: center; min-height: 48px; padding: 12px; padding-inline-end: 40px; border-radius: 14px; font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; outline: none; cursor: pointer; user-select: none; }
+.maban-select-item[data-state="checked"] { background: var(--muted); font-weight: 600; }
+.maban-select-item[data-highlighted] { background: var(--accent); color: var(--accent-foreground); box-shadow: inset 0 0 0 2px var(--ring); }
+.maban-select-item[data-disabled] { color: var(--muted-foreground); pointer-events: none; }
+.maban-select-check { position: absolute; inset-inline-end: 12px; display: flex; }
+.maban-select-scroll { display: flex; align-items: center; justify-content: center; min-height: 32px; background: var(--popover); }
+
+.maban-select-option-label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.maban-select-option-label svg { flex-shrink: 0; }

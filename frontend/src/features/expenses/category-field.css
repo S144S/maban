@@ -1,0 +1,12 @@
+.expense-category-field { min-width: 0; }
+.expense-category-field legend { margin-bottom: 10px; font-size: 14px; }
+.expense-category-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.dash-form .expense-category-choice { position: relative; display: block; max-width: 100%; min-width: 0; cursor: pointer; }
+.dash-form .expense-category-choice input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; opacity: 0; cursor: pointer; }
+.expense-category-chip { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--input); border-radius: 16px; background: var(--card); color: var(--card-foreground); font-size: 14px; }
+.expense-category-chip > span { min-width: 0; overflow-wrap: anywhere; }
+.expense-category-chip svg { flex-shrink: 0; }
+.expense-category-choice input:checked + .expense-category-chip { border-color: var(--primary); background: var(--accent); color: var(--accent-foreground); font-weight: 700; box-shadow: inset 0 0 0 1px var(--primary); }
+.expense-category-choice input:focus-visible + .expense-category-chip { outline: 2px solid var(--ring); outline-offset: 2px; }
+.expense-category-choice input:not(:disabled):hover + .expense-category-chip { background: var(--accent); color: var(--accent-foreground); }
+.expense-category-choice input:disabled + .expense-category-chip { background: var(--disabled); color: var(--disabled-foreground); cursor: default; }

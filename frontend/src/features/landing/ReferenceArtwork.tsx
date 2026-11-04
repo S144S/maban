@@ -1,10 +1,15 @@
-/** The supplied reference is kept intact. Only its non-interactive product art
- * and existing brand marks are framed here; all landing UI is native HTML. */
+/** Scalable brand artwork; the legacy bitmap is only used for product imagery. */
 export function ReferenceArtwork({
   variant,
 }: {
   variant: "hero" | "brand" | "symbol" | "footer-brand";
 }) {
+  if (variant !== "hero") {
+    return <span className={`reference-art reference-${variant}`} aria-hidden="true">
+      <span className="brand-mark" />
+      {variant !== "symbol" && <span className="brand-wordmark">مابان</span>}
+    </span>;
+  }
   return (
     <span className={`reference-art reference-${variant}`}>
       <img
