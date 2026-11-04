@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.4.0`. No backend release has been published.
+Current development version: `0.5.0`. No backend release has been published.
 
 ### Added
+
+- Family income inbox in its own schema with whole-toman amounts, four sources, member attribution, permission checks and idempotent creation. Run Alembic upgrade head.
 
 - Added full/view family permissions enforced on invitation management. Existing owners receive full access; existing members and invitations retain view-only access. Run Alembic upgrade head before starting the updated API.
 

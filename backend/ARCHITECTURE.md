@@ -61,8 +61,8 @@ also require code review; static import tests are not a sandbox.
 ## Families module
 
 `app/families` owns the `families` schema with `families`, `memberships` and
-`invitations` tables. Ownership is distinct from relationship: the creator
-manages invitations, while spouse/child/friend are relationship labels only.
+`invitations` tables. Ownership is distinct from relationship: members with full access
+manage invitations, while spouse/child/friend are relationship labels only.
 Each user can own one family and join others (maximum 20 memberships, 100 members
 per family). The creator has a membership with no relationship label. User IDs
 are opaque UUIDs without foreign keys into the users schema.
@@ -73,9 +73,9 @@ containing only ID and names (100 maximum), never phones or credentials.
 Dependency direction is families -> users; users does not depend on families.
 Family HTTP handlers contain no persistence queries. Composition registers the
 family router through `families.bootstrap`; migration metadata is exported by
-`families.persistence`. No external family business interface is needed yet.
+`families.persistence`. `families.public.Access` provides read/write authorization and membership validation without exposing ORM state.
 
-Invitation creation is owner-only, limited to 20 links per family per hour.
+Invitation creation requires full access, limited to 20 links per family per hour.
 Each random 256-bit token is stored as a SHA-256 digest and returned once.
 Links expire after seven days, can be revoked, and are accepted explicitly by
 an authenticated active user. Possession of a link grants its bearer the ability
@@ -91,3 +91,21 @@ paths. Family names and member names are visible only to family members; valid
 invite holders can preview the family name and their relationship after login.
 No transaction/budget data is shared by this module yet. Membership removal,
 family deletion/transfer and relationship edits are not exposed in this version.
+
+## Income module
+
+`app/income` owns `income.entries`. It depends only on the public families
+authorization interface and users identity/directory contracts. Family and user
+IDs are opaque references without cross-schema foreign keys. Full-access members
+can record income; all family members can read their family inbox. Attribution
+must refer to a current member of the same family.
+
+All monetary values in MaBan are whole tomans, never rials. Each income entry
+has a positive integer `amount_toman` (maximum 1,000,000,000,000), a source
+(`salary`, `subsidy`, `voucher`, `gift`), a member ID and optional description.
+The inbox total includes vouchers and is an income total, not a cash balance.
+Totals are serialized as decimal strings to preserve precision in JavaScript.
+GET `/api/families/{id}/income` returns up to 50 entries with offset pagination.
+POST requires a UUID `request_id`: identical retries return the original entry;
+reusing a key with different data returns 409. No edit/delete endpoints exist yet.
+Run Alembic upgrade head to create the schema.

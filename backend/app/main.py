@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.config import Settings
 from app.database import database
 from app.families.bootstrap import install as install_families
+from app.income.bootstrap import install as install_income
 from app.users.bootstrap import install
 
 
@@ -24,6 +25,7 @@ def create_app(settings: Settings | None = None, sms=None):
     app.state.settings, app.state.engine, app.state.sessions = settings, engine, sessions
     install(app, settings, sms)
     install_families(app)
+    install_income(app)
 
     @app.middleware("http")
     async def security(request: Request, call_next):

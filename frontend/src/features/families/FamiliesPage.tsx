@@ -1,3 +1,4 @@
+import { IncomeInbox } from "../income/IncomeInbox";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Users, UserPlus, Plus, Copy, Mail, ShieldCheck } from "lucide-react";
 import { AccountAvatar } from "@/components/AccountAvatar";
@@ -88,6 +89,7 @@ export function FamiliesPage({ user }: { user: User }) {
       {families.length > 1 && <div className="auth-field"><label htmlFor="family-select">انتخاب خانواده</label><select id="family-select" value={selected} disabled={busy} onChange={e => { setError(""); setSelected(e.target.value); }}>{families.map(f => <option value={f.id} key={f.id}>{f.name}</option>)}</select></div>}
       {detailLoading && <p role="status">در حال دریافت اعضا…</p>}
       {detail && <>
+        <IncomeInbox key={detail.family.id} familyId={detail.family.id} members={detail.members} canWrite={Boolean(own)} userId={user.id} />
         <section className="account-card family-member-card"><div className="family-overview"><span className="family-symbol" aria-hidden="true"><Users size={28} /></span><div><p className="family-eyebrow">خانوادهٔ ما</p><h2>{detail.family.name}</h2></div><span className="family-count">{detail.members.length.toLocaleString("fa-IR")} عضو</span></div><div className="family-section-heading"><h3>اعضای خانواده</h3><span className="family-private"><ShieldCheck size={16} aria-hidden="true" />فقط اعضا</span></div>
           <ul className="family-members">{detail.members.map(member => <li key={member.user_id}><span className="family-avatar" aria-hidden="true">{Array.from(member.name)[0]}</span><div><strong>{member.name}{member.user_id === user.id ? " (شما)" : ""}</strong><p className="auth-hint">{member.user_id === detail.family.owner_id ? "سازندهٔ خانواده" : member.relationship ? relationships[member.relationship] : "عضو"} · {accessLabels[member.access]}</p></div></li>)}</ul>
           {own ? <Button disabled={busy} onClick={() => open("invite")}><UserPlus size={18} aria-hidden="true" />دعوت عضو جدید</Button> : <p className="auth-hint">دسترسی شما «فقط دیدن» است؛ دعوت اعضا با افراد دارای دسترسی «همه‌چی» است.</p>}

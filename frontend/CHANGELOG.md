@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.7.0`. No frontend release has been published.
+Current development version: `0.8.0`. No frontend release has been published.
 
 ### Added
+
+- Family income inbox with toman totals, paginated history and a bottom-sheet form for full-access members.
 
 - Added full/view access selection on family invitations and permission labels on members and invitation previews.
 

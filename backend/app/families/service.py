@@ -79,7 +79,7 @@ class Families:
         if not family or not member:
             raise FamilyError("خانواده پیدا نشد یا بهش دسترسی ندارین.", 404)
         if manage and member.access != "full":
-            raise FamilyError("برای مدیریت دعوت‌ها به دسترسی «همه‌چی» نیاز دارین.", 403)
+            raise FamilyError("برای تغییر اطلاعات خانواده به دسترسی «همه‌چی» نیاز دارین.", 403)
         return family
 
     def detail(self, family_id, user_id):
