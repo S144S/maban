@@ -15,6 +15,7 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     throw new ApiError("ارتباط با سرور برقرار نشد؛ اتصال رو بررسی و دوباره امتحان کنین.", 0);
   }
+  if (response.status === 204) return undefined as T;
   const data = await response.json().catch(() => null);
   if (!response.ok) throw new ApiError(typeof data?.detail === "string" ? data.detail : "درخواست انجام نشد؛ دوباره امتحان کنین.", response.status, Number(response.headers.get("Retry-After")) || 0);
   if (!data) throw new ApiError("پاسخ سرور معتبر نیست؛ دوباره امتحان کنین.", 502);

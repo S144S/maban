@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.11.1`. No frontend release has been published.
+Current development version: `0.12.0`. No frontend release has been published.
 
 ### Added
+
+- Added account deletion with confirmation and full-access authorization. Deleted accounts disappear from active choices while historical income references and totals remain unchanged. The delete action is hidden for view-only members.
+
+- Added accessible account edit actions and a prefilled bottom sheet to rename family accounts, with validation and save feedback.
 
 - Added investment and asset buttons to the single-row mobile home actions using stable action classes so dialog triggers retain their styling, with icons above readable 12px wrapping labels and distinct muted theme colors, with bottom sheets explicitly indicating these sections are not yet available.
 

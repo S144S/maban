@@ -155,3 +155,15 @@ it against the same family. Responses include `location_id` and the recorded
 `location_name`. Existing entries remain unassigned; legacy API clients may
 omit the field. Locations do not change amounts, currency or balance calculations.
 Run `alembic upgrade head` before starting the updated API.
+
+PATCH `/api/families/{family_id}/money-locations/{location_id}` renames an account
+using `{ "name": "..." }`. Full access is required; duplicate names return 409,
+invalid names 422, and missing/foreign accounts 404. The ID remains unchanged.
+Previous income retains its original name snapshot; future income uses the new
+name. This update does not require a database migration.
+
+DELETE `/api/families/{family_id}/money-locations/{location_id}` requires full
+access and returns 204 (including retries). It archives the account, retaining
+its ID/name and all income links. Active lists and new income exclude archived
+accounts. Names stay reserved. Run `alembic upgrade head` before restarting.
+Downgrading the archive migration restores archived accounts to active status.

@@ -20,3 +20,4 @@ class MoneyLocation(Base):
     created_by: Mapped[UUID] = mapped_column()
     request_id: Mapped[UUID] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

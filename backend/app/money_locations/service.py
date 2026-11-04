@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.money_locations.models import MoneyLocation
@@ -28,7 +29,7 @@ class Locations:
 
     def list(self, family_id, user_id):
         self.access.authorize(family_id, user_id)
-        rows = self.db.scalars(select(MoneyLocation).where(MoneyLocation.family_id == family_id)
+        rows = self.db.scalars(select(MoneyLocation).where(MoneyLocation.family_id == family_id, MoneyLocation.deleted_at.is_(None))
                                .order_by(MoneyLocation.created_at, MoneyLocation.id)).all()
         return {"locations": [self.view(row) for row in rows]}
 
@@ -42,6 +43,8 @@ class Locations:
             MoneyLocation.family_id == family_id, MoneyLocation.request_id == data.request_id))
         if row is None:
             raise LocationError("حسابی با این نام از قبل وجود داره؛ نام دیگه‌ای انتخاب کنین.")
+        if row.deleted_at is not None:
+            raise LocationError("این حساب حذف شده؛ برای ساخت حساب جدید، درخواست تازه‌ای ثبت کنین.")
         if row.name != data.name or row.created_by != user_id:
             raise LocationError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
         return self.view(row)
@@ -49,7 +52,35 @@ class Locations:
     def require(self, family_id, user_id, location_id):
         self.access.authorize(family_id, user_id)
         row = self.db.scalar(select(MoneyLocation).where(
-            MoneyLocation.family_id == family_id, MoneyLocation.id == location_id))
+            MoneyLocation.family_id == family_id, MoneyLocation.deleted_at.is_(None), MoneyLocation.id == location_id))
         if row is None:
             raise LocationError("حساب در این خانواده پیدا نشد؛ دوباره انتخاب کنین.", 404)
         return row.name
+
+    def rename(self, family_id, user_id, location_id, data):
+        self.access.authorize(family_id, user_id, write=True)
+        row = self.db.scalar(select(MoneyLocation).where(
+            MoneyLocation.family_id == family_id, MoneyLocation.deleted_at.is_(None), MoneyLocation.id == location_id
+        ).with_for_update())
+        if row is None:
+            raise LocationError("حساب در این خانواده پیدا نشد؛ دوباره انتخاب کنین.", 404)
+        try:
+            with self.db.begin_nested():
+                row.name = data.name
+                self.db.flush()
+        except IntegrityError as error:
+            if getattr(getattr(error.orig, "diag", None), "constraint_name", None) != "location_family_name":
+                raise
+            raise LocationError("حسابی با این نام از قبل وجود داره؛ نام دیگه‌ای انتخاب کنین.") from error
+        return self.view(row)
+
+    def delete(self, family_id, user_id, location_id):
+        self.access.authorize(family_id, user_id, write=True)
+        row = self.db.scalar(select(MoneyLocation).where(
+            MoneyLocation.family_id == family_id, MoneyLocation.id == location_id
+        ).with_for_update())
+        if row is None:
+            raise LocationError("حساب در این خانواده پیدا نشد.", 404)
+        if row.deleted_at is None:
+            row.deleted_at = datetime.now(UTC)
+            self.db.flush()

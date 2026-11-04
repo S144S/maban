@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.7.0`. No backend release has been published.
+Current development version: `0.8.0`. No backend release has been published.
 
 ### Added
+
+- Added account deletion with confirmation and full-access authorization. Deleted accounts disappear from active choices while historical income references and totals remain unchanged. Run Alembic upgrade head. Deleted account names stay reserved; existing income retries remain idempotent.
+
+- Added family-scoped account renaming for full-access members, with duplicate-name protection. Income retains its recorded name snapshot and identical income retries remain valid after a rename. No migration required.
 
 - Family-scoped money storage locations (presented as accounts in user-facing messages) with full/view permissions, idempotent creation and income attribution through a public module interface. Run Alembic upgrade head; existing income remains unassigned and legacy API clients may omit location_id.
 

@@ -43,19 +43,25 @@ class Income:
     def create(self, family_id, user_id, data):
         self.access.authorize(family_id, user_id, write=True)
         self.access.require_member(family_id, data.from_member_id)
-        location_name = (self.locations.require(family_id, user_id, data.location_id)
-                         if data.location_id else None)
         values = {
             "family_id": family_id,
             "amount_toman": data.amount_toman,
             "source": data.source,
             "from_member_id": data.from_member_id,
             "location_id": data.location_id,
-            "location_name": location_name,
             "description": data.description or None,
             "created_by": user_id,
             "request_id": data.request_id,
         }
+        existing = self.db.scalar(select(IncomeEntry).where(
+            IncomeEntry.family_id == family_id, IncomeEntry.request_id == data.request_id
+        ))
+        if existing is not None:
+            if any(getattr(existing, key) != value for key, value in values.items()):
+                raise IncomeError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
+            return self.view(existing)
+        values["location_name"] = (self.locations.require(family_id, user_id, data.location_id)
+                                   if data.location_id else None)
         self.db.execute(
             insert(IncomeEntry)
             .values(id=uuid4(), created_at=datetime.now(UTC), **values)
@@ -66,7 +72,8 @@ class Income:
                 IncomeEntry.family_id == family_id, IncomeEntry.request_id == data.request_id
             )
         )
-        if any(getattr(row, key) != value for key, value in values.items()):
+        # The recorded name is a historical snapshot, not part of the client request.
+        if any(getattr(row, key) != value for key, value in values.items() if key != "location_name"):
             raise IncomeError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
         return self.view(row)
 

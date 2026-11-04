@@ -13,7 +13,7 @@
 .management-list li { display: flex; align-items: center; gap: 12px; padding-block: 16px; min-width: 0; }
 .management-list li + li { border-top: 1px solid var(--border); }
 .management-account-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: var(--scene-peach); color: var(--foreground); }
-.management-account-copy { min-width: 0; font-size: 16px; overflow-wrap: anywhere; }
+.management-account-copy { flex: 1; min-width: 0; font-size: 16px; overflow-wrap: anywhere; }
 .management-add { width: 100%; }
 .management-empty { display: grid; justify-items: center; gap: 12px; padding-block: 16px; text-align: center; }
 .management-empty-icon { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 24px; background: var(--muted); color: var(--foreground); }
@@ -23,3 +23,8 @@
 .management-notice:empty { display: none; }
 .management-locations [data-slot="button"], .management-sheet [data-slot="button"] { min-height: 48px; white-space: normal; text-align: center; }
 @media (max-width: 360px) { .management-body, .management-overview { padding: 16px; } }
+
+.management-delete { color: var(--destructive); }
+.management-delete:hover { background: var(--error-bg); color: var(--error); }
+.management-confirm-delete:not(:disabled) { background: var(--destructive); color: var(--destructive-foreground); }
+.management-confirm-delete:not(:disabled):hover { background: var(--destructive-hover); }

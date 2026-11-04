@@ -135,6 +135,10 @@ schema. It uses only the public family access and user identity interfaces.
 income calls this contract and stores the opaque ID and name snapshot. There are
 no cross-schema foreign keys or imports of another module's persistence.
 Names are unique per family. Full-access members create locations, all members
-may list them, and outsiders receive 404. No editing or deletion is exposed.
+may list them, and outsiders receive 404. Full-access members may rename accounts
+via PATCH on the account ID; family name uniqueness remains enforced. Income
+keeps the original name snapshot and stable account ID. Deletion sets deleted_at on the account without changing any income records.
+Active lists and new income lookups exclude deleted accounts; existing income
+retries remain valid. Deleted names remain reserved within the family.
 The migration adds nullable income columns, preserving old records and legacy
 API clients. Current UI forms require a location for new income entries.
