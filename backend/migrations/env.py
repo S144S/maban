@@ -1,5 +1,6 @@
 from alembic import context
 
+from app.assets.persistence import SCHEMA as ASSETS_SCHEMA
 from app.config import Settings
 from app.database import Base, database
 from app.expenses.persistence import SCHEMA as EXPENSES_SCHEMA
@@ -17,7 +18,7 @@ with engine.connect() as connection:
         compare_type=True,
         include_schemas=True,
         include_name=lambda name, kind, parent: (
-            kind != "schema" or name in (None, SCHEMA, FAMILY_SCHEMA, INCOME_SCHEMA, EXPENSES_SCHEMA, LOCATIONS_SCHEMA, INVESTMENTS_SCHEMA)
+            kind != "schema" or name in (None, SCHEMA, FAMILY_SCHEMA, INCOME_SCHEMA, EXPENSES_SCHEMA, LOCATIONS_SCHEMA, INVESTMENTS_SCHEMA, ASSETS_SCHEMA)
         ),
     )
     with context.begin_transaction():

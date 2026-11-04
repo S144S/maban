@@ -200,3 +200,19 @@ Optional unit prices remain whole tomans. These types reject input total prices;
 `calculated_total_toman` is derived with exact decimal arithmetic when a unit price exists.
 No market-price lookup, interest accrual or currency conversion is performed.
 Apply Alembic head; downgrade refuses to discard any of the new investment types.
+
+
+### Personal asset fund
+
+The assets module owns `assets.entries`, with authenticated POST/GET `/api/assets`.
+Its only domain dependency is the users public authentication interface. Records belong
+to the current user; family members have no implicit access. Houses and land require
+`title` (1–80), `location` (1–200), and exact `area_sqm` (0.01–1,000,000,000, up to 2 decimals).
+Cars require a combined `model` (1–80); legacy `brand` is optional, `year_calendar` (solar or gregorian), and integer
+`manufacture_year` (1200–1500 solar or 1886–2100 Gregorian). Optional purchase prices
+are positive whole tomans up to 1,000,000,000,000; notes are limited to 500 characters.
+Each request requires a UUID for per-user idempotency; mixed-type fields are rejected.
+GET supports offset pagination (50 entries). No family balance or investment record
+is modified. Apply Alembic head; downgrade refuses to remove a nonempty assets table.
+
+Property forms use optional `price_per_sqm_toman` (positive whole tomans, up to 1,000,000,000,000). Historical `purchase_price_toman` totals retain their meaning and remain supported; cars cannot submit a per-square-metre price. Apply Alembic head.

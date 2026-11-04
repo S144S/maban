@@ -5,9 +5,15 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.14.0`. No frontend release has been published.
+Current development version: `0.15.0`. No frontend release has been published.
 
 ### Added
+
+- Car entry uses one combined model field and defaults to the solar calendar without a calendar selector; separate historical brand values remain supported.
+
+- Property forms now record optional price per square metre separately from historical purchase totals; car purchase prices are unchanged.
+
+- Connected the assets action to a bottom sheet for houses, land and cars. Collects property title/location/area or vehicle brand/model/year in the solar calendar, optional purchase price and notes, Persian digit support and save feedback.
 
 - Extended investment selection with silver, crypto, currency and bonds, with type-specific labels, identifiers and quantities. Unit purchase price and notes are optional; only the existing gold form exposes a total-price input. Currency selection offers USD, EUR, CNY and IQD with Persian labels.
 

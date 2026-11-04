@@ -5,9 +5,15 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.10.0`. No backend release has been published.
+Current development version: `0.11.0`. No backend release has been published.
 
 ### Added
+
+- Car entry uses one combined model field; separate historical brand values remain supported.
+
+- Property forms now record optional price per square metre separately from historical purchase totals; car purchase prices are unchanged.
+
+- Added the personal assets module and assets schema for houses, land and cars, with typed validation, exact square-metre areas, optional whole-toman purchase prices, ownership isolation and idempotent writes. Run Alembic upgrade head; downgrade refuses to discard assets.
 
 - Extended the pending investment-type feature with silver (grams), crypto (up to 18 decimal places), foreign currency (up to 2 decimal places), and bonds (whole units). Each has typed validation, exact derived totals, personal ownership and lossless migration guards.
 

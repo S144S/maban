@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.assets.bootstrap import install as install_assets
 from app.config import Settings
 from app.database import database
 from app.expenses.bootstrap import install as install_expenses
@@ -32,6 +33,7 @@ def create_app(settings: Settings | None = None, sms=None):
     install_income(app)
     install_expenses(app)
     install_investments(app)
+    install_assets(app)
 
     @app.middleware("http")
     async def security(request: Request, call_next):
