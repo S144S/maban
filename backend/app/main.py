@@ -10,6 +10,7 @@ from app.database import database
 from app.expenses.bootstrap import install as install_expenses
 from app.families.bootstrap import install as install_families
 from app.income.bootstrap import install as install_income
+from app.investments.bootstrap import install as install_investments
 from app.money_locations.bootstrap import install as install_locations
 from app.users.bootstrap import install
 
@@ -30,6 +31,7 @@ def create_app(settings: Settings | None = None, sms=None):
     install_locations(app)
     install_income(app)
     install_expenses(app)
+    install_investments(app)
 
     @app.middleware("http")
     async def security(request: Request, call_next):

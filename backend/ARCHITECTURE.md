@@ -142,3 +142,15 @@ Active lists and new income lookups exclude deleted accounts; existing income
 retries remain valid. Deleted names remain reserved within the family.
 The migration adds nullable income columns, preserving old records and legacy
 API clients. Current UI forms require a location for new income entries.
+
+
+### Personal investments
+
+The investments module owns `investments.entries`. Authenticated users can POST and GET
+`/api/investments`; ownership is derived exclusively from the current session. Family
+membership does not grant access to these personal records. Gold quantities use exact
+NUMERIC(10,3) grams (0.001–1,000,000); optional unit and total purchase prices are independent,
+positive whole-toman amounts up to 1,000,000,000,000. No price is inferred automatically.
+Creation is idempotent per user/request UUID; history is paginated with `offset` (50 per page).
+Investments do not change income, expenses or family cash balances. Apply `alembic upgrade head`
+before running the new API. Downgrading this migration removes all investment records.

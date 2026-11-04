@@ -1,6 +1,7 @@
+import { InvestmentDialog } from "../investments/InvestmentDialog";
 import { LocationField } from "../money-locations/LocationField";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { HandCoins, CreditCard, Eye, EyeOff, Wallet, TrendingUp, Gem } from "lucide-react";
+import { HandCoins, CreditCard, Eye, EyeOff, Wallet, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -102,10 +103,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
       <div className="dash-home-actions">
         <DialogTrigger asChild><Button className="home-action home-action-income" size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("income")}><HandCoins aria-hidden="true" /><span>دخل</span></Button></DialogTrigger>
         <DialogTrigger asChild><Button className="home-action home-action-expense" size="lg" variant="outline" disabled={!canWrite || loading || busy} onClick={() => prepare("expenses")}><CreditCard aria-hidden="true" /><span>خرج</span></Button></DialogTrigger>
-        <Dialog>
-          <DialogTrigger asChild><Button className="home-action home-action-investment" size="lg" variant="outline"><TrendingUp aria-hidden="true" /><span>سرمایه‌گذاری</span></Button></DialogTrigger>
-          <DialogContent dir="rtl"><DialogHeader><DialogTitle>سرمایه‌گذاری</DialogTitle><DialogDescription>این بخش هنوز فعال نیست. امکان ثبت و مدیریت سرمایه‌گذاری‌ها در ادامه اضافه می‌شه.</DialogDescription></DialogHeader></DialogContent>
-        </Dialog>
+        <InvestmentDialog onSaved={setNotice} />
         <Dialog>
           <DialogTrigger asChild><Button className="home-action home-action-assets" size="lg" variant="outline"><Gem aria-hidden="true" /><span>دارایی‌ها</span></Button></DialogTrigger>
           <DialogContent dir="rtl"><DialogHeader><DialogTitle>دارایی‌ها</DialogTitle><DialogDescription>این بخش هنوز فعال نیست. امکان ثبت و مدیریت دارایی‌ها در ادامه اضافه می‌شه.</DialogDescription></DialogHeader></DialogContent>

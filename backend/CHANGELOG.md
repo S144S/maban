@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.8.0`. No backend release has been published.
+Current development version: `0.9.0`. No backend release has been published.
 
 ### Added
+
+- Added a private per-user investment fund with gold quantities precise to 0.001 grams, optional whole-toman purchase prices and notes, idempotent creation and paginated history. Isolated investments schema; run Alembic upgrade head. Family cash balances remain unchanged.
 
 - Added account deletion with confirmation and full-access authorization. Deleted accounts disappear from active choices while historical income references and totals remain unchanged. Run Alembic upgrade head. Deleted account names stay reserved; existing income retries remain idempotent.
 
