@@ -38,11 +38,11 @@ def test_location_permissions_and_income_attribution(client, app):
     editor, _ = account(app, "09123456782")
     with viewer, stranger, editor:
         assert accept(viewer, invite(client, family)["token"]).status_code == 200
-        invitation = client.post(f"/api/families/{family}/invitations", json={"relationship": "friend", "access": "full"}).json()
+        invitation = client.post(f"/api/families/{family}/invitations", json={"relationship": "friend"}).json()
         assert accept(editor, invitation["token"]).status_code == 200
         assert len(viewer.get(url).json()["locations"]) == 1
         assert location(viewer, family, name="پول نقد").status_code == 403
-        assert location(editor, family, name="پول نقد").status_code == 201
+        assert location(editor, family, name="پول نقد").status_code == 403
         assert stranger.get(url).status_code == 404
         assert location(stranger, family).status_code == 404
         other = create(stranger)
@@ -122,9 +122,9 @@ def test_rename_account_permissions(client, app):
         assert stranger.patch(url, json={"name": "جدید"}).status_code == 404
         other = create(stranger)
         assert stranger.patch(f"/api/families/{other}/money-locations/{bank['id']}", json={"name": "جدید"}).status_code == 404
-        invitation = client.post(f"/api/families/{family}/invitations", json={"relationship": "friend", "access": "full"}).json()
+        invitation = client.post(f"/api/families/{family}/invitations", json={"relationship": "friend"}).json()
         assert accept(editor, invitation["token"]).status_code == 200
-        assert editor.patch(url, json={"name": "بانک ملت"}).status_code == 200
+        assert editor.patch(url, json={"name": "بانک ملت"}).status_code == 403
 
 
 def test_delete_account_preserves_income_and_retries(client, app):
@@ -171,6 +171,6 @@ def test_delete_account_permissions(client, app):
         assert stranger.delete(url).status_code == 404
         other = create(stranger)
         assert stranger.delete(f"/api/families/{other}/money-locations/{bank['id']}").status_code == 404
-        invitation = client.post(f"/api/families/{family}/invitations", json={"relationship": "friend", "access": "full"}).json()
+        invitation = client.post(f"/api/families/{family}/invitations", json={"relationship": "friend"}).json()
         assert accept(editor, invitation["token"]).status_code == 200
-        assert editor.delete(url).status_code == 204
+        assert editor.delete(url).status_code == 403

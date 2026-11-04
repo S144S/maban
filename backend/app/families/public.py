@@ -12,8 +12,11 @@ class FamilyAccess:
     def __init__(self, service):
         self._service = service
 
-    def authorize(self, family_id: UUID, user_id: UUID, *, write: bool = False) -> None:
-        self._service.require_member(family_id, user_id, manage=write)
+    def authorize(self, family_id: UUID, user_id: UUID) -> None:
+        self._service.require_member(family_id, user_id)
+
+    def require_owner(self, family_id: UUID, user_id: UUID) -> None:
+        self._service.require_owner(family_id, user_id)
 
     def require_member(self, family_id: UUID, member_id: UUID) -> None:
         self._service.require_member(family_id, member_id)

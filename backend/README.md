@@ -131,12 +131,12 @@ when downgrading. Operator SQL must use schema-qualified table names.
 
 Visit `/families` after signing in to create a family and invite a spouse, child
 or friend. Each account may create one family and can also accept invitations
-to other families. Only the creator manages invitation links; relationship labels
-do not grant administrative privileges. Links are single-use, expire in seven
+to other families. All members can manage invitation links; only the creator manages family accounts.
+Relationship labels do not change permissions. Links are single-use, expire in seven
 days, and can be revoked. Share each link privately with its intended recipient.
 The link survives login/signup, and joining always requires explicit acceptance.
 
-Endpoints: `GET/POST /api/families`, `GET /api/families/{id}`, owner-only
+Endpoints: `GET/POST /api/families`, `GET /api/families/{id}`, member-only
 `GET/POST /api/families/{id}/invitations`,
 `DELETE /api/families/{id}/invitations/{invite_id}`, and authenticated
 `POST /api/families/invitations/preview` or `/accept` with `{ "token": "..." }`.
@@ -148,7 +148,7 @@ this feature migration removes family data, so back it up before a rollback.
 
 GET/POST `/api/families/{family_id}/money-locations` lists/creates family-owned
 locations (for example a bank, cash or a gift card). Creation accepts a trimmed
-`name` (1–80 characters) and UUID `request_id`, requires full access and rejects
+`name` (1–80 characters) and UUID `request_id`, requires family ownership and rejects
 duplicate family names. Identical retries return the original location.
 Income forms require a location; POST income accepts `location_id` and validates
 it against the same family. Responses include `location_id` and the recorded
@@ -157,13 +157,13 @@ omit the field. Locations do not change amounts, currency or balance calculation
 Run `alembic upgrade head` before starting the updated API.
 
 PATCH `/api/families/{family_id}/money-locations/{location_id}` renames an account
-using `{ "name": "..." }`. Full access is required; duplicate names return 409,
+using `{ "name": "..." }`. Family ownership is required; duplicate names return 409,
 invalid names 422, and missing/foreign accounts 404. The ID remains unchanged.
 Previous income retains its original name snapshot; future income uses the new
 name. This update does not require a database migration.
 
-DELETE `/api/families/{family_id}/money-locations/{location_id}` requires full
-access and returns 204 (including retries). It archives the account, retaining
+DELETE `/api/families/{family_id}/money-locations/{location_id}` requires family
+ownership and returns 204 (including retries). It archives the account, retaining
 its ID/name and all income links. Active lists and new income exclude archived
 accounts. Names stay reserved. Run `alembic upgrade head` before restarting.
 Downgrading the archive migration restores archived accounts to active status.
@@ -228,3 +228,29 @@ not treated as a known zero. Gold uses a supplied total first, otherwise grams �
 other investments use quantity × unit price. Property uses area × per-square-metre price first,
 otherwise its historical purchase total; cars use their purchase total. These are recorded
 purchase values, not live market valuations. Empty totals are zero. No migration is required.
+
+
+### Access model migration (backend 1.0.0)
+
+Access tiers have been removed from memberships and invitations. All family members can
+record income/expenses and create, list or revoke invitations. Only the family owner can
+create, rename or delete accounts in Management; all members can still select accounts
+when recording income. Personal investment and asset ownership is unchanged.
+Stop sending or reading `access` in family APIs and deploy the matching frontend.
+Run `alembic upgrade head` before starting this backend. Existing memberships and
+invitation links remain valid. Downgrade cannot restore old tiers: it assigns view
+to members/invitations and full to family owners.
+
+
+### Family expense categories
+
+The expenses module owns `expenses.categories`, scoped by family with unique names
+and idempotent request UUIDs. GET `/api/families/{id}/expenses/categories` is available
+to members; POST `{name, request_id}` requires the family owner through the public
+families authorization contract. No cross-module table access is introduced.
+New expense forms submit `category_id`; the API validates same-family ownership
+and snapshots the category name. Historical `category` codes remain supported.
+Supply exactly one of `category` or `category_id`; responses add `category_id` and
+`category_name` without removing the legacy code. Custom entries use legacy `other`.
+Apply Alembic head before deployment. Existing expenses and totals are unchanged;
+downgrade refuses to discard defined categories. Families start with no custom categories.

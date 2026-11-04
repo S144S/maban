@@ -9,7 +9,7 @@ import { api, ApiError, errorMessage } from "@/lib/http";
 import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import type { User } from "../auth/api";
 import { authHref } from "../auth/navigation";
-import { accessLabels, relationships, invitationStatus, type Family, type Member, type Invitation } from "./api";
+import { relationships, invitationStatus, type Family, type Member, type Invitation } from "./api";
 import "../auth/auth.css";
 import "../auth/account.css";
 import "./families.css";
@@ -29,7 +29,6 @@ export function FamiliesPage({ user }: { user: User }) {
   const [modalError, setModalError] = useState("");
   const [link, setLink] = useState("");
   const [reload, setReload] = useState(0);
-  const own = detail?.members.find(member => member.user_id === user.id)?.access === "full";
   const canCreate = !families.some(f => f.owner_id === user.id);
   function report(err: unknown) {
     if (err instanceof ApiError && err.status === 401) window.location.replace(authHref("/login"));
@@ -51,7 +50,7 @@ export function FamiliesPage({ user }: { user: User }) {
     const controller = new AbortController();
     setDetailLoading(true);
     api<{family: Family; members: Member[]}>(`/families/${selected}`, { signal: controller.signal }).then(async data => {
-      const list = data.members.find(member => member.user_id === user.id)?.access === "full" ? (await api<{invitations: Invitation[]}>(`/families/${selected}/invitations`, {signal: controller.signal})).invitations : [];
+      const list = (await api<{invitations: Invitation[]}>(`/families/${selected}/invitations`, {signal: controller.signal})).invitations;
       if (!controller.signal.aborted) { setDetail(data); setInvites(list); }
     }).catch(err => { if (!controller.signal.aborted) setError(report(err)); })
       .finally(() => { if (!controller.signal.aborted) setDetailLoading(false); });
@@ -71,7 +70,7 @@ export function FamiliesPage({ user }: { user: User }) {
         const result = await api<{family: Family}>("/families", {method: "POST", body: {name: String(data.get("name")).trim()}});
         setSelected(result.family.id); setModal(null); setMessage("خانواده ساخته شد؛ حالا عزیزانتون رو دعوت کنین."); setReload(n => n + 1);
       } else {
-        const result = await api<{invitation: Invitation; token: string}>(`/families/${selected}/invitations`, {method: "POST", body: {relationship: data.get("relationship"), access: data.get("access")}});
+        const result = await api<{invitation: Invitation; token: string}>(`/families/${selected}/invitations`, {method: "POST", body: {relationship: data.get("relationship")}});
         setLink(`${window.location.origin}/invite#token=${result.token}`);
         setInvites(current => [result.invitation, ...current]);
       }
@@ -97,21 +96,21 @@ export function FamiliesPage({ user }: { user: User }) {
           <div id={`family-members-${family.id}`} hidden={selected !== family.id}>
             {selected === family.id && detailLoading && <p className="family-card-loading" role="status">در حال دریافت اعضا…</p>}
             {detail?.family.id === family.id && <div className="family-card-members"><div className="family-section-heading"><h3>اعضای خانواده</h3></div>
-          <ul className="family-members">{detail.members.map(member => <li key={member.user_id}><span className="family-avatar" aria-hidden="true">{Array.from(member.name)[0]}</span><div><strong>{member.name}{member.user_id === user.id ? " (شما)" : ""}</strong><p className="auth-hint">{member.user_id === detail.family.owner_id ? "سازندهٔ خانواده" : member.relationship ? relationships[member.relationship] : "عضو"} · {accessLabels[member.access]}</p></div></li>)}</ul>
-          {own ? <Button disabled={busy} onClick={() => open("invite")}><UserPlus size={18} aria-hidden="true" />دعوت عضو جدید</Button> : <p className="auth-hint">دسترسی شما «فقط دیدن» است؛ دعوت اعضا با افراد دارای دسترسی «همه‌چی» است.</p>}
+          <ul className="family-members">{detail.members.map(member => <li key={member.user_id}><span className="family-avatar" aria-hidden="true">{Array.from(member.name)[0]}</span><div><strong>{member.name}{member.user_id === user.id ? " (شما)" : ""}</strong><p className="auth-hint">{member.user_id === detail.family.owner_id ? "سازندهٔ خانواده" : member.relationship ? relationships[member.relationship] : "عضو"}</p></div></li>)}</ul>
+          {<Button disabled={busy} onClick={() => open("invite")}><UserPlus size={18} aria-hidden="true" />دعوت عضو جدید</Button>}
         </div>}
           </div>
         </li>)}</ul>
       </section>}
       {detail && <>
-        {own && <section className="account-card family-invites-card"><div className="family-section-heading"><h2>دعوت‌ها</h2><Mail size={22} aria-hidden="true" /></div><p className="auth-hint">هر لینک برای یک نفره و ۷ روز اعتبار داره. فقط برای فرد موردنظرتون بفرستین.</p>
-          {invites.length ? <ul className="account-list">{invites.map(invite => <li className="family-invitation" key={invite.id}><div><strong>دعوت {relationships[invite.relationship]}</strong><p className="auth-hint">{accessLabels[invite.access]} · {invitationStatus[invite.status]} · اعتبار تا {new Date(invite.expires_at).toLocaleDateString("fa-IR")}</p></div>{invite.status === "pending" && <Button variant="ghost" size="icon" className="family-revoke" title="لغو دعوت" disabled={busy} aria-label={`لغو دعوت ${relationships[invite.relationship]}`} onClick={() => void perform(async () => { await api(`/families/${selected}/invitations/${invite.id}`, {method: "DELETE"}); setInvites(current => current.map(i => i.id === invite.id ? {...i, status: "revoked"} : i)); setMessage("دعوت لغو شد و لینک دیگه قابل استفاده نیست."); })}><Trash2 size={20} aria-hidden="true" /></Button>}</li>)}</ul> : <p className="family-no-invites">هنوز دعوتی نفرستادین؛ از «دعوت عضو جدید» شروع کنین.</p>}
+        {<section className="account-card family-invites-card"><div className="family-section-heading"><h2>دعوت‌ها</h2><Mail size={22} aria-hidden="true" /></div><p className="auth-hint">هر لینک برای یک نفره و ۷ روز اعتبار داره. فقط برای فرد موردنظرتون بفرستین.</p>
+          {invites.length ? <ul className="account-list">{invites.map(invite => <li className="family-invitation" key={invite.id}><div><strong>دعوت {relationships[invite.relationship]}</strong><p className="auth-hint">{invitationStatus[invite.status]} · اعتبار تا {new Date(invite.expires_at).toLocaleDateString("fa-IR")}</p></div>{invite.status === "pending" && <Button variant="ghost" size="icon" className="family-revoke" title="لغو دعوت" disabled={busy} aria-label={`لغو دعوت ${relationships[invite.relationship]}`} onClick={() => void perform(async () => { await api(`/families/${selected}/invitations/${invite.id}`, {method: "DELETE"}); setInvites(current => current.map(i => i.id === invite.id ? {...i, status: "revoked"} : i)); setMessage("دعوت لغو شد و لینک دیگه قابل استفاده نیست."); })}><Trash2 size={20} aria-hidden="true" /></Button>}</li>)}</ul> : <p className="family-no-invites">هنوز دعوتی نفرستادین؛ از «دعوت عضو جدید» شروع کنین.</p>}
         </section>}
       </>}
     </>}
-    <Dialog open={modal !== null} onOpenChange={value => { if (!busy && !value) setModal(null); }}><DialogContent className="family-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>{modal === "create" ? "ساخت خانواده" : "دعوت عضو جدید"}</DialogTitle><DialogDescription>{modal === "create" ? "یه نام برای خانواده انتخاب کنین. شما سازنده و مدیر دعوت‌ها می‌شین." : "نسبت فرد دعوت‌شده با شما رو انتخاب کنین. دسترسی عضو رو جدا از نسبت انتخاب کنین."}</DialogDescription></DialogHeader>
+    <Dialog open={modal !== null} onOpenChange={value => { if (!busy && !value) setModal(null); }}><DialogContent className="family-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={e => { if (busy) e.preventDefault(); }} onInteractOutside={e => { if (busy) e.preventDefault(); }}><DialogHeader><DialogTitle>{modal === "create" ? "ساخت خانواده" : "دعوت عضو جدید"}</DialogTitle><DialogDescription>{modal === "create" ? "یه نام برای خانواده انتخاب کنین. مدیریت حساب‌های خانواده با شماست." : "نسبت فرد دعوت‌شده با شما رو انتخاب کنین. همهٔ اعضا به امکانات خانواده دسترسی دارن؛ بخش مدیریت فقط برای سازنده است."}</DialogDescription></DialogHeader>
       {link ? <div className="auth-form"><p>لینک آماده‌ست؛ کپی کنین و برای فرد موردنظرتون بفرستین.</p><div className="auth-field"><label htmlFor="invitation-link">لینک دعوت</label><input id="invitation-link" value={link} readOnly dir="ltr" onFocus={e => e.target.select()} /></div><Button onClick={() => void perform(async () => { try { await navigator.clipboard.writeText(link); setMessage("لینک کپی شد."); } catch { setModalError("کپی خودکار انجام نشد؛ لینک رو انتخاب و دستی کپی کنین."); } }, true)} disabled={busy}><Copy size={18} aria-hidden="true" />کپی لینک دعوت</Button><p className="auth-hint">لینک فقط همین‌بار نمایش داده می‌شه. اگه گمش کردین، دعوت قبلی رو لغو و لینک تازه بسازین.</p>{message && <p role="status">{message}</p>}</div>
-      : <form onSubmit={submit} className="auth-form"><fieldset className="auth-fields" disabled={busy}>{modal === "create" ? <div className="auth-field"><label htmlFor="family-name">نام خانواده</label><input id="family-name" name="name" required maxLength={80} placeholder="مثلاً خانوادهٔ ما" /></div> : <><div className="auth-field"><label htmlFor="relationship">نسبت با شما</label><Select id="relationship" name="relationship" defaultValue="spouse" disabled={busy} options={Object.entries(relationships).map(([value, label]) => ({ value, label }))} /></div><div className="auth-field"><label htmlFor="member-access">دسترسی عضو</label><Select id="member-access" name="access" defaultValue="view" disabled={busy} options={[{ value: "view", label: "فقط دیدن" }, { value: "full", label: "همه‌چی" }]} /><p className="auth-hint">«همه‌چی» اجازهٔ مدیریت خانواده و دعوت اعضا رو می‌ده. «فقط دیدن» امکان تغییر اطلاعات خانواده رو نداره.</p></div></>}<Button type="submit">{busy ? "در حال ذخیره…" : modal === "create" ? "ساخت خانواده" : "ساخت لینک دعوت"}</Button></fieldset></form>}
+      : <form onSubmit={submit} className="auth-form"><fieldset className="auth-fields" disabled={busy}>{modal === "create" ? <div className="auth-field"><label htmlFor="family-name">نام خانواده</label><input id="family-name" name="name" required maxLength={80} placeholder="مثلاً خانوادهٔ ما" /></div> : <><div className="auth-field"><label htmlFor="relationship">نسبت با شما</label><Select id="relationship" name="relationship" defaultValue="spouse" disabled={busy} options={Object.entries(relationships).map(([value, label]) => ({ value, label }))} /></div></>}<Button type="submit">{busy ? "در حال ذخیره…" : modal === "create" ? "ساخت خانواده" : "ساخت لینک دعوت"}</Button></fieldset></form>}
       {modalError && <p role="alert" className="auth-error">{modalError}</p>}
     </DialogContent></Dialog>
   </main>;

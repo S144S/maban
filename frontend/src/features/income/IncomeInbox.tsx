@@ -16,7 +16,7 @@ function amountOf(value: string) {
   const normalized = value.replace(/[۰-۹]/g, digit => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))).replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit))).replace(/[,٬\s]/g, "");
   return /^\d+$/.test(normalized) ? Number(normalized) : NaN;
 }
-export function IncomeInbox({ familyId, members, canWrite, userId }: { familyId: string; members: Member[]; canWrite: boolean; userId: string }) {
+export function IncomeInbox({ familyId, members, userId }: { familyId: string; members: Member[]; userId: string }) {
   const [data, setData] = useState<Listing | null>(null);
   const [offset, setOffset] = useState(0);
   const [revision, setRevision] = useState(0);
@@ -57,7 +57,7 @@ export function IncomeInbox({ familyId, members, canWrite, userId }: { familyId:
     <div className="family-section-heading"><h2><Inbox size={22} aria-hidden="true" /> صندوق درآمد</h2><span className="family-private"><ShieldCheck size={16} aria-hidden="true" />مشترک با خانواده</span></div>
     <p className="auth-hint">حقوق، یارانه، کالابرگ و هدیه‌های خانواده، یک‌جا.</p>
     {data && !error && <div className="income-total"><span>جمع ورودی‌ها</span><strong>{money(data.total_toman)} <small>تومان</small></strong><span>{data.count.toLocaleString("fa-IR")} ورودی</span></div>}
-    {canWrite ? <Button onClick={() => { request.current = { fingerprint: "", id: "" }; setFormError(""); setNotice(""); setOpen(true); }}><Plus size={18} aria-hidden="true" />ثبت درآمد</Button> : <p className="auth-hint">دسترسی شما «فقط دیدن» است.</p>}
+    {<Button onClick={() => { request.current = { fingerprint: "", id: "" }; setFormError(""); setNotice(""); setOpen(true); }}><Plus size={18} aria-hidden="true" />ثبت درآمد</Button>}
     {notice && <p role="status">{notice}</p>}
     {loading ? <p role="status">در حال دریافت ورودی‌ها…</p> : error ? <div role="alert"><p className="auth-error">{error}</p><Button variant="outline" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : data && <>
       {!data.count ? <p className="income-empty">هنوز درآمدی ثبت نشده؛ ورودی‌های خانواده رو اینجا نگه دارین.</p> : <ul className="income-list">{data.entries.map(entry => <li key={entry.id}><div className="income-row"><strong>{sources[entry.source]}</strong><strong>{money(entry.amount_toman)} <small>تومان</small></strong></div><p>از جانب {entry.from_member_name}</p><p>واریز به: {entry.location_name ?? "مشخص نشده"}</p>{entry.description && <p className="income-description">{entry.description}</p>}<time dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleDateString("fa-IR")}</time></li>)}</ul>}

@@ -12,3 +12,6 @@
 .maban-select-item[data-disabled] { color: var(--muted-foreground); pointer-events: none; }
 .maban-select-check { position: absolute; inset-inline-end: 12px; display: flex; }
 .maban-select-scroll { display: flex; align-items: center; justify-content: center; min-height: 32px; background: var(--popover); }
+
+.maban-select-option-label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.maban-select-option-label svg { flex-shrink: 0; }

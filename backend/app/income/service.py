@@ -10,7 +10,7 @@ from app.income.models import IncomeEntry
 
 
 class FamilyAccess(Protocol):
-    def authorize(self, family_id: UUID, user_id: UUID, *, write: bool = False) -> None: ...
+    def authorize(self, family_id: UUID, user_id: UUID) -> None: ...
     def require_member(self, family_id: UUID, member_id: UUID) -> None: ...
 
 
@@ -41,7 +41,7 @@ class Income:
         }
 
     def create(self, family_id, user_id, data):
-        self.access.authorize(family_id, user_id, write=True)
+        self.access.authorize(family_id, user_id)
         self.access.require_member(family_id, data.from_member_id)
         values = {
             "family_id": family_id,

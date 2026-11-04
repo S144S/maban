@@ -40,14 +40,14 @@ def test_expense_permissions_and_family_isolation(client, app):
     with viewer, stranger, editor:
         assert accept(viewer, invite(client, family)["token"]).status_code == 200
         invitation = client.post(f"/api/families/{family}/invitations",
-            json={"relationship": "friend", "access": "full"}).json()
+            json={"relationship": "friend"}).json()
         assert accept(editor, invitation["token"]).status_code == 200
         assert stranger.get(url).status_code == 404
         assert stranger.post(url, json=payload(stranger_user)).status_code == 404
-        assert viewer.post(url, json=payload(viewer_user)).status_code == 403
+        assert viewer.post(url, json=payload(viewer_user)).status_code == 201
         assert client.post(url, json=payload(stranger_user)).status_code == 404
         assert editor.post(url, json=payload(owner)).status_code == 201
-        assert viewer.get(url).json()["count"] == 1
+        assert viewer.get(url).json()["count"] == 2
         other = create(stranger)
         assert stranger.get(f"/api/families/{other}/expenses").json()["total_toman"] == "0"
 

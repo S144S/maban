@@ -16,6 +16,6 @@ export function LocationField({ familyId, disabled }: { familyId: string; disabl
   }, [familyId, revision]);
   return <div className="dash-form">
     <label htmlFor="income-location">واریز به<Select key={familyId} id="income-location" name="location" required disabled={disabled || loading || !!error || !items.length} options={items.map(item => ({ value: item.id, label: item.name }))} /></label>
-    {loading ? <p role="status">در حال دریافت حساب‌های خانواده…</p> : error ? <div role="alert"><p>{error}</p><Button type="button" variant="outline" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : !items.length && <p>برای این خانواده هنوز حسابی تعریف نشده. اول یک حساب مثل بانک ملی یا پول نقد در <a className="underline" href={`/dashboard?page=budgets&family=${encodeURIComponent(familyId)}`}>مدیریت</a> اضافه کنین.</p>}
+    {loading ? <p role="status">در حال دریافت حساب‌های خانواده…</p> : error ? <div role="alert"><p>{error}</p><Button type="button" variant="outline" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : !items.length && <p>برای این خانواده هنوز حسابی تعریف نشده. سازندهٔ خانواده می‌تونه یک حساب مثل بانک ملی یا پول نقد در <a className="underline" href={`/dashboard?page=budgets&family=${encodeURIComponent(familyId)}`}>مدیریت</a> اضافه کنه.</p>}
   </div>;
 }

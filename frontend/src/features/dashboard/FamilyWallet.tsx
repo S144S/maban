@@ -1,3 +1,4 @@
+import { CategoryField } from "../expenses/CategoryField";
 import { PersonalFundValue } from "./PersonalFundValue";
 import { AssetDialog } from "../assets/AssetDialog";
 import { InvestmentDialog } from "../investments/InvestmentDialog";
@@ -12,7 +13,6 @@ import type { Family, Member } from "../families/api";
 import { parseAmount } from "./model";
 
 const sources = [{ value: "salary", label: "حقوق" }, { value: "subsidy", label: "یارانه" }, { value: "voucher", label: "کالابرگ" }, { value: "gift", label: "هدیه" }];
-const categories = [{ value: "home", label: "خانه" }, { value: "groceries", label: "خرید روزمره" }, { value: "leisure", label: "تفریح" }, { value: "other", label: "سایر" }];
 type Wallet = { familyId: string; members: Member[]; balance: string };
 const funds = [{ value: "general", label: "روزمره" }, { value: "investments", label: "سرمایه" }, { value: "assets", label: "دارایی" }] as const;
 type Fund = typeof funds[number]["value"];
@@ -64,7 +64,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
     return () => controller.abort();
   }, [selected, revision]);
 
-  const canWrite = !!wallet?.members.some(m => m.user_id === userId && m.access === "full");
+  const canWrite = !!wallet?.members.some(m => m.user_id === userId);
   function prepare(next: Kind) {
     setKind(next); setFormError(""); setNotice(""); request.current = { fingerprint: "", id: "" };
   }
@@ -75,11 +75,12 @@ export function FamilyWallet({ userId }: { userId: string }) {
     const amount = parseAmount(String(fields.get("amount") ?? ""));
     if (amount === null) { setFormError("مبلغ رو به تومان و بین ۱ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰٬۰۰۰ وارد کنین."); return; }
     if (kind === "income" && !fields.get("location")) { setFormError("حساب مقصد رو انتخاب کنین؛ اگر حسابی ندارین، از مدیریت اضافه کنین."); return; }
+    if (kind === "expenses" && !fields.get("category_id")) { setFormError("دسته‌بندی خرج رو انتخاب کنین؛ سازندهٔ خانواده می‌تونه از مدیریت اضافه‌اش کنه."); return; }
     const familyId = wallet.familyId;
     const payload = {
       amount_toman: amount,
       description: String(fields.get("description") ?? "").trim() || null,
-      ...(kind === "income" ? { source: fields.get("source"), location_id: fields.get("location"), from_member_id: fields.get("member") } : { title: String(fields.get("title") ?? "").trim(), category: fields.get("category"), paid_by_member_id: fields.get("member") }),
+      ...(kind === "income" ? { source: fields.get("source"), location_id: fields.get("location"), from_member_id: fields.get("member") } : { title: String(fields.get("title") ?? "").trim(), category_id: fields.get("category_id"), paid_by_member_id: fields.get("member") }),
     };
     const fingerprint = JSON.stringify({ familyId, kind, payload });
     if (request.current.fingerprint !== fingerprint) request.current = { fingerprint, id: crypto.randomUUID() };
@@ -97,20 +98,22 @@ export function FamilyWallet({ userId }: { userId: string }) {
   }
   const FundIcon = fund === "general" ? Wallet : fund === "investments" ? TrendingUp : Gem;
   const balanceLabel = wallet ? BigInt(wallet.balance).toLocaleString("fa-IR") : "";
-  const activeFamily = families.find(f => f.id === (wallet?.familyId ?? selected)) ?? families[0];
 
   return <>
     <section className="wallet-balance" aria-label="صندوق‌ها">
       <div className="wallet-fund-switch" role="group" aria-label="انتخاب صندوق">{funds.map(item => <button key={item.value} type="button" aria-pressed={fund === item.value} onClick={() => setFund(item.value)}>{fund === item.value && <Check size={14} aria-hidden="true" />}{item.label}</button>)}</div>
-      <div className="wallet-balance-heading"><span className="wallet-balance-icon" aria-hidden="true"><FundIcon /></span><h1>صندوق {funds.find(item => item.value === fund)?.label}</h1><Button variant="ghost" size="icon" className="wallet-visibility" aria-label={hidden ? "نمایش مبلغ" : "پنهان کردن مبلغ"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button></div>
-      <p className="wallet-fund-note">{fund === "general" ? <>مشترک با خانواده{activeFamily && <>ٔ <bdi>{activeFamily.name}</bdi></>}</> : "شخصی · فقط برای شما"}</p>
+      {fund === "general" && families.length > 1 && <label className="wallet-family">خانواده<Select id="wallet-family" value={wallet?.familyId ?? (families.some(f => f.id === selected) ? selected : families[0].id)} disabled={busy} onValueChange={value => { setSelected(value); setWallet(null); setLoading(true); setNotice(""); }} options={families.map(f => ({ value: f.id, label: f.name }))} /></label>}
+      <div className="wallet-balance-row">
+        <div className="wallet-balance-heading"><span className="wallet-balance-icon" aria-hidden="true"><FundIcon /></span><h1>موجودی</h1></div>
+        <div className="wallet-balance-value">
       {fund === "general" ? <>
-      {families.length > 1 && <label className="wallet-family">خانواده<Select id="wallet-family" value={wallet?.familyId ?? (families.some(f => f.id === selected) ? selected : families[0].id)} disabled={busy} onValueChange={value => { setSelected(value); setWallet(null); setLoading(true); setNotice(""); }} options={families.map(f => ({ value: f.id, label: f.name }))} /></label>}
       {loading ? <p role="status">در حال دریافت موجودی…</p> : error ? <div role="alert"><p className="dash-error">{error}</p><Button variant="ghost" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : wallet ? <>
         <p className={`wallet-balance-amount${!hidden && balanceLabel.length > 13 ? " wallet-balance-amount-compact" : ""}`}><bdi>{hidden ? "••••••" : balanceLabel}</bdi> <small>تومان</small></p>
-        {!canWrite && <p className="dash-small">دسترسی شما فقط دیدن است.</p>}
       </> : <p>برای ثبت دخل‌وخرج، اول از <a href="/families" className="underline">صفحهٔ خانواده</a> یه خانواده بسازین یا عضو خانواده بشین.</p>}
       </> : <PersonalFundValue key={fund} fund={fund} revision={revision} hidden={hidden} />}
+        </div>
+        <Button variant="ghost" size="icon" className="wallet-visibility" aria-label={hidden ? "نمایش مبلغ" : "پنهان کردن مبلغ"} aria-pressed={hidden} onClick={() => setHidden(!hidden)}>{hidden ? <EyeOff /> : <Eye />}</Button>
+      </div>
       <p className="wallet-balance-notice" role="status">{notice}</p>
     </section>
     <Dialog open={open} onOpenChange={value => { if (!pending.current) setOpen(value); }}>
@@ -126,7 +129,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
           <label htmlFor="wallet-amount">مبلغ (تومان)<input id="wallet-amount" name="amount" inputMode="numeric" dir="ltr" required maxLength={24} /></label>
           {kind === "income" ? <label htmlFor="wallet-source">منبع درآمد<Select id="wallet-source" name="source" defaultValue="salary" options={sources} disabled={busy} required /></label> : <>
             <label htmlFor="wallet-title">عنوان خرج<input id="wallet-title" name="title" required maxLength={80} /></label>
-            <label htmlFor="wallet-category">دسته‌بندی<Select id="wallet-category" name="category" defaultValue="groceries" options={categories} disabled={busy} required /></label>
+            {wallet && <CategoryField key={wallet.familyId} familyId={wallet.familyId} disabled={busy} />}
           </>}
           <label htmlFor="wallet-member">{kind === "income" ? "از جانب" : "پرداخت‌کننده"}<Select id="wallet-member" name="member" defaultValue={userId} options={(wallet?.members ?? []).map(m => ({ value: m.user_id, label: m.name }))} disabled={busy} required /></label>
           {kind === "income" && wallet && <LocationField familyId={wallet.familyId} disabled={busy} />}

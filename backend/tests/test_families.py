@@ -66,9 +66,9 @@ def test_invite_join_and_replay(client, app, relationship):
         assert detail["members"][1]["relationship"] == relationship
         assert (
             member.post(f"/api/families/{family_id}/invitations", json={"relationship": "friend"}).status_code
-            == 403
+            == 201
         )
-        assert member.get(f"/api/families/{family_id}/invitations").status_code == 403
+        assert member.get(f"/api/families/{family_id}/invitations").status_code == 200
         # An invited member can still create their own family.
         create(member)
         assert len(member.get("/api/families").json()["families"]) == 2
@@ -173,39 +173,48 @@ def test_family_schema_has_no_cross_module_foreign_keys():
             assert fk.column.table.schema == "families"
 
 
-def test_full_access_can_manage_invitations_and_view_cannot(client, app):
+def test_members_can_manage_invitations_without_access_tiers(client, app):
     register(client)
     family_id = create(client)
-    assert client.get(f"/api/families/{family_id}").json()["members"][0]["access"] == "full"
-    invitation = client.post(
-        f"/api/families/{family_id}/invitations", json={"relationship": "friend", "access": "full"}
-    ).json()
-    with account(app, "09123456780")[0] as manager, account(app, "09123456781")[0] as viewer:
-        assert (
-            manager.post("/api/families/invitations/preview", json={"token": invitation["token"]}).json()[
-                "access"
-            ]
-            == "full"
-        )
-        assert accept(manager, invitation["token"]).status_code == 200
-        issued = invite(manager, family_id)
-        assert issued["invitation"]["access"] == "view"
-        assert accept(viewer, issued["token"]).status_code == 200
-        assert viewer.get(f"/api/families/{family_id}").status_code == 200
-        pending = invite(manager, family_id)
+    assert "access" not in client.get(f"/api/families/{family_id}").json()["members"][0]
+    invitation = invite(client, family_id)
+    with account(app, "09123456780")[0] as member:
+        preview = member.post("/api/families/invitations/preview", json={"token": invitation["token"]})
+        assert "access" not in preview.json()
+        assert accept(member, invitation["token"]).status_code == 200
+        pending = invite(member, family_id)
+        assert "access" not in pending["invitation"]
         path = f"/api/families/{family_id}/invitations/{pending['invitation']['id']}"
-        assert viewer.delete(path).status_code == 403
-        assert (
-            viewer.post(
-                f"/api/families/{family_id}/invitations", json={"relationship": "friend", "access": "full"}
-            ).status_code
-            == 403
-        )
-        assert manager.get(f"/api/families/{family_id}/invitations").status_code == 200
-        assert manager.delete(path).status_code == 200
-    assert (
-        client.post(
-            f"/api/families/{family_id}/invitations", json={"relationship": "friend", "access": "admin"}
-        ).status_code
-        == 422
-    )
+        assert member.get(f"/api/families/{family_id}/invitations").status_code == 200
+        assert member.delete(path).status_code == 200
+    for access in ("view", "full", "admin"):
+        assert client.post(f"/api/families/{family_id}/invitations",
+                           json={"relationship": "friend", "access": access}).status_code == 422
+
+
+def test_access_migration_preserves_members_and_pending_invites(client, app):
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import text
+    from test_income import payload
+    from test_money_locations import location
+
+    owner = register(client)
+    family_id = create(client)
+    first = invite(client, family_id)
+    pending = invite(client, family_id)
+    with account(app, "09123456780")[0] as member, account(app, "09123456781")[0] as newcomer:
+        assert accept(member, first["token"]).status_code == 200
+        config = Config("alembic.ini")
+        command.downgrade(config, "45df20183290")
+        with app.state.sessions.begin() as db:
+            db.execute(text("UPDATE families.memberships SET access = 'view' WHERE user_id != :owner"), {"owner": UUID(owner["id"])})
+            db.execute(text("UPDATE families.invitations SET access = 'view'"))
+        command.upgrade(config, "head")
+        command.check(config)
+        assert len(member.get(f"/api/families/{family_id}").json()["members"]) == 2
+        assert member.post(f"/api/families/{family_id}/income", json=payload(owner)).status_code == 201
+        assert location(member, family_id).status_code == 403
+        assert accept(newcomer, pending["token"]).status_code == 200
+        assert newcomer.post(f"/api/families/{family_id}/income", json=payload(owner)).status_code == 201
+        assert location(newcomer, family_id).status_code == 403

@@ -12,7 +12,6 @@ class CreateFamily(Input):
 
 
 class CreateInvitation(Input):
-    access: Literal["full", "view"] = "view"
     relationship: Literal["spouse", "child", "friend"]
 
 

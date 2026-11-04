@@ -33,7 +33,7 @@ export function PersonalFundValue({ fund, revision, hidden }: { fund: "investmen
   const label = allUnpriced ? "نامشخص" : formatValue(summary.total_toman);
   return <div aria-live="polite">
     <p className={`wallet-balance-amount${!hidden && label.length > 13 ? " wallet-balance-amount-compact" : ""}`}><bdi>{hidden ? "••••••" : label}</bdi>{!allUnpriced && <small>تومان</small>}</p>
-    <p className="wallet-fund-note">{summary.count === 0 ? "هنوز موردی در این صندوق ثبت نکردین." : "بر اساس قیمت‌های ثبت‌شده؛ قیمت روز نیست."}</p>
+    {summary.count > 0 && <p className="wallet-fund-note">بر اساس قیمت‌های ثبت‌شده؛ قیمت روز نیست.</p>}
     {summary.unpriced_count > 0 && <p className="wallet-fund-note">{summary.unpriced_count.toLocaleString("fa-IR")} مورد بدون قیمت{allUnpriced ? "؛ برای محاسبهٔ ارزش، قیمت لازمه." : " در این مبلغ حساب نشده."}</p>}
   </div>;
 }

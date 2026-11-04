@@ -61,7 +61,7 @@ also require code review; static import tests are not a sandbox.
 ## Families module
 
 `app/families` owns the `families` schema with `families`, `memberships` and
-`invitations` tables. Ownership is distinct from relationship: members with full access
+`invitations` tables. Ownership is distinct from relationship: all family members
 manage invitations, while spouse/child/friend are relationship labels only.
 Each user can own one family and join others (maximum 20 memberships, 100 members
 per family). The creator has a membership with no relationship label. User IDs
@@ -73,9 +73,9 @@ containing only ID and names (100 maximum), never phones or credentials.
 Dependency direction is families -> users; users does not depend on families.
 Family HTTP handlers contain no persistence queries. Composition registers the
 family router through `families.bootstrap`; migration metadata is exported by
-`families.persistence`. `families.public.Access` provides read/write authorization and membership validation without exposing ORM state.
+`families.persistence`. `families.public.Access` provides membership and owner authorization and membership validation without exposing ORM state.
 
-Invitation creation requires full access, limited to 20 links per family per hour.
+Invitation creation requires membership, limited to 20 links per family per hour.
 Each random 256-bit token is stored as a SHA-256 digest and returned once.
 Links expire after seven days, can be revoked, and are accepted explicitly by
 an authenticated active user. Possession of a link grants its bearer the ability
@@ -96,7 +96,7 @@ family deletion/transfer and relationship edits are not exposed in this version.
 
 `app/income` owns `income.entries`. It depends on public families authorization, users identity/directory and
 money_locations lookup contracts. Family and user
-IDs are opaque references without cross-schema foreign keys. Full-access members
+IDs are opaque references without cross-schema foreign keys. All family members
 can record income; all family members can read their family inbox. Attribution
 must refer to a current member of the same family.
 
@@ -115,7 +115,7 @@ Run Alembic upgrade head to create the schema.
 `app/expenses` owns `expenses.entries` and depends only on families/public
 authorization and users/public identity contracts. It never accesses income
 persistence. Entries store a positive whole-toman amount, title, category,
-current family member attribution and optional description. Full-access members
+current family member attribution and optional description. All family members
 can write; all family members can read. Family/request uniqueness makes retries
 idempotent. GET/POST `/api/families/{id}/expenses` use the same pagination and
 precision-preserving aggregate conventions as income. No edit/delete API is exposed.
@@ -134,8 +134,8 @@ schema. It uses only the public family access and user identity interfaces.
 `money_locations.public.Directory` resolves a same-family location to its name;
 income calls this contract and stores the opaque ID and name snapshot. There are
 no cross-schema foreign keys or imports of another module's persistence.
-Names are unique per family. Full-access members create locations, all members
-may list them, and outsiders receive 404. Full-access members may rename accounts
+Names are unique per family. Family owners create locations, all members
+may list them, and outsiders receive 404. Family owners may rename accounts
 via PATCH on the account ID; family name uniqueness remains enforced. Income
 keeps the original name snapshot and stable account ID. Deletion sets deleted_at on the account without changing any income records.
 Active lists and new income lookups exclude deleted accounts; existing income
@@ -203,3 +203,29 @@ not treated as a known zero. Gold uses a supplied total first, otherwise grams �
 other investments use quantity × unit price. Property uses area × per-square-metre price first,
 otherwise its historical purchase total; cars use their purchase total. These are recorded
 purchase values, not live market valuations. Empty totals are zero. No migration is required.
+
+
+### Access model migration (backend 1.0.0)
+
+Access tiers have been removed from memberships and invitations. All family members can
+record income/expenses and create, list or revoke invitations. Only the family owner can
+create, rename or delete accounts in Management; all members can still select accounts
+when recording income. Personal investment and asset ownership is unchanged.
+Stop sending or reading `access` in family APIs and deploy the matching frontend.
+Run `alembic upgrade head` before starting this backend. Existing memberships and
+invitation links remain valid. Downgrade cannot restore old tiers: it assigns view
+to members/invitations and full to family owners.
+
+
+### Family expense categories
+
+The expenses module owns `expenses.categories`, scoped by family with unique names
+and idempotent request UUIDs. GET `/api/families/{id}/expenses/categories` is available
+to members; POST `{name, request_id}` requires the family owner through the public
+families authorization contract. No cross-module table access is introduced.
+New expense forms submit `category_id`; the API validates same-family ownership
+and snapshots the category name. Historical `category` codes remain supported.
+Supply exactly one of `category` or `category_id`; responses add `category_id` and
+`category_name` without removing the legacy code. Custom entries use legacy `other`.
+Apply Alembic head before deployment. Existing expenses and totals are unchanged;
+downgrade refuses to discard defined categories. Families start with no custom categories.

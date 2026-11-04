@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.12.0`. No backend release has been published.
+Current development version: `1.0.0`. No backend release has been published.
 
 ### Added
+
+- Every family has a protected default Other category; deleting a custom category atomically reassigns its expenses to Other without changing totals. Expense retries remain safe after category edits/deletion.
+
+- Added family expense categories owned by the expenses module: owners create, edit and delete named categories with validated Lucide icon identifiers (existing categories default to tag), members list/use them, and expenses retain category IDs and name snapshots. Legacy classifications remain valid; run Alembic upgrade head.
 
 - Added private investment and asset summary APIs with exact database aggregation over all records, recorded-price valuation and explicit unpriced counts. Gold total purchase price takes precedence over gram price; property per-square-metre price takes precedence over historical purchase totals.
 
@@ -74,6 +78,8 @@ Current development version: `0.12.0`. No backend release has been published.
   SMS configuration; never return passwords or provider secrets in errors.
 
 ### Changed
+
+- BREAKING: Removed invitation/member access fields and database tiers. All members can record income/expenses and manage invitations; only family owners can create, rename or delete accounts. Clients must stop sending/reading access, deploy the matching frontend, and run Alembic upgrade head. Existing memberships and invitation tokens are preserved; downgrade restores view defaults except owners, not historical tiers.
 
 - Enforce users-module boundaries with an immutable public identity contract,
   explicit startup/CLI/migration interfaces, and architecture tests. Move HTTP

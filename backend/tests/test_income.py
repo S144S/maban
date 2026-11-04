@@ -43,16 +43,16 @@ def test_income_family_access_and_attribution(client, app):
     with viewer, stranger, editor:
         assert accept(viewer, invite(client, family)["token"]).status_code == 200
         invitation = client.post(
-            f"/api/families/{family}/invitations", json={"relationship": "friend", "access": "full"}
+            f"/api/families/{family}/invitations", json={"relationship": "friend"}
         ).json()
         assert accept(editor, invitation["token"]).status_code == 200
         assert stranger.get(url).status_code == 404
         assert stranger.post(url, json=payload(stranger_user)).status_code == 404
-        assert viewer.post(url, json=payload(view_user)).status_code == 403
+        assert viewer.post(url, json=payload(view_user)).status_code == 201
         assert client.post(url, json=payload(stranger_user)).status_code == 404
         assert editor.post(url, json=payload(view_user)).status_code == 201
         assert client.post(url, json=payload(owner)).status_code == 201
-        assert viewer.get(url).json()["count"] == 2
+        assert viewer.get(url).json()["count"] == 3
         other = create(stranger)
         assert stranger.get(f"/api/families/{other}/income").json()["count"] == 0
         assert stranger.post(f"/api/families/{other}/income", json=payload(owner)).status_code == 404

@@ -46,7 +46,7 @@ def invitations(family_id: UUID, current: CurrentUser, service: Service):
 
 @router.post("/{family_id}/invitations", status_code=201)
 def invite(family_id: UUID, data: CreateInvitation, current: CurrentUser, service: Service):
-    return service.invite(family_id, current.id, data.relationship, data.access)
+    return service.invite(family_id, current.id, data.relationship)
 
 
 @router.delete("/{family_id}/invitations/{invite_id}")

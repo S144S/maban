@@ -11,7 +11,9 @@ from app.money_locations.models import MoneyLocation
 
 
 class FamilyAccess(Protocol):
-    def authorize(self, family_id: UUID, user_id: UUID, *, write: bool = False) -> None: ...
+    def authorize(self, family_id: UUID, user_id: UUID) -> None: ...
+
+    def require_owner(self, family_id: UUID, user_id: UUID) -> None: ...
 
 
 class LocationError(Exception):
@@ -34,7 +36,7 @@ class Locations:
         return {"locations": [self.view(row) for row in rows]}
 
     def create(self, family_id, user_id, data):
-        self.access.authorize(family_id, user_id, write=True)
+        self.access.require_owner(family_id, user_id)
         self.db.execute(insert(MoneyLocation).values(
             id=uuid4(), family_id=family_id, name=data.name,
             created_by=user_id, request_id=data.request_id, created_at=datetime.now(UTC),
@@ -58,7 +60,7 @@ class Locations:
         return row.name
 
     def rename(self, family_id, user_id, location_id, data):
-        self.access.authorize(family_id, user_id, write=True)
+        self.access.require_owner(family_id, user_id)
         row = self.db.scalar(select(MoneyLocation).where(
             MoneyLocation.family_id == family_id, MoneyLocation.deleted_at.is_(None), MoneyLocation.id == location_id
         ).with_for_update())
@@ -75,7 +77,7 @@ class Locations:
         return self.view(row)
 
     def delete(self, family_id, user_id, location_id):
-        self.access.authorize(family_id, user_id, write=True)
+        self.access.require_owner(family_id, user_id)
         row = self.db.scalar(select(MoneyLocation).where(
             MoneyLocation.family_id == family_id, MoneyLocation.id == location_id
         ).with_for_update())

@@ -2,15 +2,16 @@ from datetime import UTC, datetime
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.expenses.models import ExpenseEntry
+from app.expenses.models import ExpenseCategory, ExpenseEntry
 
 
 class FamilyAccess(Protocol):
-    def authorize(self, family_id: UUID, user_id: UUID, *, write: bool = False) -> None: ...
+    def authorize(self, family_id: UUID, user_id: UUID) -> None: ...
+    def require_owner(self, family_id: UUID, user_id: UUID) -> None: ...
     def require_member(self, family_id: UUID, member_id: UUID) -> None: ...
 
 
@@ -29,6 +30,8 @@ class Expense:
             "id": str(row.id),
             "amount_toman": row.amount_toman,
             "category": row.category,
+            "category_id": str(row.category_id) if row.category_id else None,
+            "category_name": row.category_name or {"home": "خانه", "groceries": "خرید روزمره", "leisure": "تفریح", "other": "سایر"}[row.category],
             "paid_by_member_id": str(row.paid_by_member_id),
             "title": row.title,
             "description": row.description,
@@ -36,12 +39,34 @@ class Expense:
         }
 
     def create(self, family_id, user_id, data):
-        self.access.authorize(family_id, user_id, write=True)
+        self.access.authorize(family_id, user_id)
         self.access.require_member(family_id, data.paid_by_member_id)
+        self.lock_categories(family_id)
+        submitted = {
+            "amount_toman": data.amount_toman, "category": data.category or "other",
+            "submitted_category_id": data.category_id, "paid_by_member_id": data.paid_by_member_id,
+            "title": data.title, "description": data.description or None, "created_by": user_id,
+        }
+        existing = self.db.scalar(select(ExpenseEntry).where(
+            ExpenseEntry.family_id == family_id, ExpenseEntry.request_id == data.request_id))
+        if existing is not None:
+            if any(getattr(existing, key) != value for key, value in submitted.items()):
+                raise ExpenseError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
+            return self.view(existing)
+        category = None
+        if data.category_id is not None:
+            category = self.db.scalar(select(ExpenseCategory).where(
+                ExpenseCategory.id == data.category_id, ExpenseCategory.family_id == family_id
+            ))
+            if category is None:
+                raise ExpenseError("دسته‌بندی در این خانواده پیدا نشد؛ دوباره انتخاب کنین.", 404)
         values = {
             "family_id": family_id,
             "amount_toman": data.amount_toman,
-            "category": data.category,
+            "category": data.category or "other",
+            "category_id": data.category_id,
+            "submitted_category_id": data.category_id,
+            "category_name": category.name if category else None,
             "paid_by_member_id": data.paid_by_member_id,
             "title": data.title,
             "description": data.description or None,
@@ -80,3 +105,82 @@ class Expense:
             "currency": "IRT",
             "offset": offset,
         }
+
+
+    @staticmethod
+    def category_view(row):
+        return {"id": str(row.id), "name": row.name, "icon": row.icon, "is_default": row.name == "سایر"}
+
+    def categories(self, family_id, user_id):
+        self.access.authorize(family_id, user_id)
+        self.lock_categories(family_id)
+        self.ensure_default(family_id, user_id)
+        rows = self.db.scalars(select(ExpenseCategory).where(ExpenseCategory.family_id == family_id)
+                               .order_by(ExpenseCategory.created_at, ExpenseCategory.id))
+        return {"categories": [self.category_view(row) for row in rows]}
+
+    def create_category(self, family_id, user_id, data):
+        self.access.require_owner(family_id, user_id)
+        self.lock_categories(family_id)
+        self.ensure_default(family_id, user_id)
+        self.db.execute(insert(ExpenseCategory).values(
+            id=uuid4(), family_id=family_id, name=data.name, icon=data.icon, created_by=user_id,
+            request_id=data.request_id, created_at=datetime.now(UTC),
+        ).on_conflict_do_nothing())
+        row = self.db.scalar(select(ExpenseCategory).where(
+            ExpenseCategory.family_id == family_id, ExpenseCategory.request_id == data.request_id))
+        if row is None:
+            raise ExpenseError("این دسته‌بندی از قبل وجود داره؛ نام دیگه‌ای انتخاب کنین.")
+        if row.name != data.name or row.icon != data.icon or row.created_by != user_id:
+            raise ExpenseError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
+        return self.category_view(row)
+
+    def lock_categories(self, family_id):
+        # Serialize category changes and expense assignment within this module/family.
+        self.db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                        {"key": f"expenses/categories/{family_id}"})
+
+    def ensure_default(self, family_id, user_id):
+        row = self.db.scalar(select(ExpenseCategory).where(
+            ExpenseCategory.family_id == family_id, ExpenseCategory.name == "سایر"))
+        if row is None:
+            row = ExpenseCategory(id=uuid4(), family_id=family_id, name="سایر", icon="tag",
+                                  created_by=user_id, request_id=uuid4(), created_at=datetime.now(UTC))
+            self.db.add(row)
+            self.db.flush()
+        return row
+
+    def editable_category(self, family_id, user_id, category_id):
+        self.access.require_owner(family_id, user_id)
+        self.lock_categories(family_id)
+        row = self.db.scalar(select(ExpenseCategory).where(
+            ExpenseCategory.family_id == family_id, ExpenseCategory.id == category_id))
+        if row is None:
+            raise ExpenseError("دسته‌بندی پیدا نشد.", 404)
+        if row.name == "سایر":
+            raise ExpenseError("دسته‌بندی پیش‌فرض سایر قابل تغییر یا حذف نیست.")
+        return row
+
+    def update_category(self, family_id, user_id, category_id, data):
+        row = self.editable_category(family_id, user_id, category_id)
+        self.ensure_default(family_id, user_id)
+        duplicate = self.db.scalar(select(ExpenseCategory.id).where(
+            ExpenseCategory.family_id == family_id, ExpenseCategory.name == data.name,
+            ExpenseCategory.id != category_id))
+        if duplicate:
+            raise ExpenseError("این دسته‌بندی از قبل وجود داره؛ نام دیگه‌ای انتخاب کنین.")
+        row.name, row.icon = data.name, data.icon
+        self.db.execute(update(ExpenseEntry).where(
+            ExpenseEntry.family_id == family_id, ExpenseEntry.category_id == category_id
+        ).values(category_name=data.name))
+        self.db.flush()
+        return self.category_view(row)
+
+    def delete_category(self, family_id, user_id, category_id):
+        row = self.editable_category(family_id, user_id, category_id)
+        default = self.ensure_default(family_id, user_id)
+        self.db.execute(update(ExpenseEntry).where(
+            ExpenseEntry.family_id == family_id, ExpenseEntry.category_id == category_id
+        ).values(category_id=default.id, category_name=default.name))
+        self.db.delete(row)
+        self.db.flush()

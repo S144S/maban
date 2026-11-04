@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import "./select.css";
 
-type Option = { value: string; label: string; disabled?: boolean };
+type Option = { value: string; label: string; disabled?: boolean; icon?: ReactNode };
 type SelectProps = {
   id: string;
   name?: string;
@@ -24,8 +25,8 @@ export function Select({ id, name, options, value, defaultValue, onValueChange, 
     <SelectPrimitive.Portal><SelectPrimitive.Content className="maban-select-content" position="popper" sideOffset={6} collisionPadding={12} dir="rtl">
       <SelectPrimitive.ScrollUpButton className="maban-select-scroll"><ChevronUp size={18} aria-hidden="true" /></SelectPrimitive.ScrollUpButton>
       <SelectPrimitive.Viewport className="maban-select-viewport">
-        {options.map(option => <SelectPrimitive.Item key={option.value} value={option.value} disabled={option.disabled} className="maban-select-item">
-          <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
+        {options.map(option => <SelectPrimitive.Item key={option.value} value={option.value} disabled={option.disabled} textValue={option.label} className="maban-select-item">
+          <SelectPrimitive.ItemText>{option.icon ? <span className="maban-select-option-label">{option.icon}{option.label}</span> : option.label}</SelectPrimitive.ItemText>
           <SelectPrimitive.ItemIndicator className="maban-select-check"><Check size={18} aria-hidden="true" /></SelectPrimitive.ItemIndicator>
         </SelectPrimitive.Item>)}
       </SelectPrimitive.Viewport>

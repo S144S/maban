@@ -5,11 +5,15 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.16.0`. No frontend release has been published.
+Current development version: `0.17.0`. No frontend release has been published.
 
 ### Added
 
-- Added a three-way home card selector for the everyday family fund, personal investment fund and personal asset fund. Shows recorded-price values, unpriced/empty states, privacy scope, retry controls and refreshed summaries after saving.
+- Every family has a protected default Other category; deleting a custom category atomically reassigns its expenses to Other without changing totals. Expense retries remain safe after category edits/deletion.
+
+- Added an owner-only expense-category section in Management with a bottom-sheet creation/editing forms and deletion confirmation and a soft peach header distinct from accounts. An icon-only, keyboard-accessible Lucide picker with compact 18px icons and screen-reader labels stores the chosen icon and displays it in Management and the expense selector. The expense modal loads the selected family’s saved categories with loading, retry and empty states instead of fixed options.
+
+- Added a three-way home card selector for the everyday family fund, personal investment fund and personal asset fund. Shows recorded-price values, unpriced/empty states, retry controls and refreshed summaries after saving.
 
 - Car entry uses one combined model field and defaults to the solar calendar without a calendar selector; separate historical brand values remain supported.
 
@@ -41,6 +45,8 @@ Current development version: `0.16.0`. No frontend release has been published.
 
 ### Fixed
 
+- Reduced the home fund selector height from 52px to 44px while preserving accessible touch targets, unified the card heading as balance across all three funds, and removed the shared/personal scope subtitles and empty-fund message from the home card. Tightened card padding and spacing; vertically centered the icon, balance title and adjacent amount in one compact row.
+
 - Redrew the family empty-state illustration with complete chipmunk characters, simpler facial details and a balanced family composition.
 
 - Removed the white circular background and border from family invitation delete buttons while preserving their touch targets and interaction feedback.
@@ -51,6 +57,8 @@ Current development version: `0.16.0`. No frontend release has been published.
   preserve the floating navigation, in-memory views, and browser back/forward.
 
 ### Changed
+
+- Removed access selectors and badges. Every family member can record income/expenses and manage invitations; Management shows only families created by the current user. Requires backend 1.0.0.
 
 - Renamed the bottom navigation budget item to Management with a settings icon, preserving its existing destination.
 
