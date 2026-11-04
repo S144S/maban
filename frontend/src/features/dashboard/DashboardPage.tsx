@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpLeft, House, Wallet, Plus, ShoppingBasket, Coffee, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,18 +7,11 @@ import { TransactionForm } from "./TransactionForm";
 import { categories, initialTransactions, formatMoney, parseAmount, summarize } from "./model";
 import "./dashboard.css";
 import { AccountAvatar } from "@/components/AccountAvatar";
-import { BottomNavigation } from "@/components/BottomNavigation";
 import type { User } from "../auth/api";
 
 const icons = { home: House, groceries: ShoppingBasket, leisure: Coffee };
 type Page = "home" | "transactions" | "budgets";
-function initialPage(): Page {
-  const page = new URLSearchParams(window.location.search).get("page");
-  return page === "transactions" || page === "budgets" ? page : "home";
-}
-
-export function DashboardPage({ user }: { user: User }) {
-  const [page, setPage] = useState<Page>(initialPage);
+export function DashboardPage({ user, page, onNavigate }: { user: User; page: Page; onNavigate: (page: Page) => void }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [limits, setLimits] = useState(categories.map(c => c.limit));
   const [filter, setFilter] = useState("all");
@@ -31,8 +24,7 @@ export function DashboardPage({ user }: { user: User }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const totals = summarize(transactions);
   const money = (value: number) => hidden ? "••••••" : formatMoney(value);
-  useEffect(() => { document.title = "داشبورد | مابان"; }, []);
-  function navigate(next: Page) { setPage(next); window.scrollTo({ top: 0, behavior: "instant" }); requestAnimationFrame(() => heading.current?.focus()); }
+  function navigate(next: Page) { onNavigate(next); window.scrollTo({ top: 0, behavior: "instant" }); requestAnimationFrame(() => heading.current?.focus()); }
   function saveBudgets(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -68,6 +60,5 @@ export function DashboardPage({ user }: { user: User }) {
       </section>}
       <p className="dash-end">قدم‌های کوچیک، حساب‌وکتاب روشن‌تر.</p>
     </main>
-    <BottomNavigation active={page} onNavigate={navigate} />
   </div>;
 }

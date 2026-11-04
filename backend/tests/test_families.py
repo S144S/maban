@@ -171,3 +171,41 @@ def test_family_schema_has_no_cross_module_foreign_keys():
         assert model.__table__.schema == "families"
         for fk in model.__table__.foreign_keys:
             assert fk.column.table.schema == "families"
+
+
+def test_full_access_can_manage_invitations_and_view_cannot(client, app):
+    register(client)
+    family_id = create(client)
+    assert client.get(f"/api/families/{family_id}").json()["members"][0]["access"] == "full"
+    invitation = client.post(
+        f"/api/families/{family_id}/invitations", json={"relationship": "friend", "access": "full"}
+    ).json()
+    with account(app, "09123456780")[0] as manager, account(app, "09123456781")[0] as viewer:
+        assert (
+            manager.post("/api/families/invitations/preview", json={"token": invitation["token"]}).json()[
+                "access"
+            ]
+            == "full"
+        )
+        assert accept(manager, invitation["token"]).status_code == 200
+        issued = invite(manager, family_id)
+        assert issued["invitation"]["access"] == "view"
+        assert accept(viewer, issued["token"]).status_code == 200
+        assert viewer.get(f"/api/families/{family_id}").status_code == 200
+        pending = invite(manager, family_id)
+        path = f"/api/families/{family_id}/invitations/{pending['invitation']['id']}"
+        assert viewer.delete(path).status_code == 403
+        assert (
+            viewer.post(
+                f"/api/families/{family_id}/invitations", json={"relationship": "friend", "access": "full"}
+            ).status_code
+            == 403
+        )
+        assert manager.get(f"/api/families/{family_id}/invitations").status_code == 200
+        assert manager.delete(path).status_code == 200
+    assert (
+        client.post(
+            f"/api/families/{family_id}/invitations", json={"relationship": "friend", "access": "admin"}
+        ).status_code
+        == 422
+    )

@@ -39,7 +39,11 @@ class Families:
         family = Family(owner_id=user_id, name=name, created_at=now())
         self.db.add(family)
         self.db.flush()
-        self.db.add(Membership(family_id=family.id, user_id=user_id, relationship=None, joined_at=now()))
+        self.db.add(
+            Membership(
+                family_id=family.id, user_id=user_id, relationship=None, access="full", joined_at=now()
+            )
+        )
         self.db.flush()
         return self.summary(family)
 
@@ -67,15 +71,15 @@ class Families:
         )
         return [self.summary(row) for row in rows]
 
-    def require_member(self, family_id, user_id, owner=False):
+    def require_member(self, family_id, user_id, manage=False):
         family = self.db.get(Family, family_id)
         member = self.db.scalar(
-            select(Membership.id).where(Membership.family_id == family_id, Membership.user_id == user_id)
+            select(Membership).where(Membership.family_id == family_id, Membership.user_id == user_id)
         )
         if not family or not member:
             raise FamilyError("خانواده پیدا نشد یا بهش دسترسی ندارین.", 404)
-        if owner and family.owner_id != user_id:
-            raise FamilyError("فقط سازندهٔ خانواده می‌تونه دعوت‌ها رو مدیریت کنه.", 403)
+        if manage and member.access != "full":
+            raise FamilyError("برای مدیریت دعوت‌ها به دسترسی «همه‌چی» نیاز دارین.", 403)
         return family
 
     def detail(self, family_id, user_id):
@@ -86,7 +90,12 @@ class Families:
             .order_by(Membership.joined_at, Membership.id)
         ).all()
         return self.summary(family), [
-            {"user_id": str(m.user_id), "relationship": m.relationship, "joined_at": m.joined_at.isoformat()}
+            {
+                "user_id": str(m.user_id),
+                "relationship": m.relationship,
+                "access": m.access,
+                "joined_at": m.joined_at.isoformat(),
+            }
             for m in members
         ]
 
@@ -103,13 +112,14 @@ class Families:
         return {
             "id": str(invite.id),
             "relationship": invite.relationship,
+            "access": invite.access,
             "status": status,
             "expires_at": invite.expires_at.isoformat(),
         }
 
-    def invite(self, family_id, user_id, relationship):
+    def invite(self, family_id, user_id, relationship, access="view"):
         lock(self.db, "family:" + str(family_id))
-        self.require_member(family_id, user_id, owner=True)
+        self.require_member(family_id, user_id, manage=True)
         recent = self.db.scalar(
             select(func.count())
             .select_from(Invitation)
@@ -127,6 +137,7 @@ class Families:
             family_id=family_id,
             token_hash=token_digest(token),
             relationship=relationship,
+            access=access,
             created_at=now(),
             expires_at=now() + timedelta(days=7),
         )
@@ -135,7 +146,7 @@ class Families:
         return {"invitation": self.invitation_view(invite), "token": token}
 
     def invitations(self, family_id, user_id):
-        self.require_member(family_id, user_id, owner=True)
+        self.require_member(family_id, user_id, manage=True)
         rows = self.db.scalars(
             select(Invitation)
             .where(Invitation.family_id == family_id)
@@ -146,7 +157,7 @@ class Families:
 
     def revoke(self, family_id, invite_id, user_id):
         lock(self.db, "family:" + str(family_id))
-        self.require_member(family_id, user_id, owner=True)
+        self.require_member(family_id, user_id, manage=True)
         invite = self.db.get(Invitation, invite_id)
         if not invite or invite.family_id != family_id:
             raise FamilyError("دعوت پیدا نشد.", 404)
@@ -172,6 +183,7 @@ class Families:
         return {
             "family": self.summary(family),
             "relationship": invite.relationship,
+            "access": invite.access,
             "expires_at": invite.expires_at.isoformat(),
             "accepted": invite.accepted_by == user_id,
         }
@@ -198,7 +210,11 @@ class Families:
             raise FamilyError("ظرفیت این خانواده تکمیل شده.", 409)
         self.db.add(
             Membership(
-                family_id=invite.family_id, user_id=user_id, relationship=invite.relationship, joined_at=now()
+                family_id=invite.family_id,
+                user_id=user_id,
+                relationship=invite.relationship,
+                access=invite.access,
+                joined_at=now(),
             )
         )
         invite.accepted_at, invite.accepted_by = now(), user_id

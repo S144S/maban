@@ -5,7 +5,16 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.6.6`. No frontend release has been published.
+Current development version: `0.7.0`. No frontend release has been published.
+
+### Added
+
+- Added full/view access selection on family invitations and permission labels on members and invitation previews.
+
+### Fixed
+
+- Prevented full-page reloads when switching between family and dashboard tabs;
+  preserve the floating navigation, in-memory views, and browser back/forward.
 
 ### Changed
 

@@ -1,8 +1,11 @@
+import { useId } from "react";
+
 /** Small, scalable chipmunk portrait for the account shortcut. */
 export function AccountAvatar() {
+  const clipId = useId();
   return <svg viewBox="0 0 80 80" fill="none" aria-hidden="true" focusable="false">
-    <defs><clipPath id="account-avatar-circle"><circle cx="40" cy="40" r="40" /></clipPath></defs>
-    <g clipPath="url(#account-avatar-circle)">
+    <defs><clipPath id={clipId}><circle cx="40" cy="40" r="40" /></clipPath></defs>
+    <g clipPath={`url(#${clipId})`}>
       <path fill="var(--scene-lime)" d="M0 0h80v80H0z" />
       <path fill="var(--primary)" d="M13 82c1-18 10-25 27-25s26 7 27 25" />
       <path stroke="var(--primary-foreground)" strokeWidth="2" strokeLinecap="round" d="m30 66 4 12m16-12-4 12" />
