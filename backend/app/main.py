@@ -17,7 +17,7 @@ from app.reminders.bootstrap import install as install_reminders
 from app.users.bootstrap import install
 
 
-def create_app(settings: Settings | None = None, sms=None):
+def create_app(settings: Settings | None = None):
     settings = settings or Settings()
     engine, sessions = database(settings.database_url)
 
@@ -28,7 +28,7 @@ def create_app(settings: Settings | None = None, sms=None):
 
     app = FastAPI(title="MaBan", version=version("maban-backend"), lifespan=lifespan)
     app.state.settings, app.state.engine, app.state.sessions = settings, engine, sessions
-    install(app, settings, sms)
+    install(app, settings)
     install_families(app)
     install_locations(app)
     install_income(app)
