@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.23.0`. No frontend release has been published.
+Current development version: `0.23.1`. No frontend release has been published.
 
 ### Changed
+
+- Shortened the Reports page heading and browser title to «گزارش», renamed the summary heading to «خلاصهٔ», removed its record count, and added playful cash-flow copy with a gently wistful message when expenses exceed income.
 
 - Replaced the long Management page with expandable account/category cards: open content in place, keep only one card expanded, and preserve family selection with keyboard-accessible controls.
 

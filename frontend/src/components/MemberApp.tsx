@@ -42,7 +42,7 @@ function MemberContent({ user }: { user: User }) {
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, []);
-  useEffect(() => { document.title = active === "families" ? "خانواده | مابان" : active === "reports" ? "گزارش مالی | مابان" : "داشبورد | مابان"; }, [active]);
+  useEffect(() => { document.title = active === "families" ? "خانواده | مابان" : active === "reports" ? "گزارش | مابان" : "داشبورد | مابان"; }, [active]);
   return <div ref={content}>
     <div hidden={active === "families"} data-active-panel={active !== "families"}>
       <DashboardPage key={selected} user={user} page={dashboardPage} onNavigate={navigate} />

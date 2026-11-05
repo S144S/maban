@@ -37,7 +37,7 @@ export function Reports() {
     setRange({ start, end }); setPreset("custom"); setCustom(false); setRangeError("");
   }
   return <div className="reports">
-    <div className="report-heading"><h1>گزارش مالی</h1></div>
+    <div className="report-heading"><h1>گزارش</h1></div>
     {error ? <div className="report-state" role="alert"><p>{error}</p><Button variant="outline" onClick={() => setRetry(n => n + 1)}>تلاش دوباره</Button></div> : !families ? <p className="report-state" role="status">در حال دریافت خانواده‌ها…</p> : !family ? <div className="report-state"><Users size={32} aria-hidden="true" /><h2>گزارش از اولین ثبت شروع می‌شه</h2><p>یه خانواده بسازین یا به خانواده‌تون بپیوندین تا دخل‌وخرج رو اینجا ببینین.</p><Button asChild><a href="/families">رفتن به خانواده</a></Button></div> : <>
       <section className="report-filters" aria-label="فیلترهای گزارش">
         <div className="report-periods" role="group" aria-label="بازهٔ گزارش">{[{ id: "week", label: "۷ روز اخیر" }, { id: "month", label: "این ماه" }, { id: "quarter", label: "۹۰ روز اخیر" }].map(p => <button key={p.id} aria-pressed={preset === p.id} onClick={() => { setPreset(p.id); setRange(presetRange(p.id)); setCustom(false); }}>{p.label}</button>)}<button aria-expanded={custom} aria-controls="report-custom-range" aria-pressed={preset === "custom"} onClick={() => setCustom(v => !v)}><SlidersHorizontal size={16} aria-hidden="true" />دلخواه</button></div>
@@ -83,13 +83,12 @@ function ReportContent({ familyId, range }: { familyId: string; range: Range }) 
   if (!data) return <div className="report-state" role="status"><ChartNoAxesCombined size={28} aria-hidden="true" /><p>در حال آماده‌سازی گزارش شما…</p></div>;
   const { income, expense } = data;
   const net = BigInt(income.total_toman) - BigInt(expense.total_toman);
-  const count = income.count + expense.count;
   const selected = data[kind];
   const ledger = page === 0 ? selected : pageData?.key === `${kind}:${page}` ? pageData.report : null;
   return <>
     <section className="report-overview" aria-labelledby="report-overview-title">
-      <div className="report-section-head"><h2 id="report-overview-title">خلاصهٔ این بازه</h2><span>{count.toLocaleString("fa-IR")} ثبت</span></div>
-      <div className="report-net"><span><Wallet size={18} aria-hidden="true" />خالص جریان پول</span><strong><bdi>{money(net)}</bdi><small>تومان</small></strong><p>{net < 0n ? "خرج این بازه از دخل بیشتر بوده." : net > 0n ? "دخل این بازه از خرج بیشتر بوده." : "دخل و خرج این بازه برابرند."}</p></div>
+      <div className="report-section-head"><h2 id="report-overview-title">خلاصهٔ</h2></div>
+      <div className="report-net"><span><Wallet size={18} aria-hidden="true" />خالص جریان پول</span><strong><bdi>{money(net)}</bdi><small>تومان</small></strong><p>{net < 0n ? <>این بار خرج جلو زد، دخل جا موند <span aria-hidden="true">🥲</span></> : net > 0n ? <>این بار دخل از خرج جلو زد! <span aria-hidden="true">🌱</span></> : "دخل و خرج این بازه برابرند."}</p></div>
       <div className="report-kpis"><div><span><ArrowDownLeft size={18} aria-hidden="true" />جمع دخل</span><strong><bdi>{money(income.total_toman)}</bdi></strong><small>تومان</small><p>{change(income.total_toman, income.previous_total_toman)}</p></div><div><span><ArrowUpLeft size={18} aria-hidden="true" />جمع خرج</span><strong><bdi>{money(expense.total_toman)}</bdi></strong><small>تومان</small><p>{change(expense.total_toman, expense.previous_total_toman)}</p></div></div>
       <p className="report-comparison">دورهٔ قبل: {dateLabel(income.previous_start)} تا {dateLabel(income.previous_end)}<br />خالص این بازه، موجودی کل حساب‌ها نیست.</p>
     </section>
