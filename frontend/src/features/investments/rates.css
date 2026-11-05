@@ -1,0 +1,14 @@
+.investment-rates { gap: 16px; }
+.rates-list { list-style: none; margin: 0; padding: 0; min-width: 0; }
+.rates-list li + li { border-top: 1px solid var(--border); }
+.rate-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 8px; width: 100%; padding: 16px 0; color: var(--foreground); }
+.rate-label { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; font-size: 14px; line-height: 1.9; }
+.rate-price { display: flex; flex: 0 1 210px; min-width: 0; align-items: center; gap: 8px; }
+.rate-price input { width: 100%; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--input); border-radius: 10px; background: var(--card); color: var(--foreground); font-size: 16px; font-weight: 600; text-align: center; }
+.rate-price input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.rate-price input[aria-invalid="true"] { border-color: var(--error); }
+.rate-price input[readonly] { background: var(--muted); }
+.rate-price > span { font-size: 12px; color: var(--muted-foreground); }
+.rate-feedback { flex-basis: 100%; font-size: 12px; line-height: 1.8; color: var(--muted-foreground); }
+.rate-feedback:empty { display: none; }
+.rate-error { color: var(--error); }

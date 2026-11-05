@@ -1,0 +1,6 @@
+.reminders-list .management-account-copy { display: grid; gap: 6px; }
+.reminders-list .management-account-copy > span { font-size: 14px; }
+.reminder-date { color: var(--muted-foreground); line-height: 1.9; }
+.reminder-actions, .reminder-pagination { display: flex; gap: 4px; flex-shrink: 0; }
+.reminder-pagination { justify-content: space-between; }
+.reminders-body [data-slot="button"] { min-width: 44px; min-height: 48px; }

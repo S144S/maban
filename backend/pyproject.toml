@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maban-backend"
+dynamic = ["version"]
+requires-python = ">=3.14"
+dependencies = [
+  "fastapi>=0.135,<1", "uvicorn>=0.41,<1", "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.3,<4", "alembic>=1.18,<2",
+  "pydantic-settings>=2.13,<3", "argon2-cffi>=25.1,<26", "httpx>=0.28,<1",
+]
+
+[dependency-groups]
+dev = ["pytest>=9,<10", "ruff>=0.15,<1"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 110
