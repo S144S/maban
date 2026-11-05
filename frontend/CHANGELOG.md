@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.25.0`. No frontend release has been published.
+Current development version: `0.26.0`. No frontend release has been published.
 
 ### Changed
 
@@ -30,6 +30,8 @@ Current development version: `0.25.0`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added an online-only installable web app manifest, Persian app identity, standalone dashboard launch, and PNG installation icons using the existing brand artwork, including iOS home-screen metadata. No service worker or offline financial data cache is introduced.
 
 - Show reminder SMS availability, provider acceptance, uncertain/skipped delivery and the next scheduled occurrence; update form copy for Tehran scheduling and Persian monthly recurrence. Requires backend 2.0.0 and separately enabled delivery.
 
