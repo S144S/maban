@@ -2,11 +2,11 @@ from datetime import UTC, datetime
 from decimal import Decimal, localcontext
 from uuid import uuid4
 
-from sqlalchemy import Numeric, case, cast, func, select
+from sqlalchemy import Numeric, case, cast, delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.investments.models import Investment
+from app.investments.models import Investment, InvestmentRate
 
 
 class InvestmentError(Exception):
@@ -63,3 +63,50 @@ class Investments:
         ).one()
         return {"total_toman": format(total, "f"), "count": count,
                 "unpriced_count": count - priced_count, "valuation_basis": "recorded_purchase_prices"}
+
+    def set_rate(self, user_id, data):
+        symbol = func.coalesce(Investment.symbol, "")
+        owned = self.db.scalar(select(Investment.id).where(
+            Investment.user_id == user_id, Investment.kind == data.kind,
+            symbol == data.symbol).limit(1))
+        if owned is None:
+            raise InvestmentError("اول این سرمایه رو به صندوق خودتون اضافه کنین.")
+        if data.unit_price_toman is None:
+            self.db.execute(delete(InvestmentRate).where(
+                InvestmentRate.user_id == user_id, InvestmentRate.kind == data.kind,
+                InvestmentRate.symbol == data.symbol))
+            return
+        values = {**data.model_dump(), "user_id": user_id, "updated_at": datetime.now(UTC)}
+        self.db.execute(insert(InvestmentRate).values(**values).on_conflict_do_update(
+            index_elements=["user_id", "kind", "symbol"],
+            set_={"unit_price_toman": data.unit_price_toman, "updated_at": values["updated_at"]}))
+
+    def rates(self, user_id):
+        # Aggregate every holding, independently of the paginated transaction list.
+        symbol = func.coalesce(Investment.symbol, "")
+        amount = func.coalesce(cast(Investment.shares, Numeric), Investment.grams, Investment.quantity)
+        holdings = self.db.execute(select(Investment.kind, symbol.label("symbol"),
+            func.sum(amount).label("quantity"), func.count().label("count"))
+            .where(Investment.user_id == user_id).group_by(Investment.kind, symbol)
+            .order_by(Investment.kind, symbol)).all()
+        prices = {(r.kind, r.symbol): r for r in self.db.scalars(
+            select(InvestmentRate).where(InvestmentRate.user_id == user_id))}
+        entries, count, missing = [], 0, 0
+        with localcontext() as context:
+            context.prec = 80
+            total = Decimal(0)
+            for holding in holdings:
+                rate = prices.get((holding.kind, holding.symbol))
+                value = holding.quantity * rate.unit_price_toman if rate else None
+                count += holding.count
+                if value is None:
+                    missing += holding.count
+                else:
+                    total += value
+                entries.append({"kind": holding.kind, "symbol": holding.symbol,
+                    "quantity": format(holding.quantity, "f"), "count": holding.count,
+                    "unit_price_toman": rate.unit_price_toman if rate else None,
+                    "updated_at": rate.updated_at.isoformat() if rate else None,
+                    "value_toman": format(value, "f") if value is not None else None})
+        return {"entries": entries, "summary": {"total_toman": format(total, "f"),
+            "count": count, "unpriced_count": missing, "valuation_basis": "manual_unit_rates"}}

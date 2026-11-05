@@ -1,6 +1,6 @@
 import { ExpenseCategories } from "../expenses/ExpenseCategories";
 import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from "react";
-import { Plus, Wallet, Users, Pencil, Trash2, Tags, ChevronDown, Bell } from "lucide-react";
+import { Plus, Wallet, Users, Pencil, Trash2, Tags, ChevronDown, Bell, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,9 +9,10 @@ import type { Family } from "../families/api";
 import type { MoneyLocation } from "./LocationField";
 import "./management.css";
 const Reminders = lazy(() => import("../reminders/Reminders").then(module => ({ default: module.Reminders })));
+const InvestmentRates = lazy(() => import("../investments/InvestmentRates").then(module => ({ default: module.InvestmentRates })));
 
 export function Management({ userId }: { userId: string }) {
-  const [section, setSection] = useState<"accounts" | "categories" | "reminders" | null>(null);
+  const [section, setSection] = useState<"accounts" | "categories" | "reminders" | "rates" | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
   const [selected, setSelected] = useState(new URLSearchParams(window.location.search).get("family") ?? "");
   const [data, setData] = useState<{ familyId: string; locations: MoneyLocation[] } | null>(null);
@@ -97,6 +98,16 @@ export function Management({ userId }: { userId: string }) {
         </div>
       </div>
     </>}
+      <div className="management-disclosure">
+        <h2><button type="button" id="rates-toggle" className="management-menu-item" aria-expanded={section === "rates"} aria-controls="rates-panel" onClick={() => setSection(current => current === "rates" ? null : "rates")}>
+          <span className="management-menu-icon"><TrendingUp size={24} aria-hidden="true" /></span>
+          <span className="management-menu-copy"><strong>نرخ‌نامه</strong><span>ثبت قیمت روز و محاسبهٔ ارزش سرمایه‌ها</span></span>
+          <ChevronDown size={20} aria-hidden="true" />
+        </button></h2>
+        <div id="rates-panel" hidden={section !== "rates"} role="region" aria-labelledby="rates-toggle">
+          {section === "rates" && <Suspense fallback={<p className="management-body" role="status">در حال آماده‌سازی نرخ‌نامه…</p>}><InvestmentRates key={userId} /></Suspense>}
+        </div>
+      </div>
       <div className="management-disclosure">
         <h2><button type="button" id="reminders-toggle" className="management-menu-item" aria-expanded={section === "reminders"} aria-controls="reminders-panel" onClick={() => setSection(current => current === "reminders" ? null : "reminders")}>
           <span className="management-menu-icon"><Bell size={24} aria-hidden="true" /></span>

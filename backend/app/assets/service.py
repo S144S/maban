@@ -55,3 +55,29 @@ class Assets:
         ).one()
         return {"total_toman": format(total, "f"), "count": count,
                 "unpriced_count": count - priced_count, "valuation_basis": "recorded_purchase_prices"}
+
+
+    def rates(self, user_id):
+        rows = self.db.scalars(select(Asset).where(Asset.user_id == user_id)
+                               .order_by(Asset.kind, Asset.created_at, Asset.id)).all()
+        return {"entries": [{**self.view(row), "unit_price_toman": row.current_unit_price_toman}
+                            for row in rows]}
+
+    def set_rate(self, user_id, asset_id, data):
+        row = self.db.scalar(select(Asset).where(Asset.user_id == user_id, Asset.id == asset_id)
+                             .with_for_update())
+        if row is None:
+            raise AssetError("این دارایی در صندوق شما پیدا نشد.")
+        row.current_unit_price_toman = data.unit_price_toman
+        row.rate_updated_at = datetime.now(UTC) if data.unit_price_toman is not None else None
+        self.db.flush()
+
+    def current_summary(self, user_id):
+        value = case((Asset.kind == "car", cast(Asset.current_unit_price_toman, Numeric)),
+                     else_=Asset.area_sqm * cast(Asset.current_unit_price_toman, Numeric))
+        count, priced_count, total = self.db.execute(
+            select(func.count(), func.count(value), func.coalesce(func.sum(value), 0))
+            .select_from(Asset).where(Asset.user_id == user_id)
+        ).one()
+        return {"total_toman": format(total, "f"), "count": count,
+                "unpriced_count": count - priced_count, "valuation_basis": "manual_unit_rates"}
