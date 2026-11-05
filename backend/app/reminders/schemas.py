@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, field_validator
@@ -9,6 +9,7 @@ class ReminderFields(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
     due_at: AwareDatetime
+    recurrence: Literal["none", "daily", "weekly", "monthly"] = "none"
     amount_toman: Annotated[int, Field(strict=True, gt=0, le=1_000_000_000_000)] | None = None
 
     @field_validator("due_at", mode="before")

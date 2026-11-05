@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.19.0`. No frontend release has been published.
+Current development version: `0.20.0`. No frontend release has been published.
 
 ### Changed
 
@@ -18,6 +18,8 @@ Current development version: `0.19.0`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added a recurrence selector using the shared RTL design-system Select, with no-repeat, daily, weekly and monthly options, persisted across editing and shown in the list. Requires backend 1.3.0; automatic execution and SMS delivery remain inactive.
 
 - Added an expandable personal reminders card for every signed-in user, including users without an owned family. Create, edit and delete one-time reminders with Persian dates, Tehran time and optional amounts; keep the card concise without introductory privacy/delivery banners, while the form explains that SMS delivery and automatic recurrence are not active. Includes a reusable RTL Persian calendar with month/year selection, today shortcut, manual input, leap-year validation and keyboard navigation. Requires backend 1.2.0.
 

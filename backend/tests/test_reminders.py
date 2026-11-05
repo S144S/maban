@@ -20,6 +20,7 @@ def test_reminders_crud_retry_and_no_delivery(client):
     row = result.json()["reminder"]
     assert row["title"] == "قسط وام"
     assert row["delivery_status"] == "not_available"
+    assert row["recurrence"] == "none"
     assert client.post("/api/reminders", json=data).json() == result.json()
     assert client.post("/api/reminders", json={**data, "amount_toman": 1}).status_code == 409
     assert len(client.get("/api/reminders").json()["reminders"]) == 1
@@ -61,7 +62,8 @@ def test_reminder_validation(client):
                     {"amount_toman": 1000000000001}, {"due_at": "2030-02-30T09:00:00Z"},
                     {"due_at": "2030-01-01T09:00:00"}, {"due_at": 123456},
                     {"due_at": "2200-01-01T00:00:00Z"}, {"user_id": str(uuid4())},
-                    {"sms_enabled": True}):
+                    {"sms_enabled": True}, {"recurrence": "yearly"}, {"recurrence": None},
+                    {"recurrence": 1}):
         response = client.post("/api/reminders", json=payload(**changes))
         assert response.status_code == 422, response.text
     assert client.post("/api/reminders", json=payload(amount_toman=None)).status_code == 201
@@ -87,3 +89,36 @@ def test_reminder_pagination_and_migration(client):
 def test_reminder_schema_ownership():
     from app.reminders.persistence import TABLES
     assert all(table.schema == "reminders" and not table.foreign_keys for table in TABLES)
+
+
+def test_recurrence_creation_editing_and_retries(client):
+    register(client)
+    for recurrence in ("daily", "weekly", "monthly"):
+        data = payload(recurrence=recurrence)
+        created = client.post("/api/reminders", json=data)
+        assert created.status_code == 201, created.text
+        row = created.json()["reminder"]
+        assert row["recurrence"] == recurrence
+        assert client.post("/api/reminders", json=data).json() == created.json()
+        assert client.post("/api/reminders", json={**data, "recurrence": "none"}).status_code == 409
+        url = f"/api/reminders/{row['id']}"
+        fields = {key: value for key, value in data.items() if key not in ("request_id", "recurrence")}
+        # A legacy update preserves the recurrence preference.
+        assert client.put(url, json=fields).json()["reminder"]["recurrence"] == recurrence
+        assert client.put(url, json={**fields, "recurrence": "yearly"}).status_code == 422
+        assert client.put(url, json={**fields, "recurrence": "weekly"}).json()["reminder"]["recurrence"] == "weekly"
+        assert client.put(url, json={**fields, "recurrence": "none"}).json()["reminder"]["recurrence"] == "none"
+    assert all(row["recurrence"] == "none" for row in client.get("/api/reminders").json()["reminders"])
+
+
+def test_recurrence_migration_preserves_existing_reminders_and_retries(client):
+    register(client)
+    data = payload()
+    created = client.post("/api/reminders", json=data).json()
+    config = Config("alembic.ini")
+    command.downgrade(config, "abdf867498f0")
+    command.upgrade(config, "head")
+    command.check(config)
+    assert client.get("/api/reminders").json()["reminders"] == [created["reminder"]]
+    assert client.post("/api/reminders", json=data).json() == created
+    assert client.post("/api/reminders", json={**data, "recurrence": "none"}).json() == created

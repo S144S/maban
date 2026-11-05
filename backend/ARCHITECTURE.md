@@ -240,6 +240,11 @@ never grants access. Due dates are timezone-aware and normalized to UTC. Optiona
 amounts are positive whole tomans up to 1,000,000,000,000. Lists are ordered by due
 date and ID, with 50-row offset pages and `has_more`.
 
+Recurrence is a stored preference (`none`, `daily`, `weekly`, `monthly`), validated
+by the API and a database constraint. Existing records default to `none`. Omitted
+recurrence in legacy PUT requests preserves the current preference. Creation
+fingerprints omit `none` to remain compatible with pre-recurrence retries.
+
 Creation is idempotent per user/request UUID. An immutable payload fingerprint
 prevents conflicting retries even after edits; deletion keeps a tombstone so a
 retry cannot recreate a deleted reminder. PUT replaces editable fields and DELETE

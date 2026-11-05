@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.2.0`. No backend release has been published.
+Current development version: `1.3.0`. No backend release has been published.
 
 ### Added
+
+- Added optional reminder recurrence preferences (`none`, `daily`, `weekly`, `monthly`) to create, edit and list APIs. Existing reminders default to none; legacy edits preserve the setting and creation retries remain compatible. Run Alembic upgrade head. Scheduling and delivery remain inactive.
 
 - Added personal reminder CRUD with timezone-aware due dates, optional whole-toman amounts, private session ownership, pagination and idempotent creation. The new reminders schema requires Alembic upgrade head. No scheduler, SMS delivery, recurrence or balance changes are enabled.
 

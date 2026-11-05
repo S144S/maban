@@ -22,6 +22,7 @@ class Reminders:
     @staticmethod
     def view(row):
         return {"id": str(row.id), "title": row.title, "due_at": row.due_at.isoformat(),
+                "recurrence": row.recurrence,
                 "amount_toman": row.amount_toman, "delivery_status": "not_available"}
 
     def list(self, user_id, offset):
@@ -32,8 +33,12 @@ class Reminders:
 
     def create(self, user_id, data):
         fields = data.model_dump(exclude={"request_id"})
+        # Preserve fingerprints from before recurrence was introduced.
+        fingerprint_fields = {**fields, "due_at": data.due_at.isoformat()}
+        if data.recurrence == "none":
+            fingerprint_fields.pop("recurrence")
         fingerprint = hashlib.sha256(json.dumps(
-            {**fields, "due_at": data.due_at.isoformat()}, sort_keys=True
+            fingerprint_fields, sort_keys=True
         ).encode()).hexdigest()
         self.db.execute(insert(Reminder).values(
             id=uuid4(), user_id=user_id, **fields, request_id=data.request_id,
@@ -58,6 +63,9 @@ class Reminders:
         if row.deleted_at is not None:
             raise ReminderError("یادآور پیدا نشد.", 404)
         for key, value in data.model_dump().items():
+            # Older clients do not know this field and must not reset it.
+            if key == "recurrence" and key not in data.model_fields_set:
+                continue
             setattr(row, key, value)
         self.db.flush()
         return self.view(row)

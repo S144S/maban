@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Bell, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MoneyInput } from "@/components/ui/money-input";
+import { Select } from "@/components/ui/select";
 import { PersianDatePicker } from "@/components/ui/persian-date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api, errorMessage } from "@/lib/http";
@@ -9,7 +10,9 @@ import { formatMoney, parseAmount } from "../dashboard/model";
 import { formatReminderDate, parseReminderDate, reminderDateFields } from "./date";
 import "./reminders.css";
 
-type Reminder = { id: string; title: string; due_at: string; amount_toman: number | null; delivery_status: "not_available" };
+const recurrenceLabels = { none: "بدون تکرار", daily: "روزانه", weekly: "هفتگی", monthly: "ماهانه" };
+const recurrenceOptions = Object.entries(recurrenceLabels).map(([value, label]) => ({ value, label }));
+type Reminder = { id: string; title: string; due_at: string; recurrence: keyof typeof recurrenceLabels; amount_toman: number | null; delivery_status: "not_available" };
 type ReminderPage = { reminders: Reminder[]; has_more: boolean };
 
 export function Reminders() {
@@ -57,7 +60,8 @@ export function Reminders() {
     if (!title) { setFormError("عنوان یادآور رو وارد کنین."); return; }
     if (!due_at) { setFormError("تاریخ شمسی معتبر بین سال‌های ۱۴۰۳ تا ۱۴۹۸ و ساعت بین ۰۰:۰۰ تا ۲۳:۵۹ وارد کنین."); return; }
     if (rawAmount && amount_toman === null) { setFormError("مبلغ رو به تومان و بین ۱ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰٬۰۰۰ وارد کنین."); return; }
-    const body = { title, due_at, amount_toman };
+    const recurrence = String(fields.get("recurrence") ?? "none");
+    const body = { title, due_at, amount_toman, recurrence };
     const payload = JSON.stringify(body);
     if (request.current.payload !== payload) request.current = { payload, id: crypto.randomUUID() };
     pending.current = true; setBusy(true); setFormError("");
@@ -86,6 +90,7 @@ export function Reminders() {
     {loading ? <p role="status">در حال دریافت یادآورها…</p> : error ? <div role="alert"><p className="dash-error">{error}</p><Button variant="outline" onClick={() => setRevision(value => value + 1)}>تلاش دوباره</Button></div> : <>
       {items.length ? <ul className="management-list reminders-list">{items.map(item => <li key={item.id}>
         <div className="management-account-copy"><strong>{item.title}</strong><span className="reminder-date">{formatReminderDate(item.due_at)} · تهران</span>
+          <span>تکرار: {recurrenceLabels[item.recurrence ?? "none"]}</span>
           {item.amount_toman !== null && <span><bdi>{formatMoney(item.amount_toman)}</bdi> تومان</span>}
         </div>
         <div className="reminder-actions"><Button variant="ghost" size="icon" aria-label={`ویرایش یادآور ${item.title}`} onClick={() => showForm(item)}><Pencil size={18} aria-hidden="true" /></Button>
@@ -99,12 +104,13 @@ export function Reminders() {
       <DialogContent className="management-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={event => {
         if (busy || event.target instanceof Element && event.target.closest('[data-calendar-open="true"]')) event.preventDefault();
       }} onInteractOutside={event => { if (busy) event.preventDefault(); }}>
-        <DialogHeader><DialogTitle>{editing ? "ویرایش یادآور" : "افزودن یادآور"}</DialogTitle><DialogDescription>یک موعد مشخص ثبت کنین. فعلاً تکرار خودکار و ارسال پیامک فعال نیست و مبلغ از موجودی کم نمی‌شه.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? "ویرایش یادآور" : "افزودن یادآور"}</DialogTitle><DialogDescription>موعد و تکرار یادآور رو تنظیم کنین. فعلاً این تنظیمات ذخیره می‌شن؛ اجرای خودکار و ارسال پیامک فعال نیست و مبلغ از موجودی کم نمی‌شه.</DialogDescription></DialogHeader>
         <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
           <label htmlFor="reminder-title">عنوان یادآور<input id="reminder-title" name="title" defaultValue={editing?.title ?? ""} maxLength={80} required placeholder="مثلاً قسط وام مسکن" /></label>
           <PersianDatePicker id="reminder-date" name="date" defaultValue={initial.date} required disabled={busy} />
           <label htmlFor="reminder-time">ساعت به وقت تهران<input id="reminder-time" name="time" dir="ltr" defaultValue={initial.time} required maxLength={5} placeholder="۰۹:۰۰" aria-describedby="reminder-time-help" /></label>
           <p id="reminder-time-help" className="text-sm text-muted-foreground">ساعت ۲۴ساعته؛ مثلاً ۱۸:۳۰</p>
+          <label htmlFor="reminder-recurrence">تکرار<Select id="reminder-recurrence" name="recurrence" defaultValue={editing?.recurrence ?? "none"} options={recurrenceOptions} disabled={busy} /></label>
           <label htmlFor="reminder-amount">مبلغ (تومان، اختیاری)<MoneyInput id="reminder-amount" name="amount" defaultValue={editing?.amount_toman ?? ""} maxLength={24} placeholder="مثلاً ۲٬۵۰۰٬۰۰۰" /></label>
           {formError && <p className="dash-error" role="alert">{formError}</p>}
           <Button type="submit">{busy ? "در حال ذخیره…" : "ذخیره یادآور"}</Button>
