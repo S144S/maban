@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.1.0`. No backend release has been published.
+Current development version: `1.2.0`. No backend release has been published.
 
 ### Added
+
+- Added personal reminder CRUD with timezone-aware due dates, optional whole-toman amounts, private session ownership, pagination and idempotent creation. The new reminders schema requires Alembic upgrade head. No scheduler, SMS delivery, recurrence or balance changes are enabled.
 
 - Added owner-managed recurring monthly expense-category limits in whole tomans, including Other. Null means unlimited; members can read limits. Limits do not block expenses or send alerts. Run Alembic upgrade head; existing categories remain unlimited.
 

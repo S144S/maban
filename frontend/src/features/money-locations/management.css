@@ -46,3 +46,23 @@
 
 
 .category-management-actions { display: flex; align-items: center; flex-shrink: 0; }
+
+.management-page { margin-top: 24px; min-width: 0; }
+.management-page > .dash-form { margin-block: 16px; }
+.management-menu { display: grid; gap: 12px; }
+.management-menu-item { display: flex; align-items: center; gap: 12px; min-height: 88px; padding: 16px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); color: var(--card-foreground); text-decoration: none; }
+.management-menu-icon { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 16px; background: var(--muted); }
+.management-menu-copy { display: grid; gap: 4px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.management-menu-copy strong { font-size: 16px; }
+.management-menu-copy > span { font-size: 14px; line-height: 1.8; color: var(--muted-foreground); }
+.management-menu-item > svg { flex-shrink: 0; }
+.management-menu-item:hover { background: var(--accent); color: var(--accent-foreground); }
+.management-menu-item:active { background: var(--secondary); }
+.management-menu-item:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+
+.management-disclosure { min-width: 0; border: 1px solid var(--border); border-radius: 20px; background: var(--card); color: var(--card-foreground); }
+.management-disclosure .management-menu-item { width: 100%; border: 0; text-align: start; cursor: pointer; font: inherit; }
+.management-menu-item[aria-expanded="true"] { background: var(--accent); color: var(--accent-foreground); border-radius: 20px 20px 0 0; }
+.management-menu-item[aria-expanded="true"] > svg { transform: rotate(180deg); }
+.management-disclosure .management-locations { margin-top: 0; border: 0; background: transparent; }
+.management-disclosure .management-overview { display: none; }

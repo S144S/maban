@@ -1,0 +1,22 @@
+.persian-picker { display: grid; gap: 8px; min-width: 0; }
+.persian-picker-field { display: flex; align-items: center; gap: 6px; }
+.persian-picker-field input { flex: 1; }
+.persian-picker-help { font-size: 12px; color: var(--muted-foreground); line-height: 1.8; }
+.persian-calendar { min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); color: var(--card-foreground); }
+.persian-calendar-nav { display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+.persian-calendar-selects { display: flex; flex: 1; min-width: 0; gap: 6px; }
+.persian-calendar-selects select { font-family: var(--font-sans); }
+.persian-calendar-scroll { overflow-x: auto; padding: 3px; }
+.persian-calendar-grid { min-width: 308px; }
+.persian-calendar-week { display: grid; grid-template-columns: repeat(7, minmax(44px, 1fr)); text-align: center; }
+.persian-calendar-week [role="columnheader"] { padding-block: 8px; font-size: 12px; color: var(--muted-foreground); }
+.persian-calendar-day { position: relative; display: block; width: 100%; min-height: 44px; border-radius: 14px; font-size: 14px; cursor: pointer; }
+.persian-calendar-day:hover { background: var(--accent); color: var(--accent-foreground); }
+.persian-calendar-day:active { background: var(--secondary); }
+.persian-calendar-day[aria-current="date"]::after { content: ""; position: absolute; bottom: 4px; inset-inline-start: calc(50% - 2px); width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+[aria-selected="true"] > .persian-calendar-day { background: var(--primary); color: var(--primary-foreground); font-weight: 700; box-shadow: inset 0 0 0 2px var(--primary-active); }
+.persian-picker :is(button, select, input):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.persian-calendar-day:disabled { background: var(--disabled); color: var(--disabled-foreground); cursor: default; }
+.persian-calendar-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+@media (max-width: 400px) { .persian-calendar { margin-inline: -12px; padding: 6px; } }
+@media (max-width: 360px) { .persian-calendar { margin-inline: 0; } .persian-calendar-selects { flex-wrap: wrap; } }

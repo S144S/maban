@@ -229,3 +229,22 @@ Supply exactly one of `category` or `category_id`; responses add `category_id` a
 `category_name` without removing the legacy code. Custom entries use legacy `other`.
 Apply Alembic head before deployment. Existing expenses and totals are unchanged;
 downgrade refuses to discard defined categories. Families start with no custom categories.
+
+
+## Personal reminders
+
+`app/reminders` owns `reminders.entries`. Its only domain dependency is
+`users.public.CurrentUser`. GET/POST `/api/reminders` and PUT/DELETE
+`/api/reminders/{id}` derive ownership from the current session; family membership
+never grants access. Due dates are timezone-aware and normalized to UTC. Optional
+amounts are positive whole tomans up to 1,000,000,000,000. Lists are ordered by due
+date and ID, with 50-row offset pages and `has_more`.
+
+Creation is idempotent per user/request UUID. An immutable payload fingerprint
+prevents conflicting retries even after edits; deletion keeps a tombstone so a
+retry cannot recreate a deleted reminder. PUT replaces editable fields and DELETE
+is idempotent for the owner. Delivery is explicitly `not_available`: no scheduler,
+SMS adapter, automatic recurrence or financial mutation is connected. A future SMS
+feature must define opt-in and delivery semantics before consuming these records;
+storing a reminder is not delivery consent. Apply Alembic head before starting the
+updated app. Downgrade refuses to discard reminder records.

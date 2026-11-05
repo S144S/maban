@@ -269,3 +269,12 @@ The setting applies to the family's category, repeats each Persian calendar mont
 monthly aggregation, threshold alerts and notifications are future work.
 Expense recording is never blocked by the target. Category edits retain it;
 deletion discards that category's target and does not alter Other's target.
+
+
+## Personal reminders
+
+Management includes private one-time reminders (title, due date/time, optional
+amount). Run `uv run alembic upgrade head` before using backend 1.2.0. No scheduler,
+SMS delivery or recurring reminders are active; records do not change balances.
+The UI accepts Persian dates and Tehran local time. Records are owned by the
+signed-in user, independently of family membership.

@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.18.1`. No frontend release has been published.
+Current development version: `0.19.0`. No frontend release has been published.
 
 ### Changed
+
+- Replaced the long Management page with expandable account/category cards: open content in place, keep only one card expanded, and preserve family selection with keyboard-accessible controls.
 
 - Reduced the balance label, icon and currency label sizes and sized amounts against available space to keep currency alongside large mobile balances.
 
@@ -16,6 +18,8 @@ Current development version: `0.18.1`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added an expandable personal reminders card for every signed-in user, including users without an owned family. Create, edit and delete one-time reminders with Persian dates, Tehran time and optional amounts; keep the card concise without introductory privacy/delivery banners, while the form explains that SMS delivery and automatic recurrence are not active. Includes a reusable RTL Persian calendar with month/year selection, today shortcut, manual input, leap-year validation and keyboard navigation. Requires backend 1.2.0.
 
 - Added a Management settings icon alongside category edit/delete actions, opening a bottom sheet to set, edit or remove each category’s recurring monthly spending limit, including Other, with Persian-digit input and clear no-alert/no-blocking semantics.
 
