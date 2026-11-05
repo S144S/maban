@@ -1,4 +1,5 @@
 import { SquirrelFamily } from "./SquirrelFamily";
+import { useActiveFamily } from "./ActiveFamily";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Users, UserPlus, Plus, Copy, Mail, Trash2, Check } from "lucide-react";
@@ -16,7 +17,7 @@ import "./families.css";
 
 export function FamiliesPage({ user }: { user: User }) {
   const [families, setFamilies] = useState<Family[]>([]);
-  const [selected, setSelected] = useState("");
+  const { selected, setSelected } = useActiveFamily();
   const [detail, setDetail] = useState<{family: Family; members: Member[]} | null>(null);
   const [invites, setInvites] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,7 @@ export function FamiliesPage({ user }: { user: User }) {
     const controller = new AbortController();
     setLoading(true); setError("");
     api<{families: Family[]}>("/families", { signal: controller.signal }).then(data => {
+      if (controller.signal.aborted) return;
       setFamilies(data.families);
       setSelected(current => data.families.some(f => f.id === current) ? current : data.families[0]?.id ?? "");
     }).catch(err => { if (!controller.signal.aborted) setError(report(err)); })

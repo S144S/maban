@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.22.0`. No frontend release has been published.
+Current development version: `0.23.0`. No frontend release has been published.
 
 ### Changed
 
@@ -18,6 +18,8 @@ Current development version: `0.22.0`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Replaced the sample Transactions destination with a real-data Reports page: Persian date filters, cash-flow summaries, previous-period comparisons, accessible trend charts and daily tables, category/source rankings, paginated records and daily CSV export. Reports retain the shared 480px mobile-first application shell and single-column sections on larger screens, with a title-only header and inline start/end labels for custom date inputs. Active family selection is shared across Home, Reports and Management, persists per user for the browser session, and can only be changed on the Families page. Management never falls back to another owned family. Legacy transactions links open Reports. Requires backend 1.5.0.
 
 - Log the build-derived client version in the browser console and show the live backend version in the profile menu, with a small non-interactive «نسخهٔ:» label and graceful unavailable state.
 

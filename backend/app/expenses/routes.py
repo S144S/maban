@@ -1,7 +1,8 @@
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.expenses.dependencies import Service
 from app.expenses.schemas import CreateCategory, CreateExpense, SetCategoryMonthlyLimit, UpdateCategory
@@ -50,3 +51,11 @@ def delete_category(family_id: UUID, category_id: UUID, current: CurrentUser, se
 def set_category_monthly_limit(family_id: UUID, category_id: UUID, data: SetCategoryMonthlyLimit,
                                current: CurrentUser, service: Service):
     return {"category": service.set_category_monthly_limit(family_id, current.id, category_id, data)}
+
+
+@router.get("/report")
+def report(family_id: UUID, start: date, end: date, current: CurrentUser, service: Service,
+           offset: Annotated[int, Query(ge=0, le=1000000)] = 0):
+    if not 0 <= (end - start).days < 366 or start.year < 2000 or end.year > 2100:
+        raise HTTPException(status_code=422, detail="بازهٔ گزارش باید بین ۱ تا ۳۶۶ روز باشه.")
+    return service.report(family_id, current.id, start, end, offset)

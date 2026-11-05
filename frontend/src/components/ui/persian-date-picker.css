@@ -1,4 +1,9 @@
 .persian-picker { display: grid; gap: 8px; min-width: 0; }
+.persian-picker-inline { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+.persian-picker-inline > label { white-space: nowrap; }
+.persian-picker-inline > .persian-picker-help, .persian-picker-inline > .persian-calendar { grid-column: 1 / -1; }
+.persian-picker-inline .persian-picker-field { min-width: 0; }
+.persian-picker-inline .persian-picker-field input { min-width: 0; width: 100%; }
 .persian-picker-field { display: flex; align-items: center; gap: 6px; }
 .persian-picker-field input { flex: 1; }
 .persian-picker-help { font-size: 12px; color: var(--muted-foreground); line-height: 1.8; }

@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.4.0`. No backend release has been published.
+Current development version: `1.5.0`. No backend release has been published.
 
 ### Added
+
+- Added authorized family income/expense reports with Tehran date boundaries, exact full-period totals, equal-length previous-period comparisons, daily series, category/source breakdowns and paginated records. Existing list APIs remain unchanged.
 
 - Added private per-instrument current unit rates with exact holding aggregation, timestamps, clearing and explicit missing-rate counts. Added owner-scoped property rates per square metre and whole-vehicle prices, with a separate current asset valuation endpoint. Historical purchase summaries remain unchanged. Run Alembic upgrade head.
 

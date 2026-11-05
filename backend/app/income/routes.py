@@ -1,7 +1,8 @@
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.income.dependencies import Service
 from app.income.schemas import CreateIncome
@@ -29,3 +30,11 @@ def list_income(
 @router.post("", status_code=201)
 def create_income(family_id: UUID, data: CreateIncome, current: CurrentUser, service: Service):
     return {"entry": service.create(family_id, current.id, data)}
+
+
+@router.get("/report")
+def report(family_id: UUID, start: date, end: date, current: CurrentUser, service: Service,
+           offset: Annotated[int, Query(ge=0, le=1000000)] = 0):
+    if not 0 <= (end - start).days < 366 or start.year < 2000 or end.year > 2100:
+        raise HTTPException(status_code=422, detail="بازهٔ گزارش باید بین ۱ تا ۳۶۶ روز باشه.")
+    return service.report(family_id, current.id, start, end, offset)

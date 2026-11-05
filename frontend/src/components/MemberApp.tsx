@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { FamiliesPage } from "@/features/families/FamiliesPage";
+import { ActiveFamilyProvider, useActiveFamily } from "@/features/families/ActiveFamily";
 import type { User } from "@/features/auth/api";
 import { BottomNavigation, type Destination } from "./BottomNavigation";
 
 function currentDestination(): Destination {
   if (/^\/families\/?$/.test(window.location.pathname)) return "families";
   const page = new URLSearchParams(window.location.search).get("page");
-  return page === "transactions" || page === "budgets" ? page : "home";
+  return page === "transactions" ? "reports" : page === "reports" || page === "budgets" ? page : "home";
 }
 
 export function MemberApp({ user }: { user: User }) {
+  return <ActiveFamilyProvider key={user.id} userId={user.id}><MemberContent user={user} /></ActiveFamilyProvider>;
+}
+
+function MemberContent({ user }: { user: User }) {
+  const { selected } = useActiveFamily();
   const [active, setActive] = useState<Destination>(currentDestination);
-  const [dashboardPage, setDashboardPage] = useState<"home" | "transactions" | "budgets">(() => active === "families" ? "home" : active);
+  const [dashboardPage, setDashboardPage] = useState<"home" | "reports" | "budgets">(() => active === "families" ? "home" : active);
   const [familyVisited, setFamilyVisited] = useState(active === "families");
   const content = useRef<HTMLDivElement>(null);
   function select(page: Destination) {
@@ -36,10 +42,10 @@ export function MemberApp({ user }: { user: User }) {
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, []);
-  useEffect(() => { document.title = active === "families" ? "خانواده | مابان" : "داشبورد | مابان"; }, [active]);
+  useEffect(() => { document.title = active === "families" ? "خانواده | مابان" : active === "reports" ? "گزارش مالی | مابان" : "داشبورد | مابان"; }, [active]);
   return <div ref={content}>
     <div hidden={active === "families"} data-active-panel={active !== "families"}>
-      <DashboardPage user={user} page={dashboardPage} onNavigate={navigate} />
+      <DashboardPage key={selected} user={user} page={dashboardPage} onNavigate={navigate} />
     </div>
     <div hidden={active !== "families"} data-active-panel={active === "families"}>
       {familyVisited && <FamiliesPage user={user} />}

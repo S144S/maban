@@ -1,8 +1,8 @@
 import { ExpenseCategories } from "../expenses/ExpenseCategories";
 import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from "react";
-import { Plus, Wallet, Users, Pencil, Trash2, Tags, ChevronDown, Bell, TrendingUp } from "lucide-react";
+import { Plus, Wallet, Pencil, Trash2, Tags, ChevronDown, Bell, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { useActiveFamily } from "../families/ActiveFamily";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api, errorMessage } from "@/lib/http";
 import type { Family } from "../families/api";
@@ -14,7 +14,7 @@ const InvestmentRates = lazy(() => import("../investments/InvestmentRates").then
 export function Management({ userId }: { userId: string }) {
   const [section, setSection] = useState<"accounts" | "categories" | "reminders" | "rates" | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
-  const [selected, setSelected] = useState(new URLSearchParams(window.location.search).get("family") ?? "");
+  const { selected } = useActiveFamily();
   const [data, setData] = useState<{ familyId: string; locations: MoneyLocation[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,9 +33,9 @@ export function Management({ userId }: { userId: string }) {
     async function load() {
       const result = await api<{ families: Family[] }>("/families", { signal: controller.signal });
       if (controller.signal.aborted) return;
-      const owned = result.families.filter(f => f.owner_id === userId);
-      setFamilies(owned);
-      const familyId = owned.find(f => f.id === selected)?.id ?? owned[0]?.id;
+      setFamilies(result.families);
+      const active = result.families.find(f => f.id === selected) ?? result.families[0];
+      const familyId = active?.owner_id === userId ? active.id : undefined;
       if (!familyId) return;
       const locations = await api<{ locations: MoneyLocation[] }>(`/families/${familyId}/money-locations`, { signal: controller.signal });
       if (!controller.signal.aborted) setData({ familyId, locations: locations.locations });
@@ -67,7 +67,6 @@ export function Management({ userId }: { userId: string }) {
     finally { pending.current = false; setBusy(false); }
   }
   return <div className="management-page">
-    {families.length > 1 && <div className="dash-form"><label htmlFor="management-family">خانواده<Select id="management-family" value={data?.familyId ?? selected} disabled={busy || loading} onValueChange={value => { setSelected(value); setNotice(""); }} options={families.map(f => ({ value: f.id, label: f.name }))} /></label></div>}
     <div className="management-menu">
     {loading ? <p role="status">در حال دریافت اطلاعات…</p> : error ? <div role="alert"><p className="dash-error">{error}</p><Button variant="outline" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div> : !data ? <p>مدیریت حساب‌ها و دسته‌بندی‌های خانواده فقط برای سازندهٔ خانواده است. می‌تونین از <a className="underline" href="/families">صفحهٔ خانواده</a> خانوادهٔ خودتون رو بسازین.</p> : <>
       <div className="management-disclosure">
@@ -78,7 +77,6 @@ export function Management({ userId }: { userId: string }) {
         </button></h2>
         <section id="accounts-panel" hidden={section !== "accounts"} aria-labelledby="accounts-toggle">
     <div className="management-body">
-      <p className="management-family"><Users size={18} aria-hidden="true" /><span>مشترک با خانوادهٔ {families.find(f => f.id === data.familyId)?.name}</span></p>
       {data.locations.length ? <ul className="management-list">{data.locations.map(location => <li key={location.id}><span className="management-account-icon"><Wallet size={20} aria-hidden="true" /></span><div className="management-account-copy"><strong>{location.name}</strong></div>{canWrite && <Button variant="ghost" size="icon" aria-label={`ویرایش نام ${location.name}`} onClick={() => { setEditing(location); setFormError(""); setOpen(true); }}><Pencil size={18} aria-hidden="true" /></Button>}{canWrite && <Button className="management-delete" variant="ghost" size="icon" aria-label={`حذف حساب ${location.name}`} onClick={() => { setFormError(""); setDeleting(location); }}><Trash2 size={18} aria-hidden="true" /></Button>}</li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Wallet size={32} aria-hidden="true" /></span><h3>اولین حساب رو اضافه کنین</h3><p>مثلاً بانک ملی یا پول نقد؛ موقع ثبت دخل، حساب مقصد رو انتخاب می‌کنین.</p></div>}
       {canWrite ? <Button className="management-add" onClick={() => { setEditing(null); request.current = { name: "", id: "" }; setFormError(""); setOpen(true); }}><Plus aria-hidden="true" />افزودن حساب</Button> : <p className="management-family">مدیریت حساب‌ها فقط برای سازندهٔ خانواده است.</p>}
     <p className="management-notice" role="status">{notice}</p>

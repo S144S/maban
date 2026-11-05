@@ -6,8 +6,8 @@ import "./persian-date-picker.css";
 
 const weekdays = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 
-export function PersianDatePicker({ id, name, defaultValue = "", required = false, disabled = false }: {
-  id: string; name: string; defaultValue?: string; required?: boolean; disabled?: boolean;
+export function PersianDatePicker({ id, name, defaultValue = "", required = false, disabled = false, label = "تاریخ شمسی", inlineLabel = false }: {
+  id: string; name: string; defaultValue?: string; required?: boolean; disabled?: boolean; label?: string; inlineLabel?: boolean;
 }) {
   const panelId = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -56,10 +56,10 @@ export function PersianDatePicker({ id, name, defaultValue = "", required = fals
       if (y >= minPersianYear) navigate(y, m, persianMonthInfo(y, m).days + next, true);
     } else navigate(year, month, next, true);
   }
-  return <div className="persian-picker" data-calendar-open={open} dir="rtl" onKeyDown={event => {
+  return <div className={`persian-picker${inlineLabel ? " persian-picker-inline" : ""}`} data-calendar-open={open} dir="rtl" onKeyDown={event => {
     if (open && event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
   }}>
-    <label htmlFor={id}>تاریخ شمسی</label>
+    <label htmlFor={id}>{label}</label>
     <div className="persian-picker-field">
       <input ref={input} id={id} name={name} value={value} onChange={event => setValue(event.target.value)} disabled={disabled}
         dir="ltr" required={required} maxLength={10} placeholder="۱۴۰۵/۰۸/۲۰" aria-describedby={`${panelId}-help`} />
