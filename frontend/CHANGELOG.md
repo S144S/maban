@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.24.1`. No frontend release has been published.
+Current development version: `0.25.0`. No frontend release has been published.
 
 ### Changed
 
@@ -31,6 +31,8 @@ Current development version: `0.24.1`. No frontend release has been published.
 
 ### Added
 
+- Show reminder SMS availability, provider acceptance, uncertain/skipped delivery and the next scheduled occurrence; update form copy for Tehran scheduling and Persian monthly recurrence. Requires backend 2.0.0 and separately enabled delivery.
+
 - Added separate personal investment/asset reports with date filters, exact valuations, price-versus-holding attribution, missing-history states and accessible daily trends; reports use three compact selectors within the shared mobile shell.
 
 - Replaced the sample Transactions destination with a real-data Reports page: Persian date filters, cash-flow summaries, previous-period comparisons, accessible trend charts and daily tables, category/source rankings, paginated records and daily CSV export. Reports retain the shared 480px mobile-first application shell and single-column sections on larger screens, with a title-only header and inline start/end labels for custom date inputs. Active family selection is shared across Home, Reports and Management, persists per user for the browser session, and can only be changed on the Families page. Management never falls back to another owned family. Legacy transactions links open Reports. Requires backend 1.5.0.
@@ -39,9 +41,9 @@ Current development version: `0.24.1`. No frontend release has been published.
 
 - Added a compact Management price list with inline label-and-toman inputs that save on blur or Enter, clear when emptied, and show per-row saving/errors without a separate dialog for investments, per-square-metre house/land rates identified by location, and whole-car prices identified by vehicle. Both personal funds use current manual rates, with explicit missing-rate counts and historical purchase prices preserved. Metal rates apply per gram across the recorded metal holdings. Requires backend 1.4.0.
 
-- Added a recurrence selector using the shared RTL design-system Select, with no-repeat, daily, weekly and monthly options, persisted across editing and shown in the list. Requires backend 1.3.0; automatic execution and SMS delivery remain inactive.
+- Added a recurrence selector using the shared RTL design-system Select, with no-repeat, daily, weekly and monthly options, persisted across editing and shown in the list. SMS scheduling requires backend 2.0.0 and its separately enabled worker.
 
-- Added an expandable personal reminders card for every signed-in user, including users without an owned family. Create, edit and delete one-time reminders with Persian dates, Tehran time and optional amounts; keep the card concise without introductory privacy/delivery banners, while the form explains that SMS delivery and automatic recurrence are not active. Includes a reusable RTL Persian calendar with month/year selection, today shortcut, manual input, leap-year validation and keyboard navigation. Requires backend 1.2.0.
+- Added an expandable personal reminders card for every signed-in user, including users without an owned family. Create, edit and delete reminders with Persian dates, Tehran time and optional amounts; keep the card concise without introductory privacy/delivery banners. Includes a reusable RTL Persian calendar with month/year selection, today shortcut, manual input, leap-year validation and keyboard navigation.
 
 - Added a Management settings icon alongside category edit/delete actions, opening a bottom sheet to set, edit or remove each category’s recurring monthly spending limit, including Other, with Persian-digit input and clear no-alert/no-blocking semantics.
 

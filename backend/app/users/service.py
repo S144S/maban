@@ -4,13 +4,13 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
-import httpx
 from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.orm import Session
 
 from app.config import Settings
+from app.messaging.public import enqueue_sms
 from app.users.models import LoginSession, OtpChallenge, RateBucket, User
-from app.users.security import SmsSender, digest, dummy_hash, password_hasher, password_matches
+from app.users.security import digest, dummy_hash, password_hasher, password_matches
 
 
 class UserError(Exception):
@@ -40,8 +40,8 @@ def user_view(user: User):
 
 
 class Users:
-    def __init__(self, db: Session, settings: Settings, sms: SmsSender):
-        self.db, self.settings, self.sms = db, settings, sms
+    def __init__(self, db: Session, settings: Settings):
+        self.db, self.settings = db, settings
 
     def hash(self, value: str):
         return digest(self.settings.secret_key, value)
@@ -67,6 +67,10 @@ class Users:
 
     def by_phone(self, phone: str):
         return self.db.scalar(select(User).where(User.phone == phone))
+
+    @staticmethod
+    def notification_phone(db: Session, user_id: UUID) -> str | None:
+        return db.scalar(select(User.phone).where(User.id == user_id, User.active.is_(True)))
 
     def request_otp(self, phone: str, purpose: str, ip: str):
         self.throttle("otp-ip:" + ip, 30)
@@ -94,12 +98,6 @@ class Users:
             )
         code = "12345" if self.settings.development_otp else f"{secrets.randbelow(100000):05d}"
         challenge_id = uuid4()
-        if eligible:
-            try:
-                self.sms.send(phone, code)
-            except httpx.HTTPError, ValueError, RuntimeError:
-                # Never include upstream URLs, credentials, phone numbers or codes in errors.
-                raise UserError("ارسال کد انجام نشد؛ کمی بعد دوباره امتحان کنین.", 503) from None
         self.db.execute(
             update(OtpChallenge).where(OtpChallenge.phone == phone).values(consumed=True, proof_hash=None)
         )
@@ -113,12 +111,35 @@ class Users:
             expires_at=now + timedelta(seconds=120),
         )
         self.db.add(challenge)
+        if eligible and not self.settings.development_otp:
+            enqueue_sms(self.db, kind="otp", reference_id=challenge_id, priority=0,
+                        available_at=now, expires_at=challenge.expires_at,
+                        secret_key=self.settings.secret_key, payload={"code": code})
         return {
             "challenge_id": str(challenge_id),
             "expires_in": 120,
             "retry_after": 30,
             "development": self.settings.development_otp,
         }
+
+    @staticmethod
+    def deliver_otp(db, settings, sender, challenge_id, payload, now):
+        challenge = db.get(OtpChallenge, challenge_id)
+        if challenge is None:
+            return "skipped"
+        lock(db, "phone:" + challenge.phone)
+        db.refresh(challenge)
+        # Recheck after locking: resend/verification can invalidate a queued code.
+        if (challenge.consumed or not challenge.eligible or challenge.attempts >= 5
+                or challenge.expires_at <= max(now, utcnow())):
+            return "skipped"
+        user = db.scalar(select(User).where(User.phone == challenge.phone))
+        if (challenge.purpose == "signup" and user is not None) or (
+            challenge.purpose != "signup" and (user is None or not user.active)
+        ):
+            return "skipped"
+        sender.send_pattern(challenge.phone, settings.sms_template, {"code": payload["code"]})
+        return "accepted"
 
     def verify_otp(self, challenge_id: UUID, code: str, ip: str):
         self.throttle("verify-ip:" + ip, 60)
