@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.6.0`. No backend release has been published.
+Current development version: `2.0.0`. No backend release has been published.
 
 ### Added
+
+- Connected signup/login/recovery OTP and separately configured reminder patterns to IranPayamak through a shared PostgreSQL job queue and independent SMS worker. Challenge/job and reminder occurrence/job writes are atomic; OTP jobs have priority, encrypted short-lived payloads, expiry and supersession checks. Concurrent claims are serialized and interrupted sends become unknown without automatic retries. Daily/weekly Tehran and monthly Persian-calendar recurrence skip historical backlogs; UI-facing reminder delivery status and next occurrence are exposed. Run Alembic upgrade head and supervise `python -m app.sms_worker`; reminders require separate enablement.
+
+- Added IranPayamak pattern delivery for OTP and a reusable pattern transport, preserving development OTP behavior. Delivery uses bounded responses, no redirects/retries, and sanitized errors.
 
 - Added private investment/asset history and report endpoints with exact decimal valuations, Tehran daily boundaries and separate price/holding effects. Mutations record atomic owner-serialized snapshots; migration seeds existing holdings at deployment time without fabricating earlier history. Run Alembic upgrade head.
 
@@ -15,9 +19,9 @@ Current development version: `1.6.0`. No backend release has been published.
 
 - Added private per-instrument current unit rates with exact holding aggregation, timestamps, clearing and explicit missing-rate counts. Added owner-scoped property rates per square metre and whole-vehicle prices, with a separate current asset valuation endpoint. Historical purchase summaries remain unchanged. Run Alembic upgrade head.
 
-- Added optional reminder recurrence preferences (`none`, `daily`, `weekly`, `monthly`) to create, edit and list APIs. Existing reminders default to none; legacy edits preserve the setting and creation retries remain compatible. Run Alembic upgrade head. Scheduling and delivery remain inactive.
+- Added optional reminder recurrence preferences (`none`, `daily`, `weekly`, `monthly`) to create, edit and list APIs. Existing reminders default to none; legacy edits preserve the setting and creation retries remain compatible. Run Alembic upgrade head. Delivery requires the separately enabled SMS worker.
 
-- Added personal reminder CRUD with timezone-aware due dates, optional whole-toman amounts, private session ownership, pagination and idempotent creation. The new reminders schema requires Alembic upgrade head. No scheduler, SMS delivery, recurrence or balance changes are enabled.
+- Added personal reminder CRUD with timezone-aware due dates, optional whole-toman amounts, private session ownership, pagination and idempotent creation. The new reminders schema requires Alembic upgrade head. Reminders do not change balances.
 
 - Added owner-managed recurring monthly expense-category limits in whole tomans, including Other. Null means unlimited; members can read limits. Limits do not block expenses or send alerts. Run Alembic upgrade head; existing categories remain unlimited.
 
@@ -74,8 +78,7 @@ Current development version: `1.6.0`. No backend release has been published.
   login, password recovery, profile editing, logout and session revocation.
 - Added admin-only user search/pagination, role and active-status management,
   plus local operator commands to bootstrap an admin and clean expired records.
-- Added Kavenegar verification-template delivery for production and fixed
-  `12345` OTPs restricted to explicit local/develop/test environments.
+- Added fixed `12345` OTPs restricted to explicit local/develop/test environments.
 - Added integration tests using isolated PostgreSQL databases and real migrations.
 
 ### Security
@@ -90,6 +93,8 @@ Current development version: `1.6.0`. No backend release has been published.
   SMS configuration; never return passwords or provider secrets in errors.
 
 ### Changed
+
+- BREAKING: IranPayamak is now the only production SMS provider. Replace previous provider credentials with an IranPayamak API key and pattern code in `MABAN_SMS_API_KEY` and `MABAN_SMS_TEMPLATE`, and configure the required `MABAN_SMS_LINE_NUMBER`. The OTP pattern must accept `code`. OTP request success now confirms job creation, not provider acceptance; delivery failures are asynchronous. Apply Alembic head and run the shared SMS worker even when reminders are disabled. Existing verification and resend response fields remain compatible.
 
 - BREAKING: Removed invitation/member access fields and database tiers. All members can record income/expenses and manage invitations; only family owners can create, rename or delete accounts. Clients must stop sending/reading access, deploy the matching frontend, and run Alembic upgrade head. Existing memberships and invitation tokens are preserved; downgrade restores view defaults except owners, not historical tiers.
 

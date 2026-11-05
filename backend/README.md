@@ -58,9 +58,10 @@ not exposed as account actions.
 - Use `MABAN_ENVIRONMENT=production` (the safe default), a dedicated PostgreSQL
   database, a random `MABAN_SECRET_KEY` of at least 32 characters, HTTPS-only
   `MABAN_ALLOWED_ORIGINS`, and `MABAN_COOKIE_SECURE=true`.
-- Set `MABAN_SMS_API_KEY` and `MABAN_SMS_TEMPLATE` for an approved Kavenegar
-  verification template accepting `token`. The server generates five random
-  digits and sends them only for eligible requests. No production fixed code
+- Set `MABAN_SMS_API_KEY`, `MABAN_SMS_TEMPLATE`, and `MABAN_SMS_LINE_NUMBER`
+  for an approved IranPayamak pattern accepting `code`. The server generates five random
+  digits and queues them only for eligible requests. Run the separate SMS worker
+  (`uv run python -m app.sms_worker`) for delivery. No production fixed code
   exists. Real provider delivery needs valid operator credentials and was not
   exercised by the automated suite (the provider interface is substituted).
 - Serve the frontend and `/api` under the same HTTPS origin. Route `/api` to
@@ -275,7 +276,128 @@ deletion discards that category's target and does not alter Other's target.
 
 Management includes private reminders (title, due date/time, optional amount and
 recurrence preference: none, daily, weekly or monthly). Run `uv run alembic upgrade head`
-before using backend 1.3.0. Preferences are stored only: no scheduler, SMS delivery
-or automatic recurrence is active; records do not change balances.
+before using backend 1.3.0. SMS scheduling and recurrence are available through the separately enabled reminder
+worker described below; records do not change balances.
 The UI accepts Persian dates and Tehran local time. Records are owned by the
 signed-in user, independently of family membership.
+
+## SMS infrastructure
+
+`app.sms` provides the shared synchronous transport. Users owns OTP generation,
+expiry and rate limits. IranPayamak is the only production provider. Configure
+`MABAN_SMS_API_KEY`, `MABAN_SMS_TEMPLATE` (pattern code with a `code` attribute),
+and `MABAN_SMS_LINE_NUMBER` (ASCII digits). Production startup rejects incomplete
+configuration. Local/develop/test environments always use the no-op sender and
+fixed development OTP; configuring credentials does not enable live delivery.
+
+IranPayamak also exposes `send_pattern(phone, pattern, attributes)` for future
+application workflows; it accepts Iranian mobile numbers as `09...` or `+989...`.
+Reminder delivery runs through the separately enabled worker described below.
+Requests have an eight-second HTTP timeout, a 64 KiB response limit, and no
+redirects or automatic retries: a timeout may mean the provider already accepted
+the message. Provider acceptance does not confirm delivery to the handset.
+OTP issuance atomically saves the challenge and a durable job; HTTP success means
+the request was recorded, not sent. Provider failures are recorded asynchronously
+in the job, rather than returned as HTTP 503. The existing resend cooldown and
+two-minute expiry still apply. Tests use mocked HTTP, never live SMS.
+
+### SMS configuration migration (backend 2.0.0)
+
+Replace previous provider credentials with an IranPayamak API key and approved
+pattern code in `MABAN_SMS_API_KEY` and `MABAN_SMS_TEMPLATE`. Set the required
+`MABAN_SMS_LINE_NUMBER` to the IranPayamak sending line (ASCII digits). The OTP
+pattern must accept a `code` attribute. Run Alembic head for the reminder and
+shared queue migrations, then start the API and the separate SMS worker. OTP
+delivery now requires the worker even when reminder delivery is disabled.
+
+### Enable OTP and reminder delivery
+
+Template codes are intentionally unset in `.env.example`; no production messages
+can be sent until real credentials and approved patterns are configured. OTP uses
+`MABAN_SMS_TEMPLATE` and the `code` attribute for signup, login, and recovery.
+The existing production configuration validation remains fail-closed.
+
+Reminders use a distinct `MABAN_SMS_REMINDER_TEMPLATE` with these attributes:
+
+| Attribute | Value |
+| --- | --- |
+| `title` | Reminder title |
+| `date` | Persian date, ASCII `YYYY/MM/DD` |
+| `time` | Tehran local time, ASCII `HH:MM` |
+| `amount` | Whole toman amount, or `بدون مبلغ` when omitted |
+
+After configuring both approved patterns, the key and sending line:
+
+```powershell
+uv sync
+uv run alembic upgrade head
+# Set MABAN_ENVIRONMENT=production and the secure production settings above.
+# Optionally enable reminders with MABAN_REMINDER_SMS_ENABLED=true in both processes.
+uv run python -m app.sms_worker
+```
+
+Run this command as a supervised process alongside the API. It polls every second
+when idle, processes up to 100 jobs per batch, and immediately continues when a
+batch is full. OTP jobs have higher priority than reminders; a send already in
+progress is not interrupted. `--once` processes a single batch. Multiple workers
+use PostgreSQL row locks with skip-locked claims. Disabling reminders leaves OTP
+delivery running and does not consume pending reminder jobs. Local/develop/test
+workers exit without sending or consuming jobs; fixed development OTPs do not
+create jobs. No worker starts inside the HTTP process. Restart both processes
+after changing settings. The old `app.reminders.worker` entry point redirects to
+this shared worker.
+
+API and worker load the same Settings and, when launched from `backend`, the same
+`.env`. They can also receive environment variables independently from a process
+manager. Keep their database, secret and pattern settings synchronized.
+
+### Shared queue and failure recovery
+
+`messaging.sms_jobs` holds both OTP and reminder jobs, with a unique domain
+reference, priority, availability, expiry and status. Producers insert jobs in
+the same transaction as the challenge or reminder occurrence. Only the worker
+contacts IranPayamak. Job states are `pending`, `processing`, `accepted`, `failed`,
+`unknown` and `skipped`. Explicit provider rejection is `failed`; timeout or an
+ambiguous response is `unknown`. Neither is automatically retried. The user can
+request a fresh OTP after the existing cooldown; requesting it invalidates the
+previous challenge. Expired, consumed, superseded and ineligible challenges are
+skipped immediately before dispatch under the users module's lock.
+
+A claim is committed as `processing` before network I/O. An interrupted claim
+older than two minutes becomes `unknown`, never `pending`; locked in-flight sends
+are excluded from recovery. This deliberately permits a missed message after a
+crash to avoid duplicate sends. Monitor pending age, processing age and terminal
+failure counts; HTTP health alone does not establish worker health.
+
+OTP job payloads are Fernet-encrypted using a purpose-specific key derived from
+`MABAN_SECRET_KEY`. Only the users module resolves the recipient. Payloads are
+cleared on every terminal outcome, including expiry and abandoned claims; the
+remaining ledger stores references and timestamps. Protect database backups and
+the secret separately. Secret rotation invalidates queued encrypted payloads;
+they fail closed and users must request a new code. Do not reset terminal jobs or
+delete reservations to force a retry. Queue downgrade refuses a nonempty ledger.
+
+Daily/weekly schedules preserve Tehran wall-clock time. Monthly schedules follow
+the Persian calendar, clamp to the month's last day, and restore the original
+day in longer months. Only the latest missed recurrence is considered; an
+occurrence more than 24 hours overdue is skipped. Existing reminders are enrolled
+by migration under the same rule, preventing a historical SMS burst.
+
+Each occurrence is reserved durably before network I/O. Acceptance means accepted
+by IranPayamak, not confirmed handset delivery. A timeout or process failure after
+reservation remains `unknown` and is never retried automatically; this trades a
+possible missed SMS for avoiding duplicate delivery. Recurring reminders still
+advance to their next occurrence. The attempt ledger stores IDs, times and status,
+not phone numbers, message bodies or credentials. Inspect `reminders.sms_attempts`
+for operational diagnosis; do not delete reservations to force retries.
+
+Deletion or rescheduling before dispatch cancels a reserved send. Once dispatch
+has begun, edits/deletion wait for it to finish and cannot recall the SMS. Inactive
+accounts are skipped. Content-only edits do not re-arm previously sent occurrences;
+a changed due date or recurrence deliberately starts a new schedule.
+
+The API returns `delivery_status` (`not_available`, `scheduled`, `accepted`,
+`unknown`, `skipped`) and nullable `next_delivery_at`. The UI displays these
+statuses without claiming delivery to a handset. Rollback refuses to drop a
+nonempty attempt ledger; export and explicitly clear it only after assessing the
+risk of repeated sends. No financial balances are modified.

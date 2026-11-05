@@ -270,23 +270,28 @@ def test_production_never_accepts_fixed_development_code(app, monkeypatch):
         allowed_origins=["https://maban.example"],
         sms_api_key="test-provider-key",
         sms_template="test-template",
+        sms_line_number="30001234",
     )
 
     class Sms:
         code = None
 
-        def send(self, phone, code):
-            self.code = code
+        def send_pattern(self, phone, pattern, attributes):
+            self.code = attributes["code"]
 
     sms = Sms()
     monkeypatch.setattr("app.users.service.secrets.randbelow", lambda _: 54321)
-    production = create_app(Settings(**settings), sms=sms)
+    production = create_app(Settings(**settings))
     with TestClient(
         production,
         base_url="https://maban.example",
         headers={"Origin": "https://maban.example", "X-Maban-Request": "1"},
     ) as client:
         challenge = request(client)
+        from app.sms_worker import run_batch
+
+        assert sms.code is None
+        assert run_batch(production.state.sessions, production.state.settings, sms) == 1
         assert sms.code == "54321"
         assert verify(client, challenge).status_code == 400
         proof = verify(client, challenge, "54321").json()["proof"]
@@ -299,16 +304,13 @@ def test_production_never_accepts_fixed_development_code(app, monkeypatch):
         Settings(**{**settings, "cookie_secure": False})
 
 
-def test_sms_failure_does_not_issue_usable_challenge(client, app):
-    class FailedSms:
-        def send(self, phone, code):
-            raise RuntimeError("secret provider URL")
+def test_development_otp_does_not_enqueue_sms(client, app):
+    from app.messaging.models import SmsJob
 
-    app.state.sms = FailedSms()
     response = client.post("/api/auth/otp/request", json={"phone": PHONE, "purpose": "signup"})
-    assert response.status_code == 503 and "secret provider" not in response.text
+    assert response.status_code == 200
     with app.state.sessions() as db:
-        assert db.scalar(select(OtpChallenge)) is None
+        assert db.scalar(select(SmsJob)) is None
 
 
 def test_session_survives_application_restart(client, app):
