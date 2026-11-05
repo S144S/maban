@@ -1,0 +1,124 @@
+from uuid import uuid4
+
+from alembic import command
+from alembic.config import Config
+from test_families import accept, account, create, invite
+from test_users import register
+
+
+def payload(**changes):
+    return {"title": "قسط وام", "due_at": "2030-03-21T09:00:00+03:30",
+            "amount_toman": 2500000, "request_id": str(uuid4()), **changes}
+
+
+def test_reminders_crud_retry_and_no_delivery(client):
+    assert client.get("/api/reminders").status_code == 401
+    register(client)
+    data = payload(title="  قسط وام  ")
+    result = client.post("/api/reminders", json=data)
+    assert result.status_code == 201, result.text
+    row = result.json()["reminder"]
+    assert row["title"] == "قسط وام"
+    assert row["delivery_status"] == "not_available"
+    assert row["recurrence"] == "none"
+    assert client.post("/api/reminders", json=data).json() == result.json()
+    assert client.post("/api/reminders", json={**data, "amount_toman": 1}).status_code == 409
+    assert len(client.get("/api/reminders").json()["reminders"]) == 1
+    url = f"/api/reminders/{row['id']}"
+    change = {"title": "قسط جدید", "due_at": "2030-04-21T18:30:00+03:30", "amount_toman": None}
+    updated = client.put(url, json=change)
+    assert updated.status_code == 200
+    assert updated.json()["reminder"]["amount_toman"] is None
+    # A delayed creation retry must not revert later edits or create another entry.
+    assert client.post("/api/reminders", json=data).json() == updated.json()
+    assert client.delete(url).status_code == 204
+    assert client.delete(url).status_code == 204
+    assert client.get("/api/reminders").json()["reminders"] == []
+    assert client.put(url, json=change).status_code == 404
+    assert client.post("/api/reminders", json=data).status_code == 409
+
+
+def test_reminders_are_private_even_for_family_members(client, app):
+    register(client)
+    family = create(client)
+    row = client.post("/api/reminders", json=payload()).json()["reminder"]
+    other, _ = account(app, "09123456780")
+    with other:
+        assert accept(other, invite(client, family)["token"]).status_code == 200
+        assert other.get("/api/reminders").json()["reminders"] == []
+        url = f"/api/reminders/{row['id']}"
+        body = payload()
+        del body["request_id"]
+        assert other.put(url, json=body).status_code == 404
+        assert other.delete(url).status_code == 404
+        assert other.post("/api/reminders", json=payload()).status_code == 201
+    assert len(client.get("/api/reminders").json()["reminders"]) == 1
+
+
+def test_reminder_validation(client):
+    register(client)
+    for changes in ({"title": " "}, {"title": "x" * 81}, {"amount_toman": 0},
+                    {"amount_toman": -1}, {"amount_toman": 1.5}, {"amount_toman": True},
+                    {"amount_toman": 1000000000001}, {"due_at": "2030-02-30T09:00:00Z"},
+                    {"due_at": "2030-01-01T09:00:00"}, {"due_at": 123456},
+                    {"due_at": "2200-01-01T00:00:00Z"}, {"user_id": str(uuid4())},
+                    {"sms_enabled": True}, {"recurrence": "yearly"}, {"recurrence": None},
+                    {"recurrence": 1}):
+        response = client.post("/api/reminders", json=payload(**changes))
+        assert response.status_code == 422, response.text
+    assert client.post("/api/reminders", json=payload(amount_toman=None)).status_code == 201
+    assert client.post("/api/reminders", json=payload(amount_toman=1000000000000)).status_code == 201
+    assert client.get("/api/reminders?offset=-1").status_code == 422
+
+
+def test_reminder_pagination_and_migration(client):
+    register(client)
+    config = Config("alembic.ini")
+    command.downgrade(config, "9ace756387ef")
+    command.upgrade(config, "head")
+    command.check(config)
+    for i in range(51):
+        assert client.post("/api/reminders", json=payload(title=f"قسط {i}")).status_code == 201
+    first = client.get("/api/reminders").json()
+    last = client.get("/api/reminders?offset=50").json()
+    assert len(first["reminders"]) == 50 and first["has_more"]
+    assert len(last["reminders"]) == 1 and not last["has_more"]
+    assert last["reminders"][0]["id"] not in {row["id"] for row in first["reminders"]}
+
+
+def test_reminder_schema_ownership():
+    from app.reminders.persistence import TABLES
+    assert all(table.schema == "reminders" and not table.foreign_keys for table in TABLES)
+
+
+def test_recurrence_creation_editing_and_retries(client):
+    register(client)
+    for recurrence in ("daily", "weekly", "monthly"):
+        data = payload(recurrence=recurrence)
+        created = client.post("/api/reminders", json=data)
+        assert created.status_code == 201, created.text
+        row = created.json()["reminder"]
+        assert row["recurrence"] == recurrence
+        assert client.post("/api/reminders", json=data).json() == created.json()
+        assert client.post("/api/reminders", json={**data, "recurrence": "none"}).status_code == 409
+        url = f"/api/reminders/{row['id']}"
+        fields = {key: value for key, value in data.items() if key not in ("request_id", "recurrence")}
+        # A legacy update preserves the recurrence preference.
+        assert client.put(url, json=fields).json()["reminder"]["recurrence"] == recurrence
+        assert client.put(url, json={**fields, "recurrence": "yearly"}).status_code == 422
+        assert client.put(url, json={**fields, "recurrence": "weekly"}).json()["reminder"]["recurrence"] == "weekly"
+        assert client.put(url, json={**fields, "recurrence": "none"}).json()["reminder"]["recurrence"] == "none"
+    assert all(row["recurrence"] == "none" for row in client.get("/api/reminders").json()["reminders"])
+
+
+def test_recurrence_migration_preserves_existing_reminders_and_retries(client):
+    register(client)
+    data = payload()
+    created = client.post("/api/reminders", json=data).json()
+    config = Config("alembic.ini")
+    command.downgrade(config, "abdf867498f0")
+    command.upgrade(config, "head")
+    command.check(config)
+    assert client.get("/api/reminders").json()["reminders"] == [created["reminder"]]
+    assert client.post("/api/reminders", json=data).json() == created
+    assert client.post("/api/reminders", json={**data, "recurrence": "none"}).json() == created

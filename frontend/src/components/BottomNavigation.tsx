@@ -1,9 +1,9 @@
-import { House, ListFilter, Settings2, Users } from "lucide-react";
+import { House, ChartNoAxesCombined, Settings2, Users } from "lucide-react";
 import "./bottom-navigation.css";
 
 const items = [
   { id: "home", label: "خانه", icon: House, href: "/dashboard" },
-  { id: "transactions", label: "تراکنش‌ها", icon: ListFilter, href: "/dashboard?page=transactions" },
+  { id: "reports", label: "گزارش", icon: ChartNoAxesCombined, href: "/dashboard?page=reports" },
   { id: "budgets", label: "مدیریت", icon: Settings2, href: "/dashboard?page=budgets" },
   { id: "families", label: "خانواده", icon: Users, href: "/families" },
 ] as const;

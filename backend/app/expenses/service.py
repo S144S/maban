@@ -1,8 +1,9 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time, timedelta
 from typing import Protocol
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select, text, update
+from sqlalchemy import String, cast, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -198,3 +199,33 @@ class Expense:
         row.monthly_limit_toman = data.monthly_limit_toman
         self.db.flush()
         return self.category_view(row)
+
+
+    def report(self, family_id, user_id, start, end, offset):
+        self.access.authorize(family_id, user_id)
+        zone = ZoneInfo("Asia/Tehran")
+        since = datetime.combine(start, time.min, zone)
+        until = datetime.combine(end + timedelta(days=1), time.min, zone)
+        previous = since - (until - since)
+        scope = ExpenseEntry.family_id == family_id
+        period = (scope, ExpenseEntry.created_at >= since, ExpenseEntry.created_at < until)
+        count, total = self.db.execute(select(func.count(), func.coalesce(func.sum(ExpenseEntry.amount_toman), 0))
+            .where(*period)).one()
+        previous_total = self.db.scalar(select(func.coalesce(func.sum(ExpenseEntry.amount_toman), 0))
+            .where(scope, ExpenseEntry.created_at >= previous, ExpenseEntry.created_at < since))
+        day = func.date(func.timezone("Asia/Tehran", ExpenseEntry.created_at))
+        daily = self.db.execute(select(day, func.sum(ExpenseEntry.amount_toman), func.count())
+            .where(*period).group_by(day).order_by(day)).all()
+        group_name = func.coalesce(ExpenseEntry.category_name, ExpenseEntry.category)
+        group_key = func.coalesce(cast(ExpenseEntry.category_id, String), ExpenseEntry.category)
+        groups = self.db.execute(select(group_key, group_name, func.sum(ExpenseEntry.amount_toman), func.count())
+            .where(*period).group_by(group_key, group_name)
+            .order_by(func.sum(ExpenseEntry.amount_toman).desc(), group_key)).all()
+        rows = self.db.scalars(select(ExpenseEntry).where(*period)
+            .order_by(ExpenseEntry.created_at.desc(), ExpenseEntry.id.desc()).offset(offset).limit(20)).all()
+        return {"total_toman": str(total), "count": count, "previous_total_toman": str(previous_total),
+                "start": start.isoformat(), "end": end.isoformat(),
+                "previous_start": previous.date().isoformat(), "previous_end": (start - timedelta(days=1)).isoformat(),
+                "daily": [{"date": d.isoformat(), "total_toman": str(v), "count": n} for d, v, n in daily],
+                "groups": [{"key": k, "name": label, "total_toman": str(v), "count": n} for k, label, v, n in groups],
+                "entries": [self.view(row) for row in rows], "offset": offset}

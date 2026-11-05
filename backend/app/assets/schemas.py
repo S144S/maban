@@ -38,3 +38,8 @@ class CreateCar(AssetInput):
 
 
 CreateAsset = Annotated[CreateProperty | CreateCar, Field(discriminator="kind")]
+
+
+class SetAssetRate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    unit_price_toman: Annotated[int, Field(strict=True, gt=0, le=1000000000000)] | None

@@ -5,9 +5,23 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.18.1`. No frontend release has been published.
+Current development version: `0.24.1`. No frontend release has been published.
 
 ### Changed
+
+- Replaced report-type buttons with equal-width underlined RTL tabs, keyboard navigation and labeled panels while preserving the selected date range.
+
+- Removed the report footer explanation about family cash flow and personal assets.
+
+- Renamed the report ledger to «تراکنش ها» and made it a keyboard-accessible disclosure, collapsed initially, with count-free income/expense tabs and five transactions per page with previous/next navigation.
+
+- Simplified the cash-flow chart to follow the report date filter directly, removing its separate interval-details selector and readout.
+
+- Refined report income/expense summaries into readable responsive rows with inline currency, percentage badges with up/down arrows and a dash for unchanged values labeled against the previous equivalent period, without an extra comparison-details section, preserving the shared application width. Percentage badges use pastel green for income growth or expense decline, pastel red for the inverse, and neutral colors for unchanged or unavailable comparisons. Nonzero totals with a zero comparison baseline display a compact unavailable-percentage placeholder.
+
+- Shortened the Reports page heading and browser title to «گزارش», renamed the summary heading to «خلاصهٔ», removed its record count, and added playful cash-flow copy with a gently wistful message when expenses exceed income.
+
+- Replaced the long Management page with expandable account/category cards: open content in place, keep only one card expanded, and preserve family selection with keyboard-accessible controls.
 
 - Reduced the balance label, icon and currency label sizes and sized amounts against available space to keep currency alongside large mobile balances.
 
@@ -16,6 +30,18 @@ Current development version: `0.18.1`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added separate personal investment/asset reports with date filters, exact valuations, price-versus-holding attribution, missing-history states and accessible daily trends; reports use three compact selectors within the shared mobile shell.
+
+- Replaced the sample Transactions destination with a real-data Reports page: Persian date filters, cash-flow summaries, previous-period comparisons, accessible trend charts and daily tables, category/source rankings, paginated records and daily CSV export. Reports retain the shared 480px mobile-first application shell and single-column sections on larger screens, with a title-only header and inline start/end labels for custom date inputs. Active family selection is shared across Home, Reports and Management, persists per user for the browser session, and can only be changed on the Families page. Management never falls back to another owned family. Legacy transactions links open Reports. Requires backend 1.5.0.
+
+- Log the build-derived client version in the browser console and show the live backend version in the profile menu, with a small non-interactive «نسخهٔ:» label and graceful unavailable state.
+
+- Added a compact Management price list with inline label-and-toman inputs that save on blur or Enter, clear when emptied, and show per-row saving/errors without a separate dialog for investments, per-square-metre house/land rates identified by location, and whole-car prices identified by vehicle. Both personal funds use current manual rates, with explicit missing-rate counts and historical purchase prices preserved. Metal rates apply per gram across the recorded metal holdings. Requires backend 1.4.0.
+
+- Added a recurrence selector using the shared RTL design-system Select, with no-repeat, daily, weekly and monthly options, persisted across editing and shown in the list. Requires backend 1.3.0; automatic execution and SMS delivery remain inactive.
+
+- Added an expandable personal reminders card for every signed-in user, including users without an owned family. Create, edit and delete one-time reminders with Persian dates, Tehran time and optional amounts; keep the card concise without introductory privacy/delivery banners, while the form explains that SMS delivery and automatic recurrence are not active. Includes a reusable RTL Persian calendar with month/year selection, today shortcut, manual input, leap-year validation and keyboard navigation. Requires backend 1.2.0.
 
 - Added a Management settings icon alongside category edit/delete actions, opening a bottom sheet to set, edit or remove each category’s recurring monthly spending limit, including Other, with Persian-digit input and clear no-alert/no-blocking semantics.
 

@@ -2,9 +2,22 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 Price = Annotated[int, Field(strict=True, gt=0, le=1000000000000)]
+
+
+class SetInvestmentRate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["gold", "silver", "stock", "crypto", "currency", "bond"]
+    symbol: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] = ""
+    unit_price_toman: Price | None
+
+    @model_validator(mode="after")
+    def validate_symbol(self):
+        if (self.kind in ("gold", "silver")) != (self.symbol == ""):
+            raise ValueError("Metals have no symbol; other investments require their exact recorded symbol")
+        return self
 
 
 class InvestmentInput(BaseModel):

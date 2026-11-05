@@ -1,3 +1,4 @@
+import { useActiveFamily } from "../families/ActiveFamily";
 import { MoneyInput } from "@/components/ui/money-input";
 import { CategoryField } from "../expenses/CategoryField";
 import { PersonalFundValue } from "./PersonalFundValue";
@@ -26,7 +27,7 @@ function report(error: unknown) {
 export function FamilyWallet({ userId }: { userId: string }) {
   const [fund, setFund] = useState<Fund>("general");
   const [families, setFamilies] = useState<Family[]>([]);
-  const [selected, setSelected] = useState("");
+  const { selected } = useActiveFamily();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -103,7 +104,6 @@ export function FamilyWallet({ userId }: { userId: string }) {
   return <>
     <section className="wallet-balance" aria-label="صندوق‌ها">
       <div className="wallet-fund-switch" role="group" aria-label="انتخاب صندوق">{funds.map(item => <button key={item.value} type="button" aria-pressed={fund === item.value} onClick={() => setFund(item.value)}>{fund === item.value && <Check size={14} aria-hidden="true" />}{item.label}</button>)}</div>
-      {fund === "general" && families.length > 1 && <label className="wallet-family">خانواده<Select id="wallet-family" value={wallet?.familyId ?? (families.some(f => f.id === selected) ? selected : families[0].id)} disabled={busy} onValueChange={value => { setSelected(value); setWallet(null); setLoading(true); setNotice(""); }} options={families.map(f => ({ value: f.id, label: f.name }))} /></label>}
       <div className="wallet-balance-row">
         <div className="wallet-balance-heading"><span className="wallet-balance-icon" aria-hidden="true"><FundIcon /></span><h1>موجودی</h1></div>
         <div className="wallet-balance-value">

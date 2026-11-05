@@ -3,6 +3,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Numeric, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -31,3 +32,27 @@ class Investment(Base):
     description: Mapped[str | None] = mapped_column(String(500))
     request_id: Mapped[UUID] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class InvestmentRate(Base):
+    __tablename__ = "rates"
+    __table_args__ = (
+        CheckConstraint("kind IN ('gold', 'stock', 'silver', 'crypto', 'currency', 'bond')", name="rate_kind"),
+        CheckConstraint("unit_price_toman > 0 AND unit_price_toman <= 1000000000000", name="rate_price"),
+        CheckConstraint("(kind IN ('gold', 'silver') AND symbol = '') OR (kind NOT IN ('gold', 'silver') AND length(trim(symbol)) > 0)", name="rate_symbol"),
+        {"schema": "investments"},
+    )
+    user_id: Mapped[UUID] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16), primary_key=True)
+    symbol: Mapped[str] = mapped_column(String(40), primary_key=True)
+    unit_price_toman: Mapped[int] = mapped_column(BigInteger)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class InvestmentSnapshot(Base):
+    __tablename__ = "valuation_history"
+    __table_args__ = ({"schema": "investments"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[UUID] = mapped_column(index=True)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    holdings: Mapped[list] = mapped_column(JSONB)
