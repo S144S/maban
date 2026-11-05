@@ -1,7 +1,8 @@
-from uuid import UUID
+from datetime import date
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.assets.dependencies import Service
 from app.assets.schemas import CreateAsset, SetAssetRate
@@ -40,3 +41,10 @@ def set_rate(asset_id: UUID, data: SetAssetRate, current: CurrentUser, service: 
 @router.get("/current-summary")
 def current_summary(current: CurrentUser, service: Service):
     return service.current_summary(current.id)
+
+
+@router.get("/report")
+def report(start: date, end: date, current: CurrentUser, service: Service):
+    if not 0 <= (end - start).days < 366 or start.year < 2000 or end.year > 2100:
+        raise HTTPException(status_code=422, detail="بازهٔ گزارش باید بین ۱ تا ۳۶۶ روز باشه.")
+    return service.report(current.id, start, end)

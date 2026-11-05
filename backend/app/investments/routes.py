@@ -1,6 +1,7 @@
+from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.investments.dependencies import Service
 from app.investments.schemas import CreateInvestment, SetInvestmentRate
@@ -39,3 +40,10 @@ def set_rate(data: SetInvestmentRate, current: CurrentUser, service: Service):
 @router.get("/current-summary")
 def current_summary(current: CurrentUser, service: Service):
     return service.rates(current.id)["summary"]
+
+
+@router.get("/report")
+def report(start: date, end: date, current: CurrentUser, service: Service):
+    if not 0 <= (end - start).days < 366 or start.year < 2000 or end.year > 2100:
+        raise HTTPException(status_code=422, detail="بازهٔ گزارش باید بین ۱ تا ۳۶۶ روز باشه.")
+    return service.report(current.id, start, end)

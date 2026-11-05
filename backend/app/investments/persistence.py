@@ -1,4 +1,4 @@
-from app.investments.models import Investment, InvestmentRate
+from app.investments.models import Investment, InvestmentRate, InvestmentSnapshot
 
 SCHEMA = "investments"
-TABLES = (Investment.__table__, InvestmentRate.__table__)
+TABLES = (InvestmentSnapshot.__table__, Investment.__table__, InvestmentRate.__table__)

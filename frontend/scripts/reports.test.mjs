@@ -23,10 +23,13 @@ test("report rows preserve exact large totals and fill missing days", () => {
   assert.equal(share("1", "4"), 25);
 });
 test("comparison does not invent a percentage for a zero baseline", () => {
-  assert.equal(change("100", "0"), "دورهٔ قبل مبلغی ثبت نشده");
-  assert.equal(change("0", "0"), "بدون تغییر نسبت به دورهٔ قبل");
-  assert.match(change("50", "100"), /کمتر/);
-  assert.match(change("150", "100"), /بیشتر/);
+  assert.equal(change("100", "0"), "-٪ · -");
+  assert.equal(change("0", "0"), "۰٪ · -");
+  assert.equal(change("50", "100"), "۵۰٪ · ↓");
+  assert.equal(change("150", "100"), "۵۰٪ · ↑");
+  assert.equal(change("0", "100"), "۱۰۰٪ · ↓");
+  assert.equal(change("100", "100"), "۰٪ · -");
+  assert.equal(change("10001", "10000"), "کمتر از ۰٫۱٪ · ↑");
 });
 test("ranges stay inclusive across year and leap-day boundaries", () => {
   assert.equal(shiftDay("2024-02-28", 1), "2024-02-29");
@@ -37,4 +40,25 @@ test("ranges stay inclusive across year and leap-day boundaries", () => {
   assert.equal((Date.parse(quarter.end) - Date.parse(quarter.start)) / 86400000, 89);
   const month = presetRange("month");
   assert.match(calendar.reminderDateFields(`${month.start}T12:00:00Z`).date, /\/01$/);
+});
+
+test("chart daily rows follow only the selected inclusive report range", () => {
+  const income = { start: "2026-11-05", end: "2026-11-05", daily: [
+    { date: "2026-11-04", total_toman: "100" },
+    { date: "2026-11-05", total_toman: "25" },
+    { date: "2026-11-06", total_toman: "200" },
+  ] };
+  const rows = dailyRows(income, { daily: [] });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].date, "2026-11-05");
+  assert.equal(rows[0].income, 25n);
+  assert.equal(rows[0].expense, 0n);
+});
+
+const { wealthMoney } = load("../src/features/reports/wealth-model.ts");
+test("wealth values preserve large amounts, missing data and fractional signs", () => {
+  assert.equal(wealthMoney(null), "—");
+  assert.equal(wealthMoney("9007199254740993.125"), BigInt("9007199254740993").toLocaleString("fa-IR") + "٫۱۲۵");
+  assert.equal(wealthMoney("-0.25"), "−۰٫۲۵");
+  assert.equal(wealthMoney("0.00000000000001"), "کمتر از ۰٫۰۰۱");
 });

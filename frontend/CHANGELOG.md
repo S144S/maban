@@ -5,9 +5,17 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.23.1`. No frontend release has been published.
+Current development version: `0.24.0`. No frontend release has been published.
 
 ### Changed
+
+- Removed the report footer explanation about family cash flow and personal assets.
+
+- Renamed the report ledger to «تراکنش ها» and made it a keyboard-accessible disclosure, collapsed initially, with count-free income/expense tabs and five transactions per page with previous/next navigation.
+
+- Simplified the cash-flow chart to follow the report date filter directly, removing its separate interval-details selector and readout.
+
+- Refined report income/expense summaries into readable responsive rows with inline currency, percentage badges with up/down arrows and a dash for unchanged values labeled against the previous equivalent period, without an extra comparison-details section, preserving the shared application width. Percentage badges use pastel green for income growth or expense decline, pastel red for the inverse, and neutral colors for unchanged or unavailable comparisons. Nonzero totals with a zero comparison baseline display a compact unavailable-percentage placeholder.
 
 - Shortened the Reports page heading and browser title to «گزارش», renamed the summary heading to «خلاصهٔ», removed its record count, and added playful cash-flow copy with a gently wistful message when expenses exceed income.
 
@@ -20,6 +28,8 @@ Current development version: `0.23.1`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added separate personal investment/asset reports with date filters, exact valuations, price-versus-holding attribution, missing-history states and accessible daily trends; reports use three compact selectors within the shared mobile shell.
 
 - Replaced the sample Transactions destination with a real-data Reports page: Persian date filters, cash-flow summaries, previous-period comparisons, accessible trend charts and daily tables, category/source rankings, paginated records and daily CSV export. Reports retain the shared 480px mobile-first application shell and single-column sections on larger screens, with a title-only header and inline start/end labels for custom date inputs. Active family selection is shared across Home, Reports and Management, persists per user for the browser session, and can only be changed on the Families page. Management never falls back to another owned family. Legacy transactions links open Reports. Requires backend 1.5.0.
 

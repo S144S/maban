@@ -19,10 +19,12 @@ export function presetRange(preset: string): Range {
 }
 export const share = (part: string | bigint, total: string | bigint) => BigInt(total) === 0n ? 0 : Number(BigInt(part) * 1000n / BigInt(total)) / 10;
 export function change(current: string, previous: string) {
-  if (BigInt(previous) === 0n) return BigInt(current) === 0n ? "بدون تغییر نسبت به دورهٔ قبل" : "دورهٔ قبل مبلغی ثبت نشده";
+  if (BigInt(previous) === 0n) return BigInt(current) === 0n ? "۰٪ · -" : "-٪ · -";
   const delta = BigInt(current) - BigInt(previous);
-  const percent = share(delta < 0n ? -delta : delta, previous).toLocaleString("fa-IR");
-  return delta === 0n ? "بدون تغییر نسبت به دورهٔ قبل" : `${percent}٪ ${delta > 0n ? "بیشتر" : "کمتر"} از دورهٔ قبل`;
+  const magnitude = delta < 0n ? -delta : delta;
+  const value = share(magnitude, previous);
+  const percent = magnitude > 0n && value === 0 ? "کمتر از ۰٫۱" : value.toLocaleString("fa-IR");
+  return delta === 0n ? "۰٪ · -" : `${percent}٪ · ${delta > 0n ? "↑" : "↓"}`;
 }
 export function dailyRows(income: Report, expense: Report) {
   const incoming = new Map(income.daily.map(d => [d.date, d.total_toman]));

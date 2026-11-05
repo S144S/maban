@@ -6,7 +6,8 @@ from sqlalchemy import Numeric, case, cast, delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.investments.models import Investment, InvestmentRate
+from app.investments.models import Investment, InvestmentRate, InvestmentSnapshot
+from app.valuation_history import capture, lock_history, report_history
 
 
 class InvestmentError(Exception):
@@ -34,6 +35,7 @@ class Investments:
                 "description": row.description, "created_at": row.created_at.isoformat()}
 
     def create(self, user_id, data):
+        self.begin_history(user_id)
         values = {**data.model_dump(), "user_id": user_id, "description": data.description or None}
         self.db.execute(insert(Investment).values(id=uuid4(), created_at=datetime.now(UTC), **values)
                         .on_conflict_do_nothing(constraint="investment_request"))
@@ -41,6 +43,7 @@ class Investments:
             Investment.user_id == user_id, Investment.request_id == data.request_id))
         if any(getattr(row, key) != value for key, value in values.items()):
             raise InvestmentError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
+        self.snapshot(user_id)
         return self.view(row)
 
     def list(self, user_id, offset):
@@ -65,6 +68,7 @@ class Investments:
                 "unpriced_count": count - priced_count, "valuation_basis": "recorded_purchase_prices"}
 
     def set_rate(self, user_id, data):
+        self.begin_history(user_id)
         symbol = func.coalesce(Investment.symbol, "")
         owned = self.db.scalar(select(Investment.id).where(
             Investment.user_id == user_id, Investment.kind == data.kind,
@@ -75,11 +79,14 @@ class Investments:
             self.db.execute(delete(InvestmentRate).where(
                 InvestmentRate.user_id == user_id, InvestmentRate.kind == data.kind,
                 InvestmentRate.symbol == data.symbol))
+            self.snapshot(user_id)
             return
         values = {**data.model_dump(), "user_id": user_id, "updated_at": datetime.now(UTC)}
         self.db.execute(insert(InvestmentRate).values(**values).on_conflict_do_update(
             index_elements=["user_id", "kind", "symbol"],
             set_={"unit_price_toman": data.unit_price_toman, "updated_at": values["updated_at"]}))
+
+        self.snapshot(user_id)
 
     def rates(self, user_id):
         # Aggregate every holding, independently of the paginated transaction list.
@@ -110,3 +117,20 @@ class Investments:
                     "value_toman": format(value, "f") if value is not None else None})
         return {"entries": entries, "summary": {"total_toman": format(total, "f"),
             "count": count, "unpriced_count": missing, "valuation_basis": "manual_unit_rates"}}
+
+    def history_holdings(self, user_id):
+        rows = self.db.scalars(select(Investment).where(Investment.user_id == user_id).order_by(Investment.id)).all()
+        rates = {(r.kind, r.symbol): r.unit_price_toman for r in self.db.scalars(select(InvestmentRate).where(InvestmentRate.user_id == user_id))}
+        return [{"id": str(r.id), "kind": r.kind, "label": r.symbol or r.kind,
+                 "quantity": str(r.shares if r.shares is not None else r.grams if r.grams is not None else r.quantity),
+                 "price": str(rates[(r.kind, r.symbol or "")]) if (r.kind, r.symbol or "") in rates else None} for r in rows]
+
+    def begin_history(self, user_id):
+        lock_history(self.db, "investments", user_id)
+        self.snapshot(user_id)
+
+    def snapshot(self, user_id):
+        capture(self.db, InvestmentSnapshot, user_id, self.history_holdings(user_id))
+
+    def report(self, user_id, start, end):
+        return report_history(self.db, InvestmentSnapshot, user_id, start, end)

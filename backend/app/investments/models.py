@@ -3,6 +3,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Numeric, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -46,3 +47,12 @@ class InvestmentRate(Base):
     symbol: Mapped[str] = mapped_column(String(40), primary_key=True)
     unit_price_toman: Mapped[int] = mapped_column(BigInteger)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class InvestmentSnapshot(Base):
+    __tablename__ = "valuation_history"
+    __table_args__ = ({"schema": "investments"},)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[UUID] = mapped_column(index=True)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    holdings: Mapped[list] = mapped_column(JSONB)

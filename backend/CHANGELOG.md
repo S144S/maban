@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.5.0`. No backend release has been published.
+Current development version: `1.6.0`. No backend release has been published.
 
 ### Added
+
+- Added private investment/asset history and report endpoints with exact decimal valuations, Tehran daily boundaries and separate price/holding effects. Mutations record atomic owner-serialized snapshots; migration seeds existing holdings at deployment time without fabricating earlier history. Run Alembic upgrade head.
 
 - Added authorized family income/expense reports with Tehran date boundaries, exact full-period totals, equal-length previous-period comparisons, daily series, category/source breakdowns and paginated records. Existing list APIs remain unchanged.
 
