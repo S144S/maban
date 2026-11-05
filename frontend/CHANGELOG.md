@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.21.0`. No frontend release has been published.
+Current development version: `0.22.0`. No frontend release has been published.
 
 ### Changed
 
@@ -19,6 +19,7 @@ Current development version: `0.21.0`. No frontend release has been published.
 
 ### Added
 
+- Log the build-derived client version in the browser console and show the live backend version in the profile menu, with a small non-interactive «نسخهٔ:» label and graceful unavailable state.
 
 - Added a compact Management price list with inline label-and-toman inputs that save on blur or Enter, clear when emptied, and show per-row saving/errors without a separate dialog for investments, per-square-metre house/land rates identified by location, and whole-car prices identified by vehicle. Both personal funds use current manual rates, with explicit missing-rate counts and historical purchase prices preserved. Metal rates apply per gram across the recorded metal holdings. Requires backend 1.4.0.
 

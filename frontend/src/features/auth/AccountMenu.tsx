@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { LogOut, UserRound } from "lucide-react";
 import { AccountAvatar } from "@/components/AccountAvatar";
@@ -10,6 +10,24 @@ export function AccountMenu() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const pending = useRef(false);
+  const [backendVersion, setBackendVersion] = useState<string | null>(null);
+  const [versionUnavailable, setVersionUnavailable] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    setVersionUnavailable(false);
+    void api<{ version: string }>("/health", { signal: controller.signal }).then(result => {
+      if (!controller.signal.aborted) {
+        if (typeof result.version !== "string" || !/^\d+\.\d+\.\d+$/.test(result.version)) {
+          setVersionUnavailable(true);
+          return;
+        }
+        setBackendVersion(result.version);
+      }
+    }).catch(() => { if (!controller.signal.aborted) setVersionUnavailable(true); });
+    return () => controller.abort();
+  }, [open]);
 
   async function logout() {
     if (pending.current) return;
@@ -46,6 +64,10 @@ export function AccountMenu() {
         </DropdownMenu.Item>
         {busy && <p className="account-menu-feedback" role="status">در حال خروج…</p>}
         {error && <p className="account-menu-feedback account-menu-error" role="alert">{error}</p>}
+        <DropdownMenu.Separator className="account-menu-separator" />
+        <DropdownMenu.Label className="account-menu-version">
+          نسخهٔ: <bdi dir="ltr">{versionUnavailable ? "در دسترس نیست" : backendVersion ?? "…"}</bdi>
+        </DropdownMenu.Label>
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
   </DropdownMenu.Root>;
