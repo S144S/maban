@@ -9,6 +9,8 @@ import { AdminUsersPage } from "./features/auth/AdminUsersPage";
 import { InvitePage } from "./features/families/InvitePage";
 import "./styles.css";
 
+console.info(`%cClient Version: ${__APP_VERSION__}`, "color: #2478ff; font-size: 22px; font-weight: bold; font-family: monospace;");
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     {/^\/(dashboard|families)\/?$/.test(window.location.pathname) ? <ProtectedPage>{user => <MemberApp user={user} />}</ProtectedPage>

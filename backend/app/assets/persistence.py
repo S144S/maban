@@ -1,4 +1,4 @@
-from app.assets.models import Asset
+from app.assets.models import Asset, AssetSnapshot
 
 SCHEMA = "assets"
-TABLES = (Asset.__table__,)
+TABLES = (AssetSnapshot.__table__, Asset.__table__,)

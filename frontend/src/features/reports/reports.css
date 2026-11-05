@@ -1,0 +1,109 @@
+.reports { display: grid; gap: 20px; color: var(--foreground); }
+.report-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.report-heading h1 { font-size: 28px; font-weight: 800; }
+.report-filters { display: grid; gap: 16px; }
+.report-filters > label { display: grid; gap: 8px; font-size: 14px; }
+.report-periods, .report-ledger-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.report-periods button, .report-ledger-tabs button { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 1; min-height: 44px; padding: 8px; white-space: nowrap; border: 1px solid var(--input); border-radius: 12px; font-size: 12px; cursor: pointer; background: var(--card); color: var(--foreground); }
+.report-periods button[aria-pressed="true"], .report-ledger-tabs button[aria-pressed="true"] { border-color: var(--primary); background: var(--accent); color: var(--accent-foreground); box-shadow: inset 0 -3px 0 var(--primary); font-weight: 700; }
+.report-periods button:hover, .report-ledger-tabs button:hover { background: var(--accent); }
+.reports button:focus-visible, .report-daily summary:focus-visible, .report-table-scroll:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.report-custom { margin: 0; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
+.report-range { font-size: 13px; line-height: 1.9; }
+.report-card, .report-overview { min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px; }
+.report-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.report-section-head h2 { font-size: 16px; font-weight: 700; }
+.report-section-head > span, .report-section-head > svg { font-size: 12px; color: var(--muted-foreground); flex-shrink: 0; }
+.report-net { padding: 20px; border-radius: 16px; background: var(--muted); }
+.report-net > span { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.report-net > strong { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: clamp(24px, 6vw, 34px); margin-block: 12px 4px; overflow-wrap: anywhere; }
+.report-net strong bdi { min-width: 0; }
+.report-net small, .report-kpis small { font-size: 12px; font-weight: 400; color: var(--muted-foreground); }
+.report-net p { font-size: 12px; line-height: 1.9; color: var(--muted-foreground); }
+.report-kpis { display: grid; gap: 12px; margin-top: 16px; }
+.report-kpi { display: grid; grid-template-columns: 1fr; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 16px; }
+.report-kpi-heading { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.report-kpi-icon { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; background: var(--muted); color: var(--foreground); }
+.report-kpi-amount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.report-kpi-amount strong { min-width: 0; font-size: 22px; line-height: 1.5; font-weight: 700; overflow-wrap: anywhere; }
+.report-kpi p { font-size: 12px; line-height: 1.9; color: var(--muted-foreground); }
+.report-kpi-change { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+.report-change-value { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 8px; background: var(--muted); color: var(--foreground); font-weight: 600; }
+@media (min-width: 400px) {
+ .report-kpi { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+ .report-kpi-amount { justify-content: flex-end; }
+ .report-kpi p { grid-column: 1 / -1; }
+}
+.report-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; }
+.report-legend > span { display: flex; gap: 6px; align-items: center; }
+.report-legend i { display: inline-block; width: 10px; height: 10px; }
+.report-income-key { background: var(--chart-1); border-radius: 50%; }
+.report-expense-key { background: var(--chart-2); }
+.report-legend small { color: var(--muted-foreground); }
+.report-chart { display: block; width: 100%; height: auto; margin-top: 20px; overflow: visible; direction: ltr; }
+.report-gridline { stroke: var(--border); stroke-dasharray: 3 4; }
+.report-income-bar { fill: var(--chart-1); }
+.report-expense-bar { fill: var(--chart-2); }
+.report-chart text { fill: var(--muted-foreground); font-family: var(--font-sans); font-size: 11px; }
+.report-chart-scale { font-size: 12px; line-height: 1.9; color: var(--muted-foreground); margin-top: 8px; }
+.report-daily { margin-top: 12px; font-size: 12px; }
+.report-daily summary { min-height: 44px; padding-block: 12px; cursor: pointer; border-radius: 8px; }
+.report-table-scroll { overflow-x: auto; max-height: 360px; }
+.report-table-scroll table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.report-table-scroll th, .report-table-scroll td { padding: 12px; text-align: start; white-space: nowrap; border-bottom: 1px solid var(--border); }
+.report-table-scroll thead { background: var(--muted); }
+.report-breakdowns { display: grid; gap: 20px; min-width: 0; }
+.report-ranking, .report-ledger { list-style: none; padding: 0; margin: 0; }
+.report-ranking { display: grid; gap: 20px; }
+.report-ranking li > div { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.report-ranking strong { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.report-rank { display: grid; place-items: center; width: 24px; height: 24px; background: var(--muted); border-radius: 8px; font-size: 12px; flex-shrink: 0; }
+.report-ranking progress { appearance: none; width: 100%; height: 6px; border: none; border-radius: 4px; overflow: hidden; background: var(--muted); display: block; margin-block: 10px 6px; }
+.report-ranking progress::-webkit-progress-bar { background: var(--muted); }
+.report-ranking progress::-webkit-progress-value { background: var(--primary); border-radius: 4px; }
+.report-ranking progress::-moz-progress-bar { background: var(--primary); }
+.report-ranking p { display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; color: var(--muted-foreground); }
+.report-ranking p > span { margin-inline-start: auto; }
+.report-ledger-tabs { margin-bottom: 12px; }
+.report-ledger li { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px; padding-block: 16px; }
+.report-ledger li + li { border-top: 1px solid var(--border); }
+.report-ledger-icon { display: grid; place-items: center; width: 36px; height: 36px; background: var(--muted); border-radius: 12px; flex-shrink: 0; }
+.report-ledger li > div { flex: 1; min-width: 90px; }
+.report-ledger strong { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.report-ledger time, .report-ledger li > div p { display: block; font-size: 12px; line-height: 1.9; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.report-entry-amount { display: grid; gap: 4px; font-size: 14px; font-weight: 600; max-width: 100%; overflow-wrap: anywhere; }
+.report-entry-amount small { font-size: 12px; font-weight: 400; color: var(--muted-foreground); }
+.report-pagination, .report-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.report-pagination { margin-top: 16px; font-size: 12px; }
+.report-state { display: grid; justify-items: center; gap: 16px; padding: 32px 16px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 24px; }
+.report-state p, .report-empty { font-size: 14px; line-height: 1.9; color: var(--muted-foreground); }
+.report-empty { padding-block: 20px; }
+.report-footnote { font-size: 12px; line-height: 2; color: var(--muted-foreground); }
+@media (max-width: 359px) { .report-card, .report-overview { padding: 16px; } .report-net { padding: 12px; } .report-periods button { flex-basis: calc(50% - 6px); } }
+
+.report-chart-dates { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted-foreground); margin-top: 8px; }
+.report-chart-dates span { direction: rtl; }
+
+.report-change-value[data-tone="positive"] { background: var(--success-bg); color: var(--success); }
+.report-change-value[data-tone="negative"] { background: var(--error-bg); color: var(--error); }
+
+.report-transactions > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; border-radius: 8px; }
+.report-transactions > summary::-webkit-details-marker { display: none; }
+.report-transactions > summary h2 { font-size: 16px; font-weight: 700; }
+.report-transactions > summary svg { flex-shrink: 0; color: var(--muted-foreground); }
+.report-transactions[open] > summary svg { transform: rotate(180deg); }
+.report-transactions > summary:hover { color: var(--primary); }
+.report-transactions > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.report-transactions-body { margin-top: 16px; }
+
+.report-sections { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--border); }
+.report-sections button { position: relative; min-height: 48px; padding: 12px 8px; border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted-foreground); font-size: 14px; cursor: pointer; }
+.report-sections button:hover, .report-sections button:active { background: var(--accent); color: var(--accent-foreground); }
+.report-sections button[aria-selected="true"] { color: var(--primary); font-weight: 700; }
+.report-sections button[aria-selected="true"]::after { content: ""; position: absolute; inset-inline: 16px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--primary); }
+.report-panel { display: grid; gap: 20px; min-width: 0; }
+.report-panel:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 8px; }
+.wealth-private { display: inline-flex; align-items: center; gap: 4px; }
+.wealth-note { font-size: 13px; line-height: 1.9; margin-top: 16px; color: var(--muted-foreground); }
+.wealth-chart path { fill: none; stroke: var(--primary); stroke-width: 2; }
+.wealth-chart circle { fill: var(--primary); }

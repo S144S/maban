@@ -9,3 +9,5 @@
 .account-menu-separator { height: 1px; margin: 4px 10px; background: var(--border); }
 .account-menu-feedback { margin: 8px 12px; font-size: 14px; line-height: 1.7; }
 .account-menu-error { color: var(--error); }
+
+.account-menu-version { padding: 6px 12px; color: var(--muted-foreground); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }

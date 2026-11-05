@@ -5,9 +5,19 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.1.0`. No backend release has been published.
+Current development version: `1.6.0`. No backend release has been published.
 
 ### Added
+
+- Added private investment/asset history and report endpoints with exact decimal valuations, Tehran daily boundaries and separate price/holding effects. Mutations record atomic owner-serialized snapshots; migration seeds existing holdings at deployment time without fabricating earlier history. Run Alembic upgrade head.
+
+- Added authorized family income/expense reports with Tehran date boundaries, exact full-period totals, equal-length previous-period comparisons, daily series, category/source breakdowns and paginated records. Existing list APIs remain unchanged.
+
+- Added private per-instrument current unit rates with exact holding aggregation, timestamps, clearing and explicit missing-rate counts. Added owner-scoped property rates per square metre and whole-vehicle prices, with a separate current asset valuation endpoint. Historical purchase summaries remain unchanged. Run Alembic upgrade head.
+
+- Added optional reminder recurrence preferences (`none`, `daily`, `weekly`, `monthly`) to create, edit and list APIs. Existing reminders default to none; legacy edits preserve the setting and creation retries remain compatible. Run Alembic upgrade head. Scheduling and delivery remain inactive.
+
+- Added personal reminder CRUD with timezone-aware due dates, optional whole-toman amounts, private session ownership, pagination and idempotent creation. The new reminders schema requires Alembic upgrade head. No scheduler, SMS delivery, recurrence or balance changes are enabled.
 
 - Added owner-managed recurring monthly expense-category limits in whole tomans, including Other. Null means unlimited; members can read limits. Limits do not block expenses or send alerts. Run Alembic upgrade head; existing categories remain unlimited.
 
