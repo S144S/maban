@@ -1,6 +1,6 @@
 # Modular monolith boundaries
 
-One FastAPI deployment and one PostgreSQL database. A schema is an ownership
+One backend application (FastAPI plus a separate SMS worker) and one PostgreSQL database. A schema is an ownership
 namespace, not a separate service or a separate runtime security role.
 
 ## Module interfaces
@@ -13,7 +13,7 @@ and revocation remain evaluated by the owning module on each request.
 
 Composition-only entry points are explicit:
 
-- `main.py` calls `users.bootstrap.install` to install routes, SMS adapter and
+- `main.py` calls `users.bootstrap.install` to install routes and
   module error handling. Business modules cannot use this startup interface.
 - `cli.py` dispatches to `users.commands.run`. User administration/cleanup logic
   and SQL remain owned by the users module.
@@ -23,7 +23,7 @@ Composition-only entry points are explicit:
 Within users, `routes.py` handles HTTP input/output and cookies, `dependencies.py`
 handles request transactions/authentication, `service.py` owns application
 operations and database queries, `models.py` owns persistence, and `security.py`
-contains password/token primitives and SMS adapters. The service currently uses
+contains password/token primitives. The service currently uses
 SQLAlchemy directly inside its own boundary; a speculative repository layer is
 not required for modularity. Shared `config.py` and `database.py` contain no
 business rules. Test code may inspect internals to verify security invariants.
@@ -248,8 +248,26 @@ fingerprints omit `none` to remain compatible with pre-recurrence retries.
 Creation is idempotent per user/request UUID. An immutable payload fingerprint
 prevents conflicting retries even after edits; deletion keeps a tombstone so a
 retry cannot recreate a deleted reminder. PUT replaces editable fields and DELETE
-is idempotent for the owner. Delivery is explicitly `not_available`: no scheduler,
-SMS adapter, automatic recurrence or financial mutation is connected. A future SMS
-feature must define opt-in and delivery semantics before consuming these records;
-storing a reminder is not delivery consent. Apply Alembic head before starting the
-updated app. Downgrade refuses to discard reminder records.
+is idempotent for the owner. Delivery is `not_available` until explicitly enabled
+in production. The reminder-owned scheduler reserves due occurrences and enqueues
+jobs atomically; daily/weekly recurrence uses Tehran time and monthly recurrence
+uses the Persian calendar. Reminders never mutate financial balances. Apply
+Alembic head before starting the updated app. Downgrade refuses to discard reminder
+records or delivery ledgers.
+
+## Shared SMS queue
+
+`messaging.public.enqueue_sms` is the shared transactional queue interface; schema
+`messaging` owns jobs and their lifecycle. It has no imports of business modules.
+`sms.py` owns only the provider transport. `sms_worker.py` is the composition root:
+it wires queue processing to `users.public.deliver_otp` and the reminders public
+scheduling/delivery/result interfaces. Each owner validates its own live state;
+reminders obtain active recipient phones through `users.public.notification_phone`.
+The API never contacts the provider. OTP jobs contain encrypted codes and opaque
+challenge references; reminder jobs contain opaque occurrence references.
+
+Claims commit before dispatch, use skip-locked row locking and prioritize OTP.
+Network I/O holds job and domain locks to serialize against cancellation. Abandoned
+claims become unknown and never retry automatically; all terminal outcomes clear
+encrypted payloads. The queue stores operational state, while each domain owns
+eligibility, content, expiry, recurrence and cancellation rules.

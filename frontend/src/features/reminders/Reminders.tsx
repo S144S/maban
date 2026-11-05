@@ -12,7 +12,14 @@ import "./reminders.css";
 
 const recurrenceLabels = { none: "بدون تکرار", daily: "روزانه", weekly: "هفتگی", monthly: "ماهانه" };
 const recurrenceOptions = Object.entries(recurrenceLabels).map(([value, label]) => ({ value, label }));
-type Reminder = { id: string; title: string; due_at: string; recurrence: keyof typeof recurrenceLabels; amount_toman: number | null; delivery_status: "not_available" };
+const deliveryLabels = {
+  not_available: "ارسال پیامک فعال نیست",
+  scheduled: "پیامک در انتظار موعد",
+  accepted: "آخرین پیامک به سرویس‌دهنده ارسال شد؛ تحویل به گوشی تأیید نشده",
+  unknown: "نتیجهٔ آخرین ارسال مشخص نیست؛ برای جلوگیری از پیامک تکراری دوباره ارسال نمی‌شه",
+  skipped: "آخرین نوبت پیامک ارسال نشد",
+};
+type Reminder = { id: string; title: string; due_at: string; recurrence: keyof typeof recurrenceLabels; amount_toman: number | null; delivery_status: keyof typeof deliveryLabels; next_delivery_at?: string | null };
 type ReminderPage = { reminders: Reminder[]; has_more: boolean };
 
 export function Reminders() {
@@ -69,7 +76,7 @@ export function Reminders() {
       await api(`/reminders${editing ? `/${editing.id}` : ""}`, {
         method: editing ? "PUT" : "POST", body: editing ? body : { ...body, request_id: request.current.id },
       });
-      setOpen(false); setNotice("یادآور ذخیره شد. ارسال پیامک هنوز فعال نیست.");
+      setOpen(false); setNotice("یادآور ذخیره شد. وضعیت پیامک رو در فهرست می‌تونین ببینین.");
       setOffset(0); setRevision(value => value + 1);
     } catch (err) { setFormError(errorMessage(err)); }
     finally { pending.current = false; setBusy(false); }
@@ -91,6 +98,8 @@ export function Reminders() {
       {items.length ? <ul className="management-list reminders-list">{items.map(item => <li key={item.id}>
         <div className="management-account-copy"><strong>{item.title}</strong><span className="reminder-date">{formatReminderDate(item.due_at)} · تهران</span>
           <span>تکرار: {recurrenceLabels[item.recurrence ?? "none"]}</span>
+          <span>{deliveryLabels[item.delivery_status] ?? "وضعیت پیامک مشخص نیست"}</span>
+          {item.next_delivery_at && <span>موعد پیامک بعدی: {formatReminderDate(item.next_delivery_at)} · تهران</span>}
           {item.amount_toman !== null && <span><bdi>{formatMoney(item.amount_toman)}</bdi> تومان</span>}
         </div>
         <div className="reminder-actions"><Button variant="ghost" size="icon" aria-label={`ویرایش یادآور ${item.title}`} onClick={() => showForm(item)}><Pencil size={18} aria-hidden="true" /></Button>
@@ -104,7 +113,7 @@ export function Reminders() {
       <DialogContent className="management-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={event => {
         if (busy || event.target instanceof Element && event.target.closest('[data-calendar-open="true"]')) event.preventDefault();
       }} onInteractOutside={event => { if (busy) event.preventDefault(); }}>
-        <DialogHeader><DialogTitle>{editing ? "ویرایش یادآور" : "افزودن یادآور"}</DialogTitle><DialogDescription>موعد و تکرار یادآور رو تنظیم کنین. فعلاً این تنظیمات ذخیره می‌شن؛ اجرای خودکار و ارسال پیامک فعال نیست و مبلغ از موجودی کم نمی‌شه.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{editing ? "ویرایش یادآور" : "افزودن یادآور"}</DialogTitle><DialogDescription>موعد و تکرار یادآور رو تنظیم کنین. اگر ارسال پیامک فعال باشه، یادآور به شمارهٔ حساب شما فرستاده می‌شه. تکرار ماهانه بر اساس ماه شمسیه و مبلغ از موجودی کم نمی‌شه.</DialogDescription></DialogHeader>
         <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
           <label htmlFor="reminder-title">عنوان یادآور<input id="reminder-title" name="title" defaultValue={editing?.title ?? ""} maxLength={80} required placeholder="مثلاً قسط وام مسکن" /></label>
           <PersianDatePicker id="reminder-date" name="date" defaultValue={initial.date} required disabled={busy} />
