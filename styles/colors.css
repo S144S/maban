@@ -1,0 +1,61 @@
+/* MaBan light theme: central source of color values.
+ * Import once in the future frontend's global stylesheet.
+ * Values are complete CSS colors: use var(--token), never hsl(var(--token)).
+ * No dark theme or framework dependency is introduced here.
+ */
+:root {
+  --scene-rose: #F5DEE7;
+  --scene-lime: #E7EFCB;
+  --scene-peach: #F9E3CF;
+  --illustration-paper: #FFFDF8;
+  --brand-teal: #0F766E;
+  --brand-navy: #032D4E;
+  --brand-aqua: #02A8A8;
+  --brand-gold: #D4A72C;
+  --background: #F6F5F0;
+  --foreground: #22231F;
+  --card: #FFFFFF;
+  --card-foreground: #22231F;
+  --popover: #FFFFFF;
+  --popover-foreground: #22231F;
+  --primary: #252620;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #3C3E34;
+  --primary-active: #171813;
+  --secondary: #EEEDE6;
+  --secondary-foreground: #22231F;
+  --secondary-hover: #E1E1D6;
+  --muted: #EEEDE6;
+  --muted-foreground: #55584D;
+  --accent: #E5EDC9;
+  --accent-foreground: #292E20;
+  --border: #D9DBCF;
+  --input: #74796A;
+  --ring: var(--brand-teal);
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --destructive-hover: #B91C1C;
+  --success: #15803D;
+  --success-bg: #DCFCE7;
+  --warning: #B45309;
+  --warning-bg: #FFFBEB;
+  --error: #B91C1C;
+  --error-bg: #FEE2E2;
+  --info: #1D4ED8;
+  --info-bg: #DBEAFE;
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --chart-1: var(--brand-teal);
+  --chart-2: var(--brand-navy);
+  --chart-3: var(--brand-aqua);
+  --chart-4: var(--brand-gold);
+  --chart-5: var(--muted-foreground);
+  --disabled: var(--muted);
+  --disabled-foreground: var(--muted-foreground);
+}

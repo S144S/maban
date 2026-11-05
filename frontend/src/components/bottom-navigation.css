@@ -1,0 +1,18 @@
+/* A single capsule follows the selected item in the RTL navigation. */
+.dash-nav { position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); inset-inline: 0; width: min(calc(100% - 24px), 456px); margin-inline: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 32px; background: var(--card); padding: 8px; z-index: 20; isolation: isolate; }
+.dash-nav::before { content: ""; position: absolute; inset-inline-start: 8px; top: 8px; width: calc((100% - 16px) / 4); height: 32px; background: var(--primary); border-radius: 16px; clip-path: inset(0 calc((100% - 60px) / 2) round 16px); pointer-events: none; z-index: -1; transform: translateX(0); }
+.dash-nav[data-active="reports"]::before { transform: translateX(-100%); }
+.dash-nav[data-active="budgets"]::before { transform: translateX(-200%); }
+.dash-nav a { text-decoration: none; display: flex; align-items: center; flex-direction: column; gap: 3px; min-height: 60px; min-width: 0; color: var(--muted-foreground); font-size: 12px; border-radius: 24px; }
+.dash-nav a span { display: grid; place-items: center; width: 60px; height: 32px; border-radius: 16px; }
+.dash-nav [aria-current="page"] { color: var(--primary-active); font-weight: 700; }
+.dash-nav [aria-current="page"] span { color: var(--primary-foreground); }
+@media (hover: hover) {
+  .dash-nav a:not([aria-current="page"]):hover span { background: var(--accent); color: var(--accent-foreground); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dash-nav::before { transition: transform var(--motion-entrance) var(--motion-easing); }
+  .dash-nav a span { transition: color var(--motion-feedback) var(--motion-easing); }
+}
+
+.dash-nav[data-active="families"]::before { transform: translateX(-300%); }

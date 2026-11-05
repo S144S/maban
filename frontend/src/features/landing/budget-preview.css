@@ -1,0 +1,296 @@
+.preview-scene {
+  position: relative;
+  padding-bottom: 66px;
+  min-width: 0;
+  scroll-margin-top: 35px;
+}
+.orbit {
+  display: none;
+}
+.budget-preview {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 23px;
+  box-shadow: 0 16px 55px rgb(0 0 0 / 0.055);
+}
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.preview-header h2 {
+  font-size: 14px;
+  font-weight: 700;
+}
+.icon-tile {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--primary);
+}
+.small-copy {
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.month {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.balance {
+  padding-block: 22px 19px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.balance > div {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: center;
+  color: var(--foreground);
+}
+.balance strong {
+  font-size: 37px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+.balance-note {
+  font-size: 10px;
+}
+.cashflow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--muted);
+  border-radius: 12px;
+  padding: 13px 10px;
+  gap: 12px;
+}
+.cashflow > div {
+  display: flex;
+  gap: 7px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  align-items: center;
+}
+.cashflow > div + div {
+  border-inline-start: 1px solid var(--border);
+  padding-inline-start: 12px;
+}
+.cashflow svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.cashflow strong {
+  display: block;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+.cashflow small {
+  font-size: 9px;
+  font-weight: 400;
+}
+.budget-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block: 23px 18px;
+}
+.budget-title h3 {
+  font-size: 12px;
+}
+.budget-title > span {
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.budget-categories {
+  display: grid;
+  gap: 15px;
+}
+.budget-row {
+  font-size: 11px;
+}
+.budget-row svg {
+  color: var(--muted-foreground);
+}
+.budget-amount {
+  margin-inline-start: auto;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+progress {
+  width: 100%;
+  display: block;
+  height: 6px;
+  border: none;
+  border-radius: 9px;
+  overflow: hidden;
+  margin-top: 9px;
+  background: var(--muted);
+}
+progress::-webkit-progress-bar {
+  background: var(--muted);
+}
+progress::-webkit-progress-value {
+  background: var(--progress-color);
+  border-radius: 9px;
+}
+progress::-moz-progress-bar {
+  background: var(--progress-color);
+  border-radius: 9px;
+}
+.chart-1 {
+  --progress-color: var(--chart-1);
+}
+.chart-2 {
+  --progress-color: var(--chart-2);
+}
+.chart-3 {
+  --progress-color: var(--chart-3);
+}
+.demo-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 23px;
+}
+.demo-actions > button:first-child {
+  flex: 1;
+  font-size: 11px;
+  padding-inline: 6px;
+}
+.demo-message {
+  min-height: 20px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-align: center;
+  margin-top: 8px;
+}
+.goal-card {
+  position: absolute;
+  bottom: 0;
+  inset-inline-end: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 280px;
+  padding: 17px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.04);
+}
+.goal-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 50px;
+  color: var(--primary);
+  background: var(--accent);
+  border-radius: 14px;
+}
+.goal-card > div {
+  flex: 1;
+}
+.goal-card h3 {
+  font-size: 12px;
+}
+.goal-card p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.goal-card strong {
+  color: var(--primary);
+}
+.goal-track {
+  height: 5px;
+  margin-block: 10px 5px;
+  border-radius: 8px;
+  background: var(--muted);
+  overflow: hidden;
+}
+.goal-track span {
+  display: block;
+  width: 60%;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 8px;
+}
+
+/* Modal demo remains a native, interactive budget rather than artwork. */
+.preview-scene {
+  padding-bottom: 0;
+  margin: 0;
+}
+.goal-card {
+  position: static;
+  width: 100%;
+  margin-top: 16px;
+  box-shadow: none;
+}
+.budget-preview {
+  padding: 16px;
+  box-shadow: none;
+}
+.budget-amount {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+@media (max-width: 480px) {
+  .preview-header {
+    flex-wrap: wrap;
+  }
+  .balance strong {
+    font-size: 28px;
+  }
+  .balance > div {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .cashflow {
+    grid-template-columns: 1fr;
+  }
+  .cashflow > div + div {
+    border-inline-start: 0;
+    padding-inline-start: 0;
+  }
+  .budget-row > div {
+    flex-wrap: wrap;
+  }
+  .budget-amount {
+    flex-basis: 100%;
+    text-align: end;
+  }
+  .demo-actions {
+    flex-wrap: wrap;
+  }
+  .demo-actions > button:first-child {
+    white-space: normal;
+    height: auto;
+    padding-block: 8px;
+  }
+  .goal-card {
+    flex-wrap: wrap;
+  }
+  .goal-card > div {
+    min-width: 0;
+  }
+  .goal-card p {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
