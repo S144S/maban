@@ -96,8 +96,13 @@
 .report-transactions > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .report-transactions-body { margin-top: 16px; }
 
-.report-sections { margin: 0; gap: 8px; }
-.report-sections button { font-size: 14px; min-width: 0; }
+.report-sections { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--border); }
+.report-sections button { position: relative; min-height: 48px; padding: 12px 8px; border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--muted-foreground); font-size: 14px; cursor: pointer; }
+.report-sections button:hover, .report-sections button:active { background: var(--accent); color: var(--accent-foreground); }
+.report-sections button[aria-selected="true"] { color: var(--primary); font-weight: 700; }
+.report-sections button[aria-selected="true"]::after { content: ""; position: absolute; inset-inline: 16px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--primary); }
+.report-panel { display: grid; gap: 20px; min-width: 0; }
+.report-panel:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 8px; }
 .wealth-private { display: inline-flex; align-items: center; gap: 4px; }
 .wealth-note { font-size: 13px; line-height: 1.9; margin-top: 16px; color: var(--muted-foreground); }
 .wealth-chart path { fill: none; stroke: var(--primary); stroke-width: 2; }

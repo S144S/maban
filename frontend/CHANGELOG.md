@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.24.0`. No frontend release has been published.
+Current development version: `0.24.1`. No frontend release has been published.
 
 ### Changed
+
+- Replaced report-type buttons with equal-width underlined RTL tabs, keyboard navigation and labeled panels while preserving the selected date range.
 
 - Removed the report footer explanation about family cash flow and personal assets.
 

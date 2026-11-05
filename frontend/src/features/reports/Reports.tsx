@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpLeft, ChartNoAxesCombined, Download, RefreshCw, SlidersHorizontal, Wallet, ChevronLeft, ChevronRight, Users, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveFamily } from "../families/ActiveFamily";
@@ -11,7 +11,10 @@ import { CashflowChart } from "./CashflowChart";
 import { change, dateLabel, downloadDaily, labels, money, presetRange, share, type Range, type Report } from "./model";
 import "./reports.css";
 
+const reportTabs = [{ id: "cashflow", label: "دخل‌وخرج" }, { id: "investments", label: "سرمایه" }, { id: "assets", label: "دارایی" }] as const;
+
 export function Reports() {
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [section, setSection] = useState<"cashflow" | "investments" | "assets">("cashflow");
   const [families, setFamilies] = useState<Family[] | null>(null);
   const { selected } = useActiveFamily();
@@ -40,15 +43,22 @@ export function Reports() {
   }
   return <div className="reports">
     <div className="report-heading"><h1>گزارش</h1></div>
-    <div className="report-ledger-tabs report-sections" role="group" aria-label="نوع گزارش">
-      {([{ id: "cashflow", label: "دخل‌وخرج" }, { id: "investments", label: "سرمایه" }, { id: "assets", label: "دارایی" }] as const).map(item => <button key={item.id} aria-pressed={section === item.id} onClick={() => setSection(item.id)}>{item.label}</button>)}
+    <div className="report-sections" role="tablist" aria-label="نوع گزارش">
+      {reportTabs.map((item, index) => <button key={item.id} ref={node => { tabRefs.current[index] = node; }} type="button" role="tab" id={`report-tab-${item.id}`} aria-selected={section === item.id} aria-controls={`report-panel-${item.id}`} tabIndex={section === item.id ? 0 : -1} onClick={() => setSection(item.id)} onKeyDown={event => {
+        const next = event.key === "ArrowLeft" ? (index + 1) % reportTabs.length : event.key === "ArrowRight" ? (index + reportTabs.length - 1) % reportTabs.length : event.key === "Home" ? 0 : event.key === "End" ? reportTabs.length - 1 : null;
+        if (next === null) return;
+        event.preventDefault();
+        tabRefs.current[next]?.focus();
+      }}>{item.label}</button>)}
     </div>
+    <div role="tabpanel" id={`report-panel-${section}`} aria-labelledby={`report-tab-${section}`} tabIndex={0} className="report-panel">
       <section className="report-filters" aria-label="فیلترهای گزارش">
         <div className="report-periods" role="group" aria-label="بازهٔ گزارش">{[{ id: "week", label: "۷ روز اخیر" }, { id: "month", label: "این ماه" }, { id: "quarter", label: "۹۰ روز اخیر" }].map(p => <button key={p.id} aria-pressed={preset === p.id} onClick={() => { setPreset(p.id); setRange(presetRange(p.id)); setCustom(false); }}>{p.label}</button>)}<button aria-expanded={custom} aria-controls="report-custom-range" aria-pressed={preset === "custom"} onClick={() => setCustom(v => !v)}><SlidersHorizontal size={16} aria-hidden="true" />دلخواه</button></div>
         {custom && <form id="report-custom-range" className="report-custom dash-form" onSubmit={applyCustom}><PersianDatePicker id="report-from" name="start" label="از تاریخ" inlineLabel required defaultValue={reminderDateFields(`${range.start}T12:00:00Z`).date} /><PersianDatePicker id="report-to" name="end" label="تا تاریخ" inlineLabel required defaultValue={reminderDateFields(`${range.end}T12:00:00Z`).date} />{rangeError && <p role="alert" className="dash-error">{rangeError}</p>}<Button type="submit">نمایش گزارش</Button></form>}
         <p className="report-range">{dateLabel(range.start)} — {dateLabel(range.end)}</p>
       </section>
       {section !== "cashflow" ? <WealthReport key={`${section}:${range.start}:${range.end}`} kind={section} range={range} /> : error ? <div className="report-state" role="alert"><p>{error}</p><Button variant="outline" onClick={() => setRetry(n => n + 1)}>تلاش دوباره</Button></div> : !families ? <p className="report-state" role="status">در حال دریافت خانواده‌ها…</p> : !family ? <div className="report-state"><Users size={32} aria-hidden="true" /><h2>گزارش از اولین ثبت شروع می‌شه</h2><p>یه خانواده بسازین یا به خانواده‌تون بپیوندین تا دخل‌وخرج رو اینجا ببینین.</p><Button asChild><a href="/families">رفتن به خانواده</a></Button></div> : <ReportContent key={`${family.id}:${range.start}:${range.end}`} familyId={family.id} range={range} />}
+    </div>
   </div>;
 }
 
