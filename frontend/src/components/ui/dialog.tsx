@@ -4,6 +4,15 @@ import { XIcon } from "lucide-react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { Button } from "@/components/ui/button";
+import { trackDialogViewport } from "@/lib/dialog-viewport";
+
+function DialogViewport({ children }: { children: React.ReactNode }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useLayoutEffect(() => {
+    if (ref.current) return trackDialogViewport(ref.current);
+  }, []);
+  return <div ref={ref} className="dialog-viewport">{children}</div>;
+}
 
 function Dialog({
   ...props
@@ -56,26 +65,28 @@ function DialogContent({
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
-      <DialogPrimitive.Content
-        data-slot="dialog-content"
-        className={cn(
-          "fixed bottom-0 inset-x-0 z-50 mx-auto grid w-full max-w-[480px] gap-4 border bg-card shadow-lg outline-none",
-          className,
-        )}
-        {...props}
-      >
-        <span className="dialog-sheet-handle" aria-hidden="true" />
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-          >
-            <XIcon />
-            <span className="sr-only">بستن</span>
-          </DialogPrimitive.Close>
-        )}
-      </DialogPrimitive.Content>
+      <DialogViewport>
+        <DialogPrimitive.Content
+          data-slot="dialog-content"
+          className={cn(
+            "absolute bottom-0 inset-x-0 z-50 mx-auto grid w-full max-w-[480px] gap-4 border bg-card shadow-lg outline-none",
+            className,
+          )}
+          {...props}
+        >
+          <span className="dialog-sheet-handle" aria-hidden="true" />
+          {children}
+          {showCloseButton && (
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            >
+              <XIcon />
+              <span className="sr-only">بستن</span>
+            </DialogPrimitive.Close>
+          )}
+        </DialogPrimitive.Content>
+      </DialogViewport>
     </DialogPortal>
   );
 }

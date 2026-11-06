@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.26.1`. No frontend release has been published.
+Current development version: `0.26.2`. No frontend release has been published.
 
 ### Changed
 
@@ -84,6 +84,8 @@ Current development version: `0.26.1`. No frontend release has been published.
 - Added full/view access selection on family invitations and permission labels on members and invitation previews.
 
 ### Fixed
+
+- Keep dialog sheets within the visible viewport as mobile keyboards open, close or pan the page; scroll focused controls inside the sheet into view.
 
 - Prevent long user names and access-edit buttons from widening admin user cards and causing horizontal page scrolling on small screens.
 
