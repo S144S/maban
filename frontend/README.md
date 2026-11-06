@@ -29,6 +29,28 @@ npm run preview
 `VERSION` is authoritative; synchronize package.json, package-lock.json and the
 Unreleased changelog when changing versions. `npm run check` validates them.
 
+## Installable online app (PWA)
+
+The web manifest provides a stable app identity, Persian name, existing MaBan
+artwork in 192/512px PNG icons, and standalone launch at `/dashboard`. Signed-out
+users follow the existing login flow. iOS uses the supplied 180px touch icon.
+
+Serve over HTTPS (localhost is allowed for development). In current Chrome/Edge,
+use the browser's Install app action; on iOS Safari use Share → Add to Home Screen
+and enable Open as Web App where offered. Browser install UI and automatic prompts
+vary by platform. No custom install prompt or offline support is provided.
+
+There is deliberately no service worker, Cache Storage, or offline request queue.
+Network requests retain normal browser/server cache semantics; protected API
+responses remain `no-store`. Loading the app and financial operations need an
+internet connection. Updates load on the next navigation/reload, without a waiting
+service worker. Serve `index.html` and `manifest.webmanifest` with revalidation
+(`Cache-Control: no-cache`), PNG icons as `image/png`, and the manifest as
+`application/manifest+json`; keep SPA fallbacks out of `/api` and static assets.
+Native installation and standalone launch must also be checked on target Android
+and iOS devices after deployment; the embedded development browser cannot prove
+OS-level installation.
+
 ## Authentication and account management
 
 - `/signup`: mobile number, five-digit OTP, then first name, last name and

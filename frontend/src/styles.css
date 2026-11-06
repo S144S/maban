@@ -770,8 +770,17 @@
 .skip-link:focus {
   top: 10px;
 }
+.dialog-viewport {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  height: 100dvh;
+  z-index: 50;
+  pointer-events: none;
+}
 [data-slot="dialog-content"] {
-  max-height: calc(100dvh - 16px);
+  max-height: calc(100% - 16px);
+  pointer-events: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--illustration-paper);
