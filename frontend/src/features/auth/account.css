@@ -7,6 +7,8 @@
 .account-list { list-style: none; display: grid; gap: 16px; padding: 0; }
 .account-list li { min-width: 0; overflow-wrap: anywhere; }
 .account-list li > * + * { margin-top: 8px; }
+.account-list .account-card { grid-template-columns: minmax(0, 1fr); }
+.account-list .account-card [data-slot="button"] { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: center; }
 .auth-field select { min-height: 52px; width: 100%; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--card-foreground); padding: 11px 15px; font: inherit; }
 
 /* Account-specific presentation; shared admin and family surfaces keep their layout. */

@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.26.0`. No frontend release has been published.
+Current development version: `0.26.1`. No frontend release has been published.
 
 ### Changed
 
@@ -84,6 +84,8 @@ Current development version: `0.26.0`. No frontend release has been published.
 - Added full/view access selection on family invitations and permission labels on members and invitation previews.
 
 ### Fixed
+
+- Prevent long user names and access-edit buttons from widening admin user cards and causing horizontal page scrolling on small screens.
 
 - Reduced the home fund selector height from 52px to 44px while preserving accessible touch targets, unified the card heading as balance across all three funds, and removed the shared/personal scope subtitles and empty-fund message from the home card. Tightened card padding and spacing; vertically centered the icon, balance title and adjacent amount in one compact row.
 
