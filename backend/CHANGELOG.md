@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `2.0.0`. No backend release has been published.
+Current development version: `2.1.0`. No backend release has been published.
 
 ### Added
+
+- Accept beauty (`sparkles`), loan (`hand-coins`) and internet (`wifi`) icons when creating or editing expense categories; preserve existing icon identifiers.
 
 - Connected signup/login/recovery OTP and separately configured reminder patterns to IranPayamak through a shared PostgreSQL job queue and independent SMS worker. Challenge/job and reminder occurrence/job writes are atomic; OTP jobs have priority, encrypted short-lived payloads, expiry and supersession checks. Concurrent claims are serialized and interrupted sends become unknown without automatic retries. Daily/weekly Tehran and monthly Persian-calendar recurrence skip historical backlogs; UI-facing reminder delivery status and next occurrence are exposed. Run Alembic upgrade head and supervise `python -m app.sms_worker`; reminders require separate enablement.
 

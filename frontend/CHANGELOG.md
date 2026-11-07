@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.26.2`. No frontend release has been published.
+Current development version: `0.27.0`. No frontend release has been published.
 
 ### Changed
 
@@ -30,6 +30,8 @@ Current development version: `0.26.2`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Add beauty, loan and internet expense-category icons, and label the existing bill icon as bills. Requires backend 2.1.0 for the new icons.
 
 - Added an online-only installable web app manifest, Persian app identity, standalone dashboard launch, and PNG installation icons using the existing brand artwork, including iOS home-screen metadata. No service worker or offline financial data cache is introduced.
 
