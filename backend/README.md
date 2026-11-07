@@ -401,3 +401,9 @@ The API returns `delivery_status` (`not_available`, `scheduled`, `accepted`,
 statuses without claiming delivery to a handset. Rollback refuses to drop a
 nonempty attempt ledger; export and explicitly clear it only after assessing the
 risk of repeated sends. No financial balances are modified.
+
+## Family plants
+
+See [Plants setup, API and care rules](../docs/plants.md) for migration and local
+workflow instructions. Open **گلدون‌ها** after selecting a family. This feature
+uses in-app reminders only and defaults daily care to Asia/Tehran.

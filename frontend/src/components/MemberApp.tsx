@@ -8,7 +8,7 @@ import { BottomNavigation, type Destination } from "./BottomNavigation";
 function currentDestination(): Destination {
   if (/^\/families\/?$/.test(window.location.pathname)) return "families";
   const page = new URLSearchParams(window.location.search).get("page");
-  return page === "transactions" ? "reports" : page === "reports" || page === "budgets" ? page : "home";
+  return page === "transactions" ? "reports" : page === "reports" || page === "budgets" || page === "plants" ? page : "home";
 }
 
 export function MemberApp({ user }: { user: User }) {
@@ -18,7 +18,7 @@ export function MemberApp({ user }: { user: User }) {
 function MemberContent({ user }: { user: User }) {
   const { selected } = useActiveFamily();
   const [active, setActive] = useState<Destination>(currentDestination);
-  const [dashboardPage, setDashboardPage] = useState<"home" | "reports" | "budgets">(() => active === "families" ? "home" : active);
+  const [dashboardPage, setDashboardPage] = useState<"home" | "reports" | "budgets" | "plants">(() => active === "families" ? "home" : active);
   const [familyVisited, setFamilyVisited] = useState(active === "families");
   const content = useRef<HTMLDivElement>(null);
   function select(page: Destination) {
@@ -42,7 +42,7 @@ function MemberContent({ user }: { user: User }) {
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, []);
-  useEffect(() => { document.title = active === "families" ? "خانواده | مابان" : active === "reports" ? "گزارش | مابان" : "داشبورد | مابان"; }, [active]);
+  useEffect(() => { document.title = active === "plants" ? "گلدون‌ها | مابان" : active === "families" ? "خانواده | مابان" : active === "reports" ? "گزارش | مابان" : "داشبورد | مابان"; }, [active]);
   return <div ref={content}>
     <div hidden={active === "families"} data-active-panel={active !== "families"}>
       <DashboardPage key={selected} user={user} page={dashboardPage} onNavigate={navigate} />

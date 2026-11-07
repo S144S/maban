@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `2.1.0`. No backend release has been published.
+Current development version: `2.2.0`. No backend release has been published.
 
 ### Added
+
+- Added family-owned plants, soil checks and optional fertilizer schedules, member assignment, immutable care history and atomic idempotent care recording. All family members may collaborate; data is isolated by family. Daily due dates use the documented Asia/Tehran default. Run Alembic upgrade head; no notification worker or delivery settings are required.
 
 - Accept beauty (`sparkles`), loan (`hand-coins`) and internet (`wifi`) icons when creating or editing expense categories; preserve existing icon identifiers.
 

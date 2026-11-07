@@ -1,10 +1,11 @@
-import { House, ChartNoAxesCombined, Settings2, Users } from "lucide-react";
+import { House, ChartNoAxesCombined, Settings2, Users, Sprout } from "lucide-react";
 import "./bottom-navigation.css";
 
 const items = [
   { id: "home", label: "خانه", icon: House, href: "/dashboard" },
   { id: "reports", label: "گزارش", icon: ChartNoAxesCombined, href: "/dashboard?page=reports" },
   { id: "budgets", label: "مدیریت", icon: Settings2, href: "/dashboard?page=budgets" },
+  { id: "plants", label: "گلدون‌ها", icon: Sprout, href: "/dashboard?page=plants" },
   { id: "families", label: "خانواده", icon: Users, href: "/families" },
 ] as const;
 export type Destination = typeof items[number]["id"];
