@@ -17,9 +17,21 @@ class Settings(BaseSettings):
     sms_line_number: str = ""
     sms_reminder_template: str = ""
     reminder_sms_enabled: bool = False
+    minio_endpoint: str = ""
+    minio_access_key: str = Field(default="", repr=False)
+    minio_secret_key: str = Field(default="", repr=False)
+    minio_bucket: str = Field(default="maban-plants", pattern=r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
+    minio_secure: bool = True
 
     @model_validator(mode="after")
     def validate_production(self):
+        storage = (self.minio_endpoint, self.minio_access_key, self.minio_secret_key)
+        if any(storage) and not all(storage):
+            raise ValueError("MinIO requires endpoint, access key and secret key together")
+        if self.minio_endpoint and ("://" in self.minio_endpoint or "/" in self.minio_endpoint):
+            raise ValueError("MINIO_ENDPOINT must be a host with optional port, without scheme or path")
+        if self.minio_endpoint and self.environment == "production" and not self.minio_secure:
+            raise ValueError("Production MinIO requires TLS")
         if not self.database_url.startswith("postgresql+psycopg://"):
             raise ValueError("PostgreSQL with psycopg is required")
         if len(self.secret_key) < 32:

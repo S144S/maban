@@ -1,7 +1,15 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -17,6 +25,9 @@ class Plant(Base):
                         "AND fertilizer_due IS NOT NULL)",
                         name="plants_fertilizer_schedule"),
         Index("ix_plants_family", "family_id", "deleted_at", "id"),
+        Index("ix_plants_photo_key", "photo_key", unique=True),
+        CheckConstraint("(photo_digest IS NULL AND photo_key IS NULL) OR "
+                        "(photo_digest IS NOT NULL AND photo_key IS NOT NULL)", name="plants_photo"),
         {"schema": "plants"},
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -35,6 +46,8 @@ class Plant(Base):
     request_fingerprint: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    photo_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    photo_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
 
 class CareEvent(Base):

@@ -1,4 +1,15 @@
 services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: maban_local
+      MINIO_ROOT_PASSWORD: maban_minio_local_only
+    ports:
+      - "127.0.0.1:54340:9000"
+      - "127.0.0.1:54341:9001"
+    volumes:
+      - maban_minio:/data
   db:
     image: postgres:18-alpine
     environment:
@@ -15,4 +26,5 @@ services:
       timeout: 3s
       retries: 20
 volumes:
+  maban_minio:
   maban_postgres:

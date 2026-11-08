@@ -1,5 +1,5 @@
 export type Schedule = { interval_days: number; next_due: string; status: "overdue" | "today" | "upcoming" };
-export type Plant = { id: string; name: string; species: string; location: string; note: string; assignee_id: string | null; soil: Schedule; fertilizer: Schedule | null };
+export type Plant = { id: string; name: string; species: string; location: string; note: string; assignee_id: string | null; soil: Schedule; fertilizer: Schedule | null; photo_url: string | null };
 export const careLabels = { watered: "آب دادم", not_needed: "هنوز نیاز به آب نداشت", fertilized: "کود دادم" };
 export type CareAction = keyof typeof careLabels;
 export type CareEvent = { id: string; actor_id: string; actor_name: string; action: CareAction; note: string; performed_at: string; next_due: string };

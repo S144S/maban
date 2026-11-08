@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.28.0`. No frontend release has been published.
+Current development version: `0.29.0`. No frontend release has been published.
 
 ### Changed
 
@@ -30,6 +30,8 @@ Current development version: `0.28.0`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added optional plant photos in lists and details, with selection, preview, upload feedback, replacement and confirmed removal. New plants open their details for optional photo upload without resubmitting plant creation.
 
 - Added the Persian RTL Plants destination (گلدون‌ها), with family-scoped lists, due indicators, plant creation/editing/deletion, member assignment, Persian care schedules, care outcomes and paginated history. Reuses shared sheets, calendar and navigation; includes pending/retry/error/empty/success states. Requires backend 2.2.0.
 

@@ -20,8 +20,48 @@ or select a family in **خانواده**, then open **گلدون‌ها** in the
 (`/dashboard?page=plants`). Add a plant, choose a family member if desired, set
 its soil-check interval/first Persian date, and optionally enable fertilizer.
 Open its details, record either soil result, and check the new date and history.
+After creation, details open automatically. Use **افزودن عکس** to select an
+optional image, review its preview and save it. Family members can replace it or
+confirm its removal independently of the plant metadata and care history.
 Invite another local test account to verify shared care and actor attribution.
-No additional environment settings or worker process are needed for plants.
+Care schedules need no worker. Photos require private MinIO storage:
+
+```powershell
+# Repository root (local-only services and credentials)
+docker compose up -d db minio
+cd backend
+# Add the MABAN_MINIO_* values below to an existing .env; do not overwrite it.
+uv sync --python 3.14 --reinstall-package maban-backend
+uv run alembic upgrade head
+uv run python -m app.plants.storage
+```
+
+Local values (also in `backend/.env.example`):
+
+```dotenv
+MABAN_MINIO_ENDPOINT=127.0.0.1:54340
+MABAN_MINIO_ACCESS_KEY=maban_local
+MABAN_MINIO_SECRET_KEY=maban_minio_local_only
+MABAN_MINIO_BUCKET=maban-plants
+MABAN_MINIO_SECURE=false
+```
+
+Restart the API after configuration. MinIO API is bound to localhost port 54340;
+its operator console is at http://127.0.0.1:54341. Data persists in the
+`maban_minio` named Docker volume. The setup command creates the bucket if absent
+and rejects an existing bucket policy; it never enables anonymous reads. Run it
+with provisioning credentials. The ordinary API does not create buckets. If
+storage is unconfigured/unavailable, photo operations return a Persian 503;
+there is no database/file fallback. Financial and plant-care routes remain usable.
+
+In production use a private bucket with anonymous access disabled, a TLS MinIO
+endpoint (`MABAN_MINIO_SECURE=true`, mandatory in production) and dedicated app
+credentials. Endpoint is `host[:port]`, without scheme/path. Scope the app's IAM
+policy to `s3:GetBucketLocation`/`s3:ListBucket` on this dedicated bucket and
+`s3:GetObject`/`s3:PutObject`/`s3:DeleteObject` on `bucket/plants/*`. Keep provisioning
+permissions (`CreateBucket`, `GetBucketPolicy`) separate. Do not deploy the local
+Compose credentials publicly or expose its console to ordinary users. No browser
+MinIO credentials, bucket CORS or public/presigned image URLs are needed.
 
 Checks:
 
@@ -49,6 +89,60 @@ npm run build
   `fertilized`) and optional `note`. The server supplies actor and timestamp.
 - `GET /plants/{id}/history?offset=0`: 50 events per page, newest first, with
   actor names, timezone-aware timestamps and the next date recorded at that time.
+- `PUT /plants/{id}/photo`: raw image body with `Content-Type: image/jpeg`,
+  `image/png` or `image/webp`; returns the updated plant including `photo_url`.
+  Repeating the same upload replaces the same single photo without care events.
+- `GET /plants/{id}/photo`: authenticated JPEG bytes with `Cache-Control: no-store`.
+  The returned URL includes a content digest for refreshing changed images; it
+  does not grant access without an authorized session. `DELETE` removes the
+  image and is safe to retry. List/detail return nullable `photo_url`.
+
+Photos have a 5 MiB input limit (also applied to streamed bodies), 20 megapixel
+limit and must be static. The server validates actual format and pixels with
+Pillow, applies orientation, downsizes to at most 1600 × 1600 and rebuilds a JPEG
+without EXIF/GPS/profile metadata. SVG, GIF and animated images are unsupported.
+Family authorization applies to reads and writes, including guessed image URLs.
+Normalized files are stored in MinIO under random per-family/per-plant object
+keys. PostgreSQL holds only nullable `photo_key` and `photo_digest`; there is no
+image/blob column at migration head. Migration `d58764dc192a` replaces the initial
+unreleased blob schema (`c47653cb0819`); no current photos need transfer. As a
+guard it refuses to discard unexpected existing blobs. Downgrade likewise refuses
+nonempty object references; there is no automatic transfer back into PostgreSQL.
+
+Uploads complete before the new key is committed. Repeated identical uploads
+retain one object/key and can repair a missing object. Different images get new
+random keys; the old object is removed only after a successful database commit.
+Database failures leave the prior committed photo untouched. Deletion first
+commits removal of access to the photo, then removes its object. Storage and
+PostgreSQL do not share an atomic transaction: outages or a crash can leave a
+private, unreferenced object, without exposing it through the API. A failed or
+ambiguous database commit never triggers blind deletion of a potentially committed
+upload. Cleanup failures are logged and do not turn committed deletion into an
+HTTP failure. Concurrent photo changes use the family write lock and
+last-write-wins. Original files are not retained.
+
+Schedule reconciliation periodically (for example daily) using the same database,
+bucket and credentials as the API:
+
+```powershell
+uv run python -m app.plants.cleanup         # dry run: candidate count only
+uv run python -m app.plants.cleanup --apply # remove unreferenced objects older than 24h
+```
+
+The command only inspects generated keys under `plants/`, takes the same family
+lock as uploads/reads, rechecks the committed reference and preserves live objects.
+Do not add a bucket lifecycle rule that deletes current photos by age. Back up
+MinIO **and** PostgreSQL separately with coordinated retention/restore points;
+a named volume or MinIO alone is not a backup. Pause cleanup while restoring
+either store. Database-only backups do not contain images.
+
+Tests substitute the narrow storage interface for deterministic failure/rollback
+cases. For the real MinIO integration test, set `MABAN_TEST_MINIO_ENDPOINT`,
+`MABAN_TEST_MINIO_ACCESS_KEY`, `MABAN_TEST_MINIO_SECRET_KEY` (and optional
+`MABAN_TEST_MINIO_SECURE=true`) and run `uv run pytest tests/test_plant_storage.py -q`.
+It creates/deletes only its own random test bucket, verifies anonymous reads are
+denied, and exercises upload/retry/replacement/deletion through the authenticated
+API. Without these settings that single integration test is skipped.
 
 All routes authenticate and authorize the family before reading data. Assignees
 must belong to that family. IDs from another family are inaccessible, including
@@ -77,7 +171,8 @@ disables controls during submission. Two deliberately separate requests with
 different UUIDs count as separate care events.
 
 Deletion is soft: the plant, schedules and history become inaccessible in the UI
-and API; rows are retained to preserve references/retry protection. No restore or
+and API; its photo reference is cleared and the MinIO object is removed after commit.
+Other rows are retained to preserve references/retry protection. No restore or
 permanent purge endpoint is provided. Migration `b36542baf708` adds this schema
 without modifying family/user/finance tables. Downgrade refuses to discard
 nonempty plant/history data; export and explicitly clear it before rolling back.
@@ -87,6 +182,6 @@ nonempty plant/history data; export and explicitly clear it before rolling back.
 Reminders appear only in the plant list/details; there are no background delivery
 jobs or global notification badges. Statuses refresh on entering the page, window
 focus and each minute while the page is open. Family selection stays in the
-existing Families screen. No photos, diagnosis, species database or treatment
+existing Families screen. No diagnosis, species database or treatment
 recommendations are included. Shared metadata edits use last-write-wins, matching
 existing editing flows; simultaneous edits are not merged.

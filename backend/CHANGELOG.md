@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `2.2.0`. No backend release has been published.
+Current development version: `2.3.0`. No backend release has been published.
 
 ### Added
+
+- Added one optional private photo per family plant with authenticated read, replacement and deletion. JPEG, PNG and WebP uploads are bounded to 5 MiB/20 megapixels, normalized to static JPEG and stripped of metadata. Files use a private MinIO bucket; PostgreSQL stores object keys only. Configure MABAN_MINIO_* and initialize the bucket; run Alembic upgrade head (refuses unexpected legacy blobs). Upload/commit failure recovery preserves current photos; a reconciliation command removes abandoned objects after a 24-hour grace period. Local Compose includes persistent MinIO storage; back up it and PostgreSQL separately.
 
 - Added family-owned plants, soil checks and optional fertilizer schedules, member assignment, immutable care history and atomic idempotent care recording. All family members may collaborate; data is isolated by family. Daily due dates use the documented Asia/Tehran default. Run Alembic upgrade head; no notification worker or delivery settings are required.
 
