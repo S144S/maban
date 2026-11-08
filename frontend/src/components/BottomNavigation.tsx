@@ -1,22 +1,21 @@
-import { House, ChartNoAxesCombined, Settings2, Users, Sprout } from "lucide-react";
+import { House, ChartNoAxesCombined, Settings2 } from "lucide-react";
 import "./bottom-navigation.css";
 
 const items = [
   { id: "home", label: "خانه", icon: House, href: "/dashboard" },
-  { id: "reports", label: "گزارش", icon: ChartNoAxesCombined, href: "/dashboard?page=reports" },
   { id: "budgets", label: "مدیریت", icon: Settings2, href: "/dashboard?page=budgets" },
-  { id: "plants", label: "گلدون‌ها", icon: Sprout, href: "/dashboard?page=plants" },
-  { id: "families", label: "خانواده", icon: Users, href: "/families" },
+  { id: "reports", label: "گزارش", icon: ChartNoAxesCombined, href: "/dashboard?page=reports" },
 ] as const;
-export type Destination = typeof items[number]["id"];
+export type Destination = typeof items[number]["id"] | "plants" | "families" | "finance";
 
 export function BottomNavigation({ active, onNavigate }: {
   active: Destination;
   onNavigate?: (page: Destination) => void;
 }) {
-  return <nav className="dash-nav" data-active={active} aria-label="ناوبری اصلی">
+  const selected = active === "families" || active === "plants" || active === "finance" ? "budgets" : active;
+  return <nav className="dash-nav" data-active={selected} aria-label="ناوبری اصلی">
     {items.map(({ id, label, icon: Icon, href }) => <a key={id} href={href}
-      aria-current={active === id ? "page" : undefined}
+      aria-current={selected === id ? "page" : undefined}
       onClick={event => {
         if (onNavigate && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) {
           event.preventDefault(); onNavigate(id);

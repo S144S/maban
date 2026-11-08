@@ -5,9 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.30.0`. No frontend release has been published.
+Current development version: `0.31.0`. No frontend release has been published.
 
 ### Changed
+
+- Grouped Management into softly colored Family, Finance and Plants buttons with dedicated pages and compact left-arrow back controls aligned with page titles. Finance preserves accounts, categories, rates and reminders; all three pages keep Management selected in bottom navigation, including on direct visits.
+
+- Simplified bottom navigation to Home, Management and Reports in RTL order, preserving existing page routes and content.
 
 - Added optional photo selection and preview directly to the new-plant form. Saving uploads the photo after plant creation; failed uploads retain the selected file in details for retry without creating another plant.
 

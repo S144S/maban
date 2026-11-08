@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
+import { ManagementBack } from "@/components/ManagementBack";
 import { Management } from "../money-locations/Management";
+import { ManagementHub } from "./ManagementHub";
 import { FamilyWallet } from "./FamilyWallet";
 import { ReferenceArtwork } from "../landing/ReferenceArtwork";
 import { AccountMenu } from "../auth/AccountMenu";
@@ -9,7 +11,7 @@ import type { Destination } from "@/components/BottomNavigation";
 
 const Reports = lazy(() => import("../reports/Reports").then(module => ({ default: module.Reports })));
 const Plants = lazy(() => import("../plants/Plants").then(module => ({ default: module.Plants })));
-type Page = "home" | "reports" | "budgets" | "plants";
+type Page = "home" | "reports" | "budgets" | "plants" | "finance";
 export function DashboardPage({ user, page, onNavigate }: { user: User; page: Page; onNavigate: (page: Destination) => void }) {
   return <div className="dash-shell">
     <a className="skip-link" href="#dashboard-main">رفتن به محتوای اصلی</a>
@@ -19,8 +21,9 @@ export function DashboardPage({ user, page, onNavigate }: { user: User; page: Pa
         <Suspense fallback={<p role="status">در حال آماده‌سازی گلدون‌ها…</p>}><Plants embedded onFamilies={() => onNavigate("families")} onAllPlants={() => onNavigate("plants")} /></Suspense>
       </>}
       {page === "reports" && <Suspense fallback={<p role="status">در حال آماده‌سازی گزارش…</p>}><Reports key={user.id} /></Suspense>}
-      {page === "budgets" && <><div className="dash-welcome"><h1 tabIndex={-1}>مدیریت</h1></div><Management userId={user.id} /></>}
-      {page === "plants" && <Suspense fallback={<p role="status">در حال آماده‌سازی گلدون‌ها…</p>}><Plants onFamilies={() => onNavigate("families")} /></Suspense>}
+      {page === "budgets" && <ManagementHub onNavigate={onNavigate} />}
+      {page === "finance" && <><div className="dash-welcome management-title-row"><h1 tabIndex={-1}>مالی</h1><ManagementBack onBack={() => onNavigate("budgets")} /></div><Management userId={user.id} /></>}
+      {page === "plants" && <Suspense fallback={<p role="status">در حال آماده‌سازی گلدون‌ها…</p>}><Plants onFamilies={() => onNavigate("families")} onBack={() => onNavigate("budgets")} /></Suspense>}
     </main>
   </div>;
 }

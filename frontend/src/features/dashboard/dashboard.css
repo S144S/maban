@@ -6,6 +6,15 @@
 .dash-account:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 .dash-main { padding: 26px 24px 110px; }
 .dash-section-divider { width: 100%; margin-block: 28px; border: 0; border-block-start: 1px solid var(--border); }
+.management-hub { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-block-start: 24px; }
+.management-hub > button { min-width: 0; min-height: 96px; padding: 12px 4px; flex-direction: column; gap: 12px; border-radius: 24px; white-space: normal; }
+.management-hub > button svg { width: 24px; height: 24px; }
+.management-hub > .management-family-action { --management-action-bg: var(--scene-rose); }
+.management-hub > .management-finance-action { --management-action-bg: var(--scene-peach); }
+.management-hub > .management-plants-action { --management-action-bg: var(--scene-lime); }
+.management-hub > button { background: var(--management-action-bg); color: var(--foreground); }
+.management-hub > button:hover { background: var(--accent); color: var(--accent-foreground); }
+.management-hub > button:active { background: var(--secondary); color: var(--secondary-foreground); }
 .dash-welcome, .dash-row, .dash-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .dash-welcome { flex-wrap: wrap; }
 .dash-welcome h1 { font-size: 27px; font-weight: 800; color: var(--foreground); }

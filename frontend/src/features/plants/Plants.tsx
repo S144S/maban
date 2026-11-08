@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Leaf, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ManagementBack } from "@/components/ManagementBack";
 import { Select } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api, errorMessage } from "@/lib/http";
@@ -23,7 +24,7 @@ function ScheduleInfo({ label, schedule }: { label: string; schedule: Schedule }
   </div>;
 }
 
-export function Plants({ onFamilies, embedded = false, onAllPlants }: { onFamilies: () => void; embedded?: boolean; onAllPlants?: () => void }) {
+export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { onFamilies: () => void; embedded?: boolean; onAllPlants?: () => void; onBack?: () => void }) {
   const { selected, setSelected } = useActiveFamily();
   const [family, setFamily] = useState<Family | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -141,7 +142,7 @@ export function Plants({ onFamilies, embedded = false, onAllPlants }: { onFamili
   const visibleItems = embedded ? items.slice(0, 3) : items;
 
   return <section className={`plants-page${embedded ? " plants-home" : ""}`} aria-labelledby="plants-title">
-    <div className="dash-welcome"><Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌ها"}</Heading>
+    <div className="dash-welcome">{onBack ? <div className="management-title-row"><Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌ها"}</Heading><ManagementBack onBack={onBack} /></div> : <Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌ها"}</Heading>}
       {!plantId && family && <Button disabled={loading || !!error} onClick={() => show("add")}><Plus aria-hidden="true" />افزودن گلدون</Button>}
     </div>
     {family && (!embedded || plantId) && <p className="plants-family">خانوادهٔ {family.name} · رسیدگی مشترک</p>}
