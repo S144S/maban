@@ -15,13 +15,24 @@ setup. From `backend`, run `uv sync --python 3.14 --reinstall-package maban-back
 `uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 6202 --no-proxy-headers`.
 From `frontend`, run `npm ci` and `npm run dev`.
 
+The home page also shows up to three plants below the financial divider, in compact rows with a thumbnail, name and next care status, ordered
+by the earliest care due date. The summary stays similar in size to the financial
+section, while details expand on demand. Add plants, open details and record care there;
+use **همهٔ گلدون‌ها** to open the full paginated list. It uses the same selected
+family and existing plant flow. Loading this section does not move keyboard focus
+away from the financial controls.
+
 Sign up/sign in with the existing real account flow (local OTP: `12345`), create
 or select a family in **خانواده**, then open **گلدون‌ها** in the bottom navigation
 (`/dashboard?page=plants`). Add a plant, choose a family member if desired, set
 its soil-check interval/first Persian date, and optionally enable fertilizer.
 Open its details, record either soil result, and check the new date and history.
-After creation, details open automatically. Use **افزودن عکس** to select an
-optional image, review its preview and save it. Family members can replace it or
+Select an optional image directly below the name in the new-plant form and
+review its preview before saving. Plant creation commits first, then the photo
+is uploaded. If uploading fails, details open with a clear message and retain
+the file for retry via **ذخیرهٔ عکس**, without creating another plant.
+After creation, details open automatically. Use **افزودن عکس** there to select
+or replace an image independently. Family members can replace it or
 confirm its removal independently of the plant metadata and care history.
 Invite another local test account to verify shared care and actor attribution.
 Care schedules need no worker. Photos require private MinIO storage:

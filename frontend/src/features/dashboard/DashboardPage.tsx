@@ -15,7 +15,9 @@ export function DashboardPage({ user, page, onNavigate }: { user: User; page: Pa
     <a className="skip-link" href="#dashboard-main">رفتن به محتوای اصلی</a>
     <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><AccountMenu /></header>
     <main id="dashboard-main" className="dash-main">
-      {page === "home" && <FamilyWallet userId={user.id} />}
+      {page === "home" && <><FamilyWallet userId={user.id} /><hr className="dash-section-divider" />
+        <Suspense fallback={<p role="status">در حال آماده‌سازی گلدون‌ها…</p>}><Plants embedded onFamilies={() => onNavigate("families")} onAllPlants={() => onNavigate("plants")} /></Suspense>
+      </>}
       {page === "reports" && <Suspense fallback={<p role="status">در حال آماده‌سازی گزارش…</p>}><Reports key={user.id} /></Suspense>}
       {page === "budgets" && <><div className="dash-welcome"><h1 tabIndex={-1}>مدیریت</h1></div><Management userId={user.id} /></>}
       {page === "plants" && <Suspense fallback={<p role="status">در حال آماده‌سازی گلدون‌ها…</p>}><Plants onFamilies={() => onNavigate("families")} /></Suspense>}

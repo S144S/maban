@@ -9,8 +9,8 @@ export function PlantImage({ src, name }: { src: string; name: string }) {
     : <img className="plant-photo" src={src} alt={`عکس ${name}`} width={640} height={480} loading="lazy" onError={() => setFailed(true)} />;
 }
 
-export function PlantPhoto({ plant, familyId, onSaved, activity }: { plant: Plant; familyId: string; onSaved: (message: string) => void; activity: { current: boolean } }) {
-  const [file, setFile] = useState<File | null>(null);
+export function PlantPhoto({ plant, familyId, onSaved, activity, initialFile = null }: { plant: Plant; familyId: string; onSaved: (message: string) => void; activity: { current: boolean }; initialFile?: File | null }) {
+  const [file, setFile] = useState<File | null>(initialFile);
   const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

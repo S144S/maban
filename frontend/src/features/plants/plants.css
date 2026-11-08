@@ -1,6 +1,23 @@
 .plants-page { display: grid; gap: 18px; min-width: 0; color: var(--foreground); }
 .plants-page h1, .plants-page h2, .plant-card h2 { overflow-wrap: anywhere; }
 .plants-page h2 { font-family: var(--font-heading); font-size: 19px; font-weight: 700; }
+.plants-home > .dash-welcome > h2 { font-size: 22px; font-weight: 800; }
+.plants-home .plant-card h3 { font-family: var(--font-heading); font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
+.plants-home { gap: 12px; }
+.plants-home-list { list-style: none; padding: 4px 12px; margin: 0; border: 1px solid var(--border); border-radius: 24px; background: var(--card); color: var(--card-foreground); }
+.plants-home-list li + li { border-block-start: 1px solid var(--border); }
+.plants-home-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 60px; padding: 8px 0; text-align: start; color: inherit; border-radius: 12px; cursor: pointer; }
+.plants-home-row:hover, .plants-home-row:active { background: var(--accent); color: var(--accent-foreground); }
+.plants-home-row:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.plants-home-row > img, .plants-home-icon { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; object-fit: cover; background: var(--muted); }
+.plants-home-icon { display: grid; place-items: center; color: var(--primary); }
+.plants-home-copy { display: grid; gap: 2px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.plants-home-copy strong { font-size: 14px; font-weight: 600; }
+.plants-home-copy > span { font-size: 12px; color: var(--muted-foreground); }
+.plants-home-copy > span[data-due="true"] { color: var(--warning); }
+.plants-home-arrow { width: 18px; height: 18px; flex-shrink: 0; transform: rotate(180deg); }
+.plants-home > .plants-empty { gap: 8px; padding: 16px; }
+.plants-home > .plants-empty > svg { width: 28px; height: 28px; }
 .plants-family { color: var(--muted-foreground); font-size: 14px; overflow-wrap: anywhere; }
 .plants-list, .plant-history ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
 .plant-card { display: grid; gap: 12px; min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: 24px; background: var(--card); color: var(--card-foreground); overflow-wrap: anywhere; }
@@ -22,6 +39,8 @@
 .plants-empty > svg { width: 48px; height: 48px; color: var(--primary); }
 .plants-empty p { color: var(--muted-foreground); }
 .plants-notice { padding: 12px; border-radius: 12px; color: var(--success); background: var(--success-bg); }
+.plants-notice-warning { color: var(--warning); background: var(--warning-bg); }
+.plants-form .plant-photo-editor bdi { overflow-wrap: anywhere; }
 .plants-form textarea { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--foreground); font: inherit; resize: vertical; }
 .plants-schedule-form { display: grid; gap: 14px; min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 18px; }
 .plants-schedule-form legend { padding-inline: 6px; font-weight: 600; }

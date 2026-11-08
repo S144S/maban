@@ -5,9 +5,15 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.29.0`. No frontend release has been published.
+Current development version: `0.30.0`. No frontend release has been published.
 
 ### Changed
+
+- Added optional photo selection and preview directly to the new-plant form. Saving uploads the photo after plant creation; failed uploads retain the selected file in details for retry without creating another plant.
+
+- Added a home-page plants section below the financial divider, showing up to three compact photo/name/next-care rows ordered by care due date, sized similarly to the financial section with existing creation, detail and care flows, family selection, loading/error/empty states and navigation to all plants.
+
+- Added a horizontal divider below the financial section on the home page using the shared border token.
 
 - Replaced report-type buttons with equal-width underlined RTL tabs, keyboard navigation and labeled panels while preserving the selected date range.
 
