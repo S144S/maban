@@ -104,7 +104,7 @@ export function Reminders() {
         </div>
         <div className="reminder-actions"><Button variant="ghost" size="icon" aria-label={`ویرایش یادآور ${item.title}`} onClick={() => showForm(item)}><Pencil size={18} aria-hidden="true" /></Button>
           <Button variant="ghost" size="icon" className="management-delete" aria-label={`حذف یادآور ${item.title}`} onClick={() => { setDeleting(item); setFormError(""); }}><Trash2 size={18} aria-hidden="true" /></Button></div>
-      </li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Bell size={32} aria-hidden="true" /></span><h3>اولین یادآورتون رو ثبت کنین</h3><p>مثلاً قسط وام، اجاره یا تمدید بیمه.</p></div>}
+      </li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Bell size={32} aria-hidden="true" /></span><h3>اولین یادآورتون رو ثبت کنین</h3><p>مثلاً وقت دکتر، تولد عزیزان یا پرداخت قسط.</p></div>}
       {(offset > 0 || hasMore) && <div className="reminder-pagination"><Button variant="outline" disabled={offset === 0} onClick={() => setOffset(value => Math.max(0, value - 50))}>قبلی</Button><Button variant="outline" disabled={!hasMore} onClick={() => setOffset(value => value + 50)}>بعدی</Button></div>}
     </>}
     <Button className="management-add" onClick={() => showForm(null)}><Plus aria-hidden="true" />افزودن یادآور</Button>
@@ -115,7 +115,7 @@ export function Reminders() {
       }} onInteractOutside={event => { if (busy) event.preventDefault(); }}>
         <DialogHeader><DialogTitle>{editing ? "ویرایش یادآور" : "افزودن یادآور"}</DialogTitle><DialogDescription>موعد و تکرار یادآور رو تنظیم کنین. اگر ارسال پیامک فعال باشه، یادآور به شمارهٔ حساب شما فرستاده می‌شه. تکرار ماهانه بر اساس ماه شمسیه و مبلغ از موجودی کم نمی‌شه.</DialogDescription></DialogHeader>
         <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
-          <label htmlFor="reminder-title">عنوان یادآور<input id="reminder-title" name="title" defaultValue={editing?.title ?? ""} maxLength={80} required placeholder="مثلاً قسط وام مسکن" /></label>
+          <label htmlFor="reminder-title">عنوان یادآور<input id="reminder-title" name="title" defaultValue={editing?.title ?? ""} maxLength={80} required placeholder="مثلاً وقت دکتر" /></label>
           <PersianDatePicker id="reminder-date" name="date" defaultValue={initial.date} required disabled={busy} />
           <label htmlFor="reminder-time">ساعت به وقت تهران<input id="reminder-time" name="time" dir="ltr" defaultValue={initial.time} required maxLength={5} placeholder="۰۹:۰۰" aria-describedby="reminder-time-help" /></label>
           <p id="reminder-time-help" className="text-sm text-muted-foreground">ساعت ۲۴ساعته؛ مثلاً ۱۸:۳۰</p>

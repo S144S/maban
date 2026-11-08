@@ -6,13 +6,13 @@ const items = [
   { id: "budgets", label: "مدیریت", icon: Settings2, href: "/dashboard?page=budgets" },
   { id: "reports", label: "گزارش", icon: ChartNoAxesCombined, href: "/dashboard?page=reports" },
 ] as const;
-export type Destination = typeof items[number]["id"] | "plants" | "families" | "finance";
+export type Destination = typeof items[number]["id"] | "plants" | "families" | "finance" | "reminders";
 
 export function BottomNavigation({ active, onNavigate }: {
   active: Destination;
   onNavigate?: (page: Destination) => void;
 }) {
-  const selected = active === "families" || active === "plants" || active === "finance" ? "budgets" : active;
+  const selected = active === "families" || active === "plants" || active === "finance" || active === "reminders" ? "budgets" : active;
   return <nav className="dash-nav" data-active={selected} aria-label="ناوبری اصلی">
     {items.map(({ id, label, icon: Icon, href }) => <a key={id} href={href}
       aria-current={selected === id ? "page" : undefined}

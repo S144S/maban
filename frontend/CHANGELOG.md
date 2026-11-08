@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.31.0`. No frontend release has been published.
+Current development version: `0.31.1`. No frontend release has been published.
 
 ### Changed
+
+- Moved personal reminders out of Finance into a dedicated «یادآورها» Management page, preserving existing reminder actions, back navigation and Management selection.
 
 - Grouped Management into softly colored Family, Finance and Plants buttons with dedicated pages and compact left-arrow back controls aligned with page titles. Finance preserves accounts, categories, rates and reminders; all three pages keep Management selected in bottom navigation, including on direct visits.
 
