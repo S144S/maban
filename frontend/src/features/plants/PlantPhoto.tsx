@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { ImageOff } from "lucide-react";
 import { api, errorMessage } from "@/lib/http";
 import type { Plant } from "./model";
 
-export function PlantImage({ src, name }: { src: string; name: string }) {
+export function PlantImage({ src, name, thumbnail = false }: { src: string; name: string; thumbnail?: boolean }) {
   const [failed, setFailed] = useState(false);
+  if (failed && thumbnail) return <Button variant="ghost" className="plant-thumbnail plant-thumbnail-retry" aria-label={`عکس ${name} دریافت نشد؛ تلاش دوباره`} title="عکس دریافت نشد؛ تلاش دوباره" onClick={() => setFailed(false)}><ImageOff aria-hidden="true" /></Button>;
   return failed ? <div className="plant-photo-error"><p>عکس دریافت نشد.</p><Button variant="ghost" onClick={() => setFailed(false)}>دریافت دوبارهٔ عکس</Button></div>
-    : <img className="plant-photo" src={src} alt={`عکس ${name}`} width={640} height={480} loading="lazy" onError={() => setFailed(true)} />;
+    : <img className={thumbnail ? "plant-thumbnail" : "plant-photo"} src={src} alt={`عکس ${name}`} width={thumbnail ? 64 : 640} height={thumbnail ? 64 : 480} loading="lazy" onError={() => setFailed(true)} />;
 }
 
 export function PlantPhoto({ plant, familyId, onSaved, activity, initialFile = null }: { plant: Plant; familyId: string; onSaved: (message: string) => void; activity: { current: boolean }; initialFile?: File | null }) {

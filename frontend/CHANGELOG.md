@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.31.1`. No frontend release has been published.
+Current development version: `0.31.2`. No frontend release has been published.
 
 ### Changed
+
+- Display plant-list photos as compact square thumbnails beside each plant name and location, preserving full-size detail photos and accessible image retry.
 
 - Moved personal reminders out of Finance into a dedicated «یادآورها» Management page, preserving existing reminder actions, back navigation and Management selection.
 

@@ -52,7 +52,11 @@
 .plant-confirm-delete:not(:disabled):hover { background: var(--destructive-hover); }
 .plant-photo-editor, .plant-photo-confirm { display: grid; gap: 14px; min-width: 0; }
 .plant-photo { display: block; width: 100%; height: auto; max-height: 360px; aspect-ratio: 4 / 3; object-fit: contain; border-radius: 16px; background: var(--muted); }
-.plants-list .plant-photo { object-fit: cover; max-height: 240px; }
+.plant-card-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.plant-card-heading > div { display: grid; gap: 4px; min-width: 0; }
+.plant-thumbnail { display: block; width: 64px; height: 64px; flex-shrink: 0; object-fit: cover; border-radius: 16px; background: var(--muted); }
+.plant-thumbnail-placeholder { display: grid; place-items: center; }
+.plant-thumbnail-retry { color: var(--muted-foreground); }
 .plant-photo-editor bdi { overflow-wrap: anywhere; }
 .plant-photo-editor .dash-muted { font-size: 14px; }
 .plant-photo-error { padding: 16px; background: var(--muted); border-radius: 16px; }
