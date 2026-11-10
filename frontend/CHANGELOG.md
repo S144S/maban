@@ -5,7 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.1.0`. No frontend release has been published.
+Current development version: `1.1.1`. No frontend release has been published.
+
+### Fixed
+
+- Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
 
 ### Added
 
