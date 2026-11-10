@@ -5,7 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.4.0`. No frontend release has been published.
+Current development version: `1.5.0`. No frontend release has been published.
+
+### Added
+
+- Added an online-only service worker with a build fingerprint and a Persian RTL update notice on all pages. The compact card uses contextual icons, clear title/body hierarchy, equal touch-friendly actions, a reversible save-confirmation step, and explicit loading/error/retry feedback. New builds wait for explicit confirmation, warn about unsaved forms, support deferral and activation retry, and reload only the accepting tab. Check on startup, return to the app, restored connectivity and once per visible online minute; never cache financial data or queue offline writes. Production hosting must serve `/sw.js` as JavaScript with revalidation and retain old hashed assets for open tabs.
 
 ### Fixed
 

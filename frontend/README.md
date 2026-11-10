@@ -40,13 +40,28 @@ use the browser's Install app action; on iOS Safari use Share → Add to Home Sc
 and enable Open as Web App where offered. Browser install UI and automatic prompts
 vary by platform. No custom install prompt or offline support is provided.
 
-There is deliberately no service worker, Cache Storage, or offline request queue.
-Network requests retain normal browser/server cache semantics; protected API
-responses remain `no-store`. Loading the app and financial operations need an
-internet connection. Updates load on the next navigation/reload, without a waiting
-service worker. Serve `index.html` and `manifest.webmanifest` with revalidation
-(`Cache-Control: no-cache`), PNG icons as `image/png`, and the manifest as
-`application/manifest+json`; keep SPA fallbacks out of `/api` and static assets.
+A production build emits `/sw.js` with a fingerprint derived from its output.
+It detects new builds on startup, on returning to a visible online app, and every
+visible online minute (checks are throttled to once per minute). A new worker
+waits for the Persian update notice's explicit confirmation. “Later” dismisses
+that worker's notice for the current page; another build or a reload can show it
+again. Before activation the notice warns that unsaved edits will be lost: save
+or defer first. Only the accepting tab reloads; other tabs keep their open forms.
+The first installation is silent. Registration is disabled in Vite development;
+use `npm run build` and `npm run preview` to test real updates between two builds.
+
+The worker does not use Cache Storage or an offline request queue. Navigations
+go directly to the network with `cache: no-store`; API and asset requests pass
+through untouched, and protected API responses remain `no-store`. Loading the
+app and financial operations still need an internet connection.
+
+Serve `index.html`, `sw.js` and `manifest.webmanifest` with revalidation
+(`Cache-Control: no-cache`), `/sw.js` as JavaScript, PNG icons as `image/png`,
+and the manifest as `application/manifest+json`. Keep SPA fallbacks out of `/api`,
+`/sw.js` and static assets. Deploy the entire build atomically and retain previous
+hashed assets for existing tabs. Purge any CDN cache of the worker and HTML when
+deploying. The first deployment of this mechanism needs one normal navigation or
+reload to register the worker; subsequent builds can display the update notice.
 Native installation and standalone launch must also be checked on target Android
 and iOS devices after deployment; the embedded development browser cannot prove
 OS-level installation.
