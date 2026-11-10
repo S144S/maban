@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.2.1`. No frontend release has been published.
+Current development version: `1.3.0`. No frontend release has been published.
 
 ### Fixed
 
@@ -14,6 +14,8 @@ Current development version: `1.2.1`. No frontend release has been published.
 - Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
 
 ### Added
+
+- Added a collapsed "last three transactions" section below Home's financial actions, combining the selected family's newest income and expenses by timestamp with green income/red expense labels, Persian dates and amounts, loading/error/empty states and balance-visibility support. Reuses existing authenticated data requests and refreshes after recording income or expenses.
 
 - Replaced home plants with upcoming personal reminders within the next 24 hours under «یادت نره!», including the next recurring occurrence, notes, empty/loading/error states, pagination and an accessible bell icon button to open all reminders. Home cards use two equal columns and time-based backgrounds (white above 18 hours, progressively redder at 18, 12 and 6 hours remaining), omit recurrence badges and the Tehran suffix, with no introductory description below the heading. Refreshes on returning to Home or reloading, without polling or window-focus requests; plant management remains available.
 
