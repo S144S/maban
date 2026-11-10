@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.2.0`. No frontend release has been published.
+Current development version: `1.2.1`. No frontend release has been published.
 
 ### Fixed
+
+- Show the Management tab and hub/finance routes only for the selected family's creator or spouse, using authenticated family membership. Fail closed during permission loading/failure and adapt Home/Reports navigation to two columns. Family selection/onboarding, personal reminders and shared plant care remain available; existing server operation permissions are unchanged.
 
 - Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
 
