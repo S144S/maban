@@ -42,7 +42,7 @@ function MemberContent({ user }: { user: User }) {
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, []);
-  useEffect(() => { document.title = active === "plants" ? "گلدون‌ها | مابان" : active === "families" ? "خانواده | مابان" : active === "finance" ? "مالی | مابان" : active === "reminders" ? "یادآورها | مابان" : active === "budgets" ? "مدیریت | مابان" : active === "reports" ? "گزارش | مابان" : "داشبورد | مابان"; }, [active]);
+  useEffect(() => { document.title = active === "plants" ? "گلدون‌های ما | مابان" : active === "families" ? "خانواده | مابان" : active === "finance" ? "مالی | مابان" : active === "reminders" ? "یادآورها | مابان" : active === "budgets" ? "مدیریت | مابان" : active === "reports" ? "گزارش | مابان" : "داشبورد | مابان"; }, [active]);
   return <div ref={content}>
     <div hidden={active === "families"} data-active-panel={active !== "families"}>
       <DashboardPage key={selected} user={user} page={dashboardPage} onNavigate={navigate} />

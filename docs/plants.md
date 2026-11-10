@@ -15,18 +15,19 @@ setup. From `backend`, run `uv sync --python 3.14 --reinstall-package maban-back
 `uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 6202 --no-proxy-headers`.
 From `frontend`, run `npm ci` and `npm run dev`.
 
-The home page also shows up to three plants below the financial divider, in compact rows with a thumbnail, name and next care status, ordered
-by the earliest care due date. The summary stays similar in size to the financial
+The home page also shows up to three plants below the financial divider, in compact rows with a thumbnail, name and location, ordered
+by creation time (newest first). The summary stays similar in size to the financial
 section, while details expand on demand. Add plants, open details and record care there;
 use **همهٔ گلدون‌ها** to open the full paginated list. It uses the same selected
 family and existing plant flow. Loading this section does not move keyboard focus
 away from the financial controls.
 
 Sign up/sign in with the existing real account flow (local OTP: `12345`), create
-or select a family in **خانواده**, then open **گلدون‌ها** in the bottom navigation
-(`/dashboard?page=plants`). Add a plant, choose a family member if desired, set
-its soil-check interval/first Persian date, and optionally enable fertilizer.
-Open its details, record either soil result, and check the new date and history.
+or select a family in **خانواده**, then open **گیاهان** in Management
+(`/dashboard?page=plants`). Add a plant with name, common/custom/unknown species, location and optional note.
+New plants default to shared family care. Open details, record watering, a soil
+check that needed no water, or fertilizing, and check the history. There are no
+schedules, automatic due dates or plant reminders.
 Select an optional image directly below the name in the new-plant form and
 review its preview before saving. Plant creation commits first, then the photo
 is uploaded. If uploading fails, details open with a clear message and retain
@@ -35,7 +36,7 @@ After creation, details open automatically. Use **افزودن عکس** there to
 or replace an image independently. Family members can replace it or
 confirm its removal independently of the plant metadata and care history.
 Invite another local test account to verify shared care and actor attribution.
-Care schedules need no worker. Photos require private MinIO storage:
+Manual care needs no worker. Photos require private MinIO storage:
 
 ```powershell
 # Repository root (local-only services and credentials)
@@ -89,17 +90,16 @@ npm run build
 
 ## API and rules
 
-- `GET /plants?offset=0`: 50 plants per page, earliest care date first, with
-  `has_more`, `timezone` and date-derived `overdue`/`today`/`upcoming` statuses.
-- `POST /plants`: metadata, required `soil_interval`/`soil_due`, nullable paired
-  `fertilizer_interval`/`fertilizer_due`, optional member `assignee_id`, UUID
+- `GET /plants?offset=0`: 50 plants per page, newest creation first (ID breaks ties),
+  with `has_more` and display `timezone`; no care due states.
+- `POST /plants`: metadata, optional member `assignee_id`, UUID
   `request_id`. All members may create, edit, delete and record care.
-- `GET`, `PUT`, `DELETE /plants/{id}`: detail, full metadata/schedule replacement,
+- `GET`, `PUT`, `DELETE /plants/{id}`: detail, full metadata replacement,
   and deletion. PUT uses the same fields as POST except `request_id`.
 - `POST /plants/{id}/care`: UUID `request_id`, `action` (`watered`, `not_needed`,
-  `fertilized`) and optional `note`. The server supplies actor and timestamp.
+  `fertilized`, `soil_changed`, `repotted`, `examined`) and optional `note`. The server supplies actor and timestamp.
 - `GET /plants/{id}/history?offset=0`: 50 events per page, newest first, with
-  actor names, timezone-aware timestamps and the next date recorded at that time.
+  actor names and timezone-aware timestamps.
 - `PUT /plants/{id}/photo`: raw image body with `Content-Type: image/jpeg`,
   `image/png` or `image/webp`; returns the updated plant including `photo_url`.
   Repeating the same upload replaces the same single photo without care events.
@@ -158,30 +158,40 @@ API. Without these settings that single integration test is skipped.
 All routes authenticate and authorize the family before reading data. Assignees
 must belong to that family. IDs from another family are inaccessible, including
 when submitted under an authorized family's URL. Extra input fields are rejected.
-Text is trimmed and bounded; intervals are whole integers from 1 through 365.
-API due dates are ISO Gregorian calendar dates; UI inputs/displays use Persian
-dates and accept Persian, Arabic and Latin digits.
+Text is trimmed and bounded. Families currently have no timezone setting; the
+**Asia/Tehran** display default is returned by list/detail APIs. Events use
+PostgreSQL `timestamptz` and server UTC time. All manual care actions are
+available without any program and never create or advance a due date.
+Backdated/client-supplied completion times are not supported.
 
-Families currently have **no timezone setting**. The documented default for all
-plant schedules is **Asia/Tehran**, returned by the list/detail APIs. Events use
-PostgreSQL `timestamptz` and server UTC time. The next date is the **local day of
-server-recorded care + interval in calendar days**, never the old due date or
-elapsed 24-hour blocks. A soil check is not an instruction to water. Both soil
-outcomes advance only soil; fertilizer advances only fertilizer. Recording care
-early is allowed. Backdated/client-supplied completion times are not supported.
-Editing a plant explicitly replaces its schedule; disabling fertilizer preserves
-past events. History records the original resulting due date even after edits.
+## Schedule removal migration (backend 3.0.0 / frontend 1.0.0)
+
+This is a breaking change: schedule input fields, `soil`/`fertilizer` output
+objects and event `next_due` are removed. Old schedule inputs return 422.
+Stop the API, take a PostgreSQL backup, run `uv run alembic upgrade head`,
+then start backend 3.0.0 with frontend 1.0.0. Reopen pending plant forms after
+upgrading; old creation retry fingerprints cannot be reused without the removed
+schedule fields (409). Care retry receipts keep their original identity and
+server timestamp, but no longer contain a next date.
+
+Migration `e69875ed203b` deletes the four plant scheduling columns and the
+historical event `next_due` column. Plant metadata, assignees, photo references,
+performed care, notes, actors, timestamps and care request fingerprints remain.
+No default/hidden schedule is created. An empty plant module can downgrade its
+schema safely; with existing plants, downgrade refuses to invent lost schedules;
+rollback requires a coordinated restore of the pre-upgrade database and matching
+application versions. This migration does not change MinIO objects or financial data.
 
 Each family has a module-owned transaction advisory lock for plant writes.
 Creation retries use a stored fingerprint; care retries use a family-wide UUID
 uniqueness constraint, actor/plant/action/note fingerprint and immutable receipt.
-Identical concurrent retries produce one event and one schedule update; changed
-payloads/actors reusing the UUID return 409. Event and due date commit atomically.
+Identical concurrent retries produce one event; changed
+payloads/actors reusing the UUID return 409. Each event commits atomically.
 The UI retains request IDs across retries of an unchanged submitted form and
 disables controls during submission. Two deliberately separate requests with
 different UUIDs count as separate care events.
 
-Deletion is soft: the plant, schedules and history become inaccessible in the UI
+Deletion is soft: the plant and history become inaccessible in the UI
 and API; its photo reference is cleared and the MinIO object is removed after commit.
 Other rows are retained to preserve references/retry protection. No restore or
 permanent purge endpoint is provided. Migration `b36542baf708` adds this schema
@@ -190,9 +200,14 @@ nonempty plant/history data; export and explicitly clear it before rolling back.
 
 ## Current limits
 
-Reminders appear only in the plant list/details; there are no background delivery
-jobs or global notification badges. Statuses refresh on entering the page, window
-focus and each minute while the page is open. Family selection stays in the
-existing Families screen. No diagnosis, species database or treatment
-recommendations are included. Shared metadata edits use last-write-wins, matching
-existing editing flows; simultaneous edits are not merged.
+Plant care is a manual shared log with no scheduling, due statuses or delivery
+jobs. Family selection stays in the existing Families screen. No diagnosis or
+treatment recommendations are included. The species selector is a small list
+of common names, with unknown/custom options; it is not a comprehensive catalog.
+Shared metadata edits use last-write-wins, matching existing editing flows;
+simultaneous edits are not merged.
+
+Migration `f7a986fe314c` adds soil replacement, repotting and examination actions.
+The care dialog offers these alongside watering and fertilizing. Legacy
+`not_needed` events and retries remain supported by the API and history.
+Downgrade refuses while new action records exist; export or restore a backup.

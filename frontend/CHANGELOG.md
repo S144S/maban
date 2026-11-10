@@ -5,9 +5,23 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.31.2`. No frontend release has been published.
+Current development version: `1.0.0`. No frontend release has been published.
 
 ### Changed
+
+- Care entry now offers watering, fertilizing, soil replacement, repotting and examination; legacy no-water-needed events remain readable in history.
+
+- Plant detail back arrows now return to the plant list, including embedded details; removed the redundant detail list button while preserving list-to-Management navigation.
+
+- Moved detail photos into the plant information card, replaced location/species rows with a friendly name-and-location sentence, removed the separate album section and assignee display, and placed photo controls in the edit dialog, opened with an accessible borderless pencil icon matching the delete control.
+
+- Renamed plant section and browser titles to «گلدون‌های ما», removed the family/shared-care subtitle and made the header add button full-width with more space below the title.
+
+- Exposed plant deletion as a labeled, 44-pixel trash icon on list cards and details with a named confirmation, safe initial cancel focus, duplicate-submit protection and success/error feedback; kept deletion available in details.
+
+- **Breaking:** Removed soil-check/fertilizer scheduling, due states and next-date history from all plant screens. Care remains a manual shared log; deploy with backend 3.0.0 and migrate the database. Home rows show location and newest plants first.
+
+- Simplified new-plant creation with 30 common plant types, unknown/custom options and shared family care; preserved existing custom species when editing.
 
 - Display plant-list photos as compact square thumbnails beside each plant name and location, preserving full-size detail photos and accessible image retry.
 

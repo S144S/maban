@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowRight, Leaf, Plus } from "lucide-react";
+import { ArrowRight, Leaf, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagementBack } from "@/components/ManagementBack";
 import { Select } from "@/components/ui/select";
@@ -10,19 +10,12 @@ import { useActiveFamily } from "../families/ActiveFamily";
 import type { Family, Member } from "../families/api";
 import { PlantForm, type PlantFields } from "./PlantForm";
 import { PlantImage, PlantPhoto } from "./PlantPhoto";
-import { careLabels, formatDay, statusLabel, type CareAction, type CareEvent, type Plant, type Schedule } from "./model";
+import { careLabels, type CareAction, type CareEvent, type Plant } from "./model";
 import "./plants.css";
 
 type PlantPage = { plants: Plant[]; has_more: boolean; timezone: string };
 type History = { events: CareEvent[]; has_more: boolean };
 type Modal = "add" | "edit" | "care" | "delete" | null;
-
-function ScheduleInfo({ label, schedule }: { label: string; schedule: Schedule }) {
-  return <div className="plant-schedule" data-due={schedule.status !== "upcoming"}>
-    <strong>{label} · {statusLabel(schedule)}</strong><span>{formatDay(schedule.next_due)}</span>
-    <span className="dash-muted">هر {schedule.interval_days.toLocaleString("fa-IR")} روز</span>
-  </div>;
-}
 
 export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { onFamilies: () => void; embedded?: boolean; onAllPlants?: () => void; onBack?: () => void }) {
   const { selected, setSelected } = useActiveFamily();
@@ -39,6 +32,7 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
   const [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
   const [modal, setModal] = useState<Modal>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Plant | null>(null);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
   const [notice, setNotice] = useState("");
@@ -80,13 +74,6 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
   }, [selected, plantId, offset, historyOffset, revision, setSelected]);
 
   useEffect(() => {
-    // Refresh date-derived statuses after midnight, returning to the app, or a long open session.
-    const refresh = () => { if (!pending.current && !photoActivity.current && !modal) setRevision(n => n + 1); };
-    const timer = window.setInterval(refresh, 60_000);
-    window.addEventListener("focus", refresh);
-    return () => { clearInterval(timer); window.removeEventListener("focus", refresh); };
-  }, [modal]);
-  useEffect(() => {
     if (!loading && focusedDetail.current !== plantId) {
       // Loading the home summary must not move focus away from financial actions.
       if (!embedded || plantId || focusedDetail.current) heading.current?.focus({ preventScroll: true });
@@ -98,10 +85,14 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     request.current = { payload: "", id: "" }; setFormError(""); setNotice(""); setNoticeWarning(false); setModal(next);
   }
+  function showDelete(target: Plant) {
+    setDeleteTarget(target);
+    show("delete");
+  }
   async function perform(body: PlantFields | { action: CareAction; note: string } | null, photo: File | null = null) {
-    if (pending.current || !family) return;
+    if (pending.current || !family || modal === "delete" && !deleteTarget) return;
     const base = `/families/${family.id}/plants`;
-    const url = modal === "add" ? base : `${base}/${plant?.id}${modal === "care" ? "/care" : ""}`;
+    const url = modal === "add" ? base : `${base}/${modal === "delete" ? deleteTarget?.id : plant?.id}${modal === "care" ? "/care" : ""}`;
     const payload = JSON.stringify({ url, body });
     if (request.current.payload !== payload) request.current = { payload, id: crypto.randomUUID() };
     pending.current = true; setBusy(true); setFormError("");
@@ -117,16 +108,16 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
             await api(`/families/${family.id}/plants/${result.plant.id}/photo`, { method: "PUT", body: photo });
             setUnsavedPhoto(null);
           } catch (err) {
-            photoFailure = `گلدون ذخیره شد، ولی ذخیرهٔ عکس تأیید نشد. ${errorMessage(err)} از بخش عکس پایین صفحه دوباره امتحان کنین.`;
+            photoFailure = `گلدون ذخیره شد، ولی ذخیرهٔ عکس تأیید نشد. ${errorMessage(err)} با دکمهٔ ویرایش گلدون، ذخیرهٔ عکس رو دوباره امتحان کنین.`;
             setUnsavedPhoto({ plantId: result.plant.id, file: photo });
           }
         }
         setPlantId(result.plant.id); setHistoryOffset(0);
       }
-      if (modal === "delete") { setPlantId(null); setPlant(null); }
+      if (modal === "delete") { setPlantId(null); setPlant(null); setDeleteTarget(null); setUnsavedPhoto(null); }
       if (modal === "care") setHistoryOffset(0);
       setNoticeWarning(!!photoFailure);
-      setNotice(photoFailure || (modal === "delete" ? "گلدون حذف شد." : modal === "care" ? "رسیدگی ثبت شد؛ نوبت بعدی هم تنظیم شد." : photo ? "گلدون و عکسش ذخیره شدن." : "گلدون ذخیره شد."));
+      setNotice(photoFailure || (modal === "delete" ? "گلدون حذف شد." : modal === "care" ? "رسیدگی ثبت شد." : photo ? "گلدون و عکسش ذخیره شدن." : "گلدون ذخیره شد."));
       setModal(null); setRevision(n => n + 1);
     } catch (err) { setFormError(errorMessage(err)); }
     finally { pending.current = false; setBusy(false); }
@@ -142,39 +133,30 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
   const visibleItems = embedded ? items.slice(0, 3) : items;
 
   return <section className={`plants-page${embedded ? " plants-home" : ""}`} aria-labelledby="plants-title">
-    <div className="dash-welcome">{onBack ? <div className="management-title-row"><Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌ها"}</Heading><ManagementBack onBack={onBack} /></div> : <Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌ها"}</Heading>}
+    <div className="dash-welcome">{onBack || plantId ? <div className="management-title-row"><Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌های ما"}</Heading><ManagementBack label={plantId ? "بازگشت به گلدون‌های ما" : undefined} onBack={plantId ? () => { setPlantId(null); setHistoryOffset(0); setNotice(""); } : onBack!} /></div> : <Heading id="plants-title" ref={heading} tabIndex={-1}>{plantId && plant ? plant.name : "گلدون‌های ما"}</Heading>}
       {!plantId && family && <Button disabled={loading || !!error} onClick={() => show("add")}><Plus aria-hidden="true" />افزودن گلدون</Button>}
     </div>
-    {family && (!embedded || plantId) && <p className="plants-family">خانوادهٔ {family.name} · رسیدگی مشترک</p>}
     {notice && <p role={noticeWarning ? "alert" : "status"} className={`plants-notice${noticeWarning ? " plants-notice-warning" : ""}`}>{notice}</p>}
-    {plantId && <Button variant="ghost" onClick={() => { setPlantId(null); setHistoryOffset(0); }}><ArrowRight aria-hidden="true" />همهٔ گلدون‌ها</Button>}
     {loading ? <p role="status">در حال دریافت گلدون‌ها…</p> : error ? <div role="alert"><p className="dash-error">{error}</p><Button variant="outline" onClick={() => setRevision(n => n + 1)}>تلاش دوباره</Button></div>
       : !family ? <div className="plants-empty"><Leaf aria-hidden="true" /><h2>گلدون‌ها رو با خانواده همراه کنین</h2><p>اول از بخش خانواده، یه خانواده بسازین یا خانوادهٔ فعال رو انتخاب کنین.</p><Button onClick={onFamilies}>رفتن به خانواده</Button></div>
       : plant ? <>
         <article className="plant-card">
-          <dl className="plant-info"><div><dt>محل قرارگیری</dt><dd>{plant.location}</dd></div>{plant.species && <div><dt>نوع گیاه</dt><dd>{plant.species}</dd></div>}
-            <div><dt>مسئول رسیدگی</dt><dd>{plant.assignee_id ? members.find(m => m.user_id === plant.assignee_id)?.name ?? "عضو خانواده" : "همه با هم"}</dd></div></dl>
+          {plant.photo_url && <PlantImage key={plant.photo_url} src={plant.photo_url} name={plant.name} />}
+          <p><bdi>{plant.name}</bdi> در <bdi>{plant.location}</bdi> زندگی می‌کنه <span aria-hidden="true">😊❤️</span></p>
           {plant.note && <p className="plant-note">{plant.note}</p>}
-          <ScheduleInfo label="بررسی خاک" schedule={plant.soil} />
-          {plant.soil.status !== "upcoming" && <p>وقتشه خاک این گلدون رو بررسی کنین.</p>}
-          {plant.fertilizer ? <ScheduleInfo label="کوددهی" schedule={plant.fertilizer} /> : <p className="dash-muted">برنامهٔ کوددهی تنظیم نشده.</p>}
-          <p className="dash-muted">موعدها به وقت تهرانن؛ برنامهٔ بررسی خاک به معنی نیاز قطعی به آب نیست.</p>
-          <div className="plant-actions"><Button onClick={() => show("care")}>ثبت رسیدگی</Button><Button variant="outline" onClick={() => show("edit")}>ویرایش و برنامهٔ رسیدگی</Button><Button variant="ghost" className="plant-delete" onClick={() => show("delete")}>حذف گلدون</Button></div>
+          <div className="plant-actions"><Button onClick={() => show("care")}>ثبت رسیدگی</Button><Button variant="ghost" size="icon" className="plant-edit" aria-label={`ویرایش گلدون ${plant.name}`} title="ویرایش گلدون" onClick={() => show("edit")}><Pencil aria-hidden="true" /></Button><Button variant="ghost" size="icon" className="plant-delete" aria-label={`حذف گلدون ${plant.name}`} title="حذف گلدون" onClick={() => showDelete(plant)}><Trash2 aria-hidden="true" /></Button></div>
         </article>
-        <article className="plant-card"><PlantPhoto key={plant.id + (plant.photo_url ?? "")} plant={plant} familyId={family.id} initialFile={unsavedPhoto?.plantId === plant.id ? unsavedPhoto.file : null} activity={photoActivity} onSaved={message => { setUnsavedPhoto(null); setNoticeWarning(false); setNotice(message); focusedDetail.current = undefined; setRevision(n => n + 1); }} /></article>
         <section className="plant-history" aria-labelledby="history-title"><h2 id="history-title">تاریخچهٔ رسیدگی</h2>
-          {history.events.length ? <ol>{history.events.map(event => <li key={event.id}><strong>{careLabels[event.action]}</strong><span>{event.actor_name}</span><time dateTime={event.performed_at}>{formatReminderDate(event.performed_at)} · تهران</time>{event.note && <p className="plant-note">{event.note}</p>}<span className="dash-muted">نوبت بعدیِ ثبت‌شده: {formatDay(event.next_due)}</span></li>)}</ol> : <p className="dash-muted">هنوز رسیدگی‌ای ثبت نشده؛ اولین بررسی خاک رو ثبت کنین.</p>}
+          {history.events.length ? <ol>{history.events.map(event => <li key={event.id}><strong>{careLabels[event.action]}</strong><span>{event.actor_name}</span><time dateTime={event.performed_at}>{formatReminderDate(event.performed_at)} · تهران</time>{event.note && <p className="plant-note">{event.note}</p>}</li>)}</ol> : <p className="dash-muted">هنوز رسیدگی‌ای ثبت نشده؛ اولین رسیدگی رو ثبت کنین.</p>}
           {(historyOffset > 0 || history.has_more) && <div className="plant-actions"><Button variant="outline" disabled={!historyOffset} onClick={() => setHistoryOffset(n => Math.max(0, n - 50))}>رسیدگی‌های جدیدتر</Button><Button variant="outline" disabled={!history.has_more} onClick={() => setHistoryOffset(n => n + 50)}>رسیدگی‌های قدیمی‌تر</Button></div>}
         </section>
       </> : <>
         {items.length ? embedded ? <ul className="plants-home-list">{visibleItems.map(item => {
-          const fertilizerFirst = item.fertilizer && item.fertilizer.next_due < item.soil.next_due;
-          const next = fertilizerFirst ? item.fertilizer! : item.soil;
           return <li key={item.id}><button type="button" className="plants-home-row" onClick={() => { setPlantId(item.id); setHistoryOffset(0); setNotice(""); }} aria-label={`جزئیات و رسیدگی به ${item.name}`}>
             {item.photo_url ? <img src={item.photo_url} alt="" width={44} height={44} loading="lazy" /> : <span className="plants-home-icon"><Leaf aria-hidden="true" /></span>}
-            <span className="plants-home-copy"><strong>{item.name}</strong><span data-due={next.status !== "upcoming"}>{fertilizerFirst ? "کوددهی" : "بررسی خاک"} · {next.status === "upcoming" ? formatDay(next.next_due) : statusLabel(next)}</span></span><ArrowRight className="plants-home-arrow" aria-hidden="true" />
+            <span className="plants-home-copy"><strong>{item.name}</strong><span>{item.location}</span></span><ArrowRight className="plants-home-arrow" aria-hidden="true" />
           </button></li>;
-        })}</ul> : <ul className="plants-list">{visibleItems.map(item => <li key={item.id}><article className="plant-card"><header className="plant-card-heading">{item.photo_url ? <PlantImage key={item.photo_url} src={item.photo_url} name={item.name} thumbnail /> : <span className="plant-thumbnail plant-thumbnail-placeholder"><Leaf className="plant-symbol" aria-hidden="true" /></span>}<div><ItemHeading>{item.name}</ItemHeading><p className="dash-muted">{item.location}</p></div></header><ScheduleInfo label="بررسی خاک" schedule={item.soil} />{item.fertilizer && <ScheduleInfo label="کوددهی" schedule={item.fertilizer} />}{item.soil.status !== "upcoming" && <p>وقتشه خاک این گلدون رو بررسی کنین.</p>}<Button variant="outline" onClick={() => { setPlantId(item.id); setHistoryOffset(0); setNotice(""); }}>جزئیات و رسیدگی به {item.name}</Button></article></li>)}</ul>
+        })}</ul> : <ul className="plants-list">{visibleItems.map(item => <li key={item.id}><article className="plant-card"><header className="plant-card-heading">{item.photo_url ? <PlantImage key={item.photo_url} src={item.photo_url} name={item.name} thumbnail /> : <span className="plant-thumbnail plant-thumbnail-placeholder"><Leaf className="plant-symbol" aria-hidden="true" /></span>}<div><ItemHeading>{item.name}</ItemHeading><p className="dash-muted">{item.location}</p></div></header><div className="plant-actions"><Button variant="outline" onClick={() => { setPlantId(item.id); setHistoryOffset(0); setNotice(""); }}>جزئیات و رسیدگی به {item.name}</Button><Button variant="ghost" size="icon" className="plant-delete" aria-label={`حذف گلدون ${item.name}`} title="حذف گلدون" onClick={() => showDelete(item)}><Trash2 aria-hidden="true" /></Button></div></article></li>)}</ul>
           : <div className="plants-empty"><Leaf aria-hidden="true" /><h2>یه گوشهٔ سبز برای خونه</h2><p>اولین گلدون رو اضافه کنین تا با هم حواسمون بهش باشه.</p><Button onClick={() => show("add")}>افزودن گلدون</Button></div>}
         {embedded && !!items.length && onAllPlants && <Button variant="outline" onClick={onAllPlants}>همهٔ گلدون‌ها</Button>}
         {!embedded && (offset > 0 || hasMore) && <div className="plant-actions"><Button variant="outline" disabled={!offset} onClick={() => setOffset(n => Math.max(0, n - 50))}>قبلی</Button><Button variant="outline" disabled={!hasMore} onClick={() => setOffset(n => n + 50)}>بعدی</Button></div>}
@@ -185,11 +167,12 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
         onCloseAutoFocus={event => { event.preventDefault(); if (opener.current?.isConnected) opener.current.focus(); else heading.current?.focus(); }}
         onEscapeKeyDown={event => { if (busy || event.target instanceof Element && event.target.closest('[data-calendar-open="true"]')) event.preventDefault(); }}
         onInteractOutside={event => { if (busy) event.preventDefault(); }}>
-        <DialogHeader><DialogTitle>{modal === "add" ? "افزودن گلدون" : modal === "edit" ? "ویرایش گلدون و برنامه" : modal === "care" ? "ثبت رسیدگی" : "حذف گلدون"}</DialogTitle>
-          <DialogDescription>{modal === "delete" ? `گلدون «${plant?.name}»، برنامه‌ها و تاریخچه‌اش از دسترس خانواده خارج می‌شن و عکسش حذف می‌شه. این کار قابل برگشت نیست.` : modal === "care" ? "خاک رو بررسی کنین و نتیجه رو ثبت کنین. نوبت بعدی از روز انجام کار، به وقت تهران حساب می‌شه." : "یه برنامهٔ ساده برای رسیدگی مشترک بچینین. یادآوری‌ها فقط داخل مابان نمایش داده می‌شن."}</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>{modal === "add" ? "افزودن گلدون" : modal === "edit" ? "ویرایش گلدون" : modal === "care" ? "ثبت رسیدگی" : "حذف گلدون"}</DialogTitle>
+          <DialogDescription>{modal === "delete" ? `گلدون «${deleteTarget?.name}» و تاریخچه‌اش از دسترس خانواده خارج می‌شن و عکسش حذف می‌شه. این کار قابل برگشت نیست.` : modal === "care" ? "کاری که انجام دادین رو ثبت کنین تا بقیهٔ اعضای خانواده هم در جریان باشن." : modal === "add" ? "اسم و نوع گلدون رو وارد کنین؛ اگه دوست داشتین عکسش رو هم اضافه کنین." : "اطلاعات گلدون رو به‌روز کنین."}</DialogDescription></DialogHeader>
         {(modal === "add" || modal === "edit") && <PlantForm key={modal + (plant?.id ?? "")} plant={modal === "edit" ? plant : null} members={members} busy={busy} error={formError} onSubmit={(body, photo) => void perform(body, photo)} />}
+        {modal === "edit" && plant && family && <PlantPhoto key={plant.id + (plant.photo_url ?? "")} plant={plant} familyId={family.id} initialFile={unsavedPhoto?.plantId === plant.id ? unsavedPhoto.file : null} activity={photoActivity} onSaved={message => { setUnsavedPhoto(null); setNoticeWarning(false); setNotice(message); focusedDetail.current = undefined; setRevision(n => n + 1); }} />}
         {modal === "care" && <form onSubmit={submitCare}><fieldset className="dash-form plants-form" disabled={busy}>
-          <label htmlFor="care-action">نتیجهٔ رسیدگی<Select id="care-action" name="action" defaultValue="watered" disabled={busy} options={Object.entries(careLabels).filter(([key]) => key !== "fertilized" || plant?.fertilizer).map(([value, label]) => ({ value, label }))} /></label>
+          <label htmlFor="care-action">نتیجهٔ رسیدگی<Select id="care-action" name="action" defaultValue="watered" disabled={busy} options={Object.entries(careLabels).filter(([action]) => action !== "not_needed").map(([value, label]) => ({ value, label }))} /></label>
           <label htmlFor="care-note">یادداشت (اختیاری)<textarea id="care-note" name="note" rows={3} maxLength={2000} /></label>
           {formError && <p role="alert" className="dash-error">{formError}</p>}
           <Button type="submit">{busy ? "در حال ثبت…" : "ثبت رسیدگی"}</Button>

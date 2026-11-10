@@ -15,7 +15,7 @@ HEADERS = {"Origin": "http://127.0.0.1:6201", "X-Maban-Request": "1"}
 
 
 @pytest.fixture
-def app(monkeypatch):
+def app(monkeypatch, request):
     url = make_url(
         os.getenv(
             "MABAN_TEST_DATABASE_URL", "postgresql+psycopg://maban:maban_local@127.0.0.1:54339/maban_test"
@@ -35,7 +35,7 @@ def app(monkeypatch):
     monkeypatch.setenv("MABAN_SECRET_KEY", settings.secret_key)
     application = None
     try:
-        command.upgrade(Config("alembic.ini"), "head")
+        command.upgrade(Config("alembic.ini"), getattr(request, "param", "head"))
         application = create_app(settings)
         yield application
     finally:

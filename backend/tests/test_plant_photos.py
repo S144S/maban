@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -99,9 +99,9 @@ def test_private_photo_full_flow_and_migration(client, app, store):
     upload = client.put(photo, content=data, headers={"Content-Type": "image/png"})
     assert upload.status_code == 200, upload.text
     uploaded = upload.json()["plant"]
-    assert uploaded["soil"] == original["soil"]
+    assert {k: v for k, v in uploaded.items() if k != "photo_url"} == {k: v for k, v in original.items() if k != "photo_url"}
     assert uploaded["photo_url"].startswith(photo + "?v=")
-    # PUT retry stores the same normalized bytes without touching care or schedules.
+    # PUT retry stores the same normalized bytes without touching plant metadata or care.
     assert client.put(photo, content=data, headers={"Content-Type": "image/png"}).json() == upload.json()
     assert len(store.data) == 1
     fetched = client.get(uploaded["photo_url"])
@@ -129,7 +129,7 @@ def test_private_photo_full_flow_and_migration(client, app, store):
         assert replacement.json()["plant"]["photo_url"] != uploaded["photo_url"]
         assert client.get(photo).content != fetched.content
     command.check(Config("alembic.ini"))
-    with pytest.raises(RuntimeError, match="Refusing to discard MinIO photo references"):
+    with pytest.raises(RuntimeError, match="Refusing to fabricate removed plant schedules"):
         command.downgrade(Config("alembic.ini"), "b36542baf708")
     assert client.delete(photo).status_code == 204
     assert client.delete(photo).status_code == 204
@@ -143,8 +143,6 @@ def test_private_photo_full_flow_and_migration(client, app, store):
         deleted = db.scalar(select(Plant).where(Plant.id == UUID(original["id"])))
         assert deleted.photo_key is None and deleted.photo_digest is None
     assert store.data == {}
-    command.downgrade(Config("alembic.ini"), "b36542baf708")
-    command.upgrade(Config("alembic.ini"), "head")
     command.check(Config("alembic.ini"))
 
 
@@ -215,11 +213,23 @@ def test_photos_require_authentication(client):
     assert client.delete(photo).status_code == 401
 
 
-def test_minio_migration_refuses_unexpected_legacy_images(client, app):
-    register(client)
-    base = f"/api/families/{create(client)}/plants"
-    row = client.post(base, json=payload()).json()["plant"]
+@pytest.mark.parametrize("app", ["d58764dc192a"], indirect=True)
+def test_minio_migration_refuses_unexpected_legacy_images(app):
+    row = {"id": str(uuid4())}
     config = Config("alembic.ini")
+    with app.state.engine.begin() as db:
+        db.execute(text("""
+            INSERT INTO plants.plants (id, family_id, name, species, location, note,
+                soil_interval, soil_due, created_by, request_id, request_fingerprint,
+                created_at, photo_key, photo_digest)
+            VALUES (:id, :family, 'legacy', '', 'home', '', 3, '2026-01-01',
+                :actor, :request, :fingerprint, now(), 'plants/legacy.jpg', :digest)
+        """), {"id": UUID(row["id"]), "family": uuid4(), "actor": uuid4(),
+                 "request": uuid4(), "fingerprint": "c" * 64, "digest": "a" * 64})
+    with pytest.raises(RuntimeError, match="Refusing to discard MinIO photo references"):
+        command.downgrade(config, "c47653cb0819")
+    with app.state.engine.begin() as db:
+        db.execute(text("UPDATE plants.plants SET photo_key = NULL, photo_digest = NULL"))
     command.downgrade(config, "c47653cb0819")
     with app.state.engine.begin() as db:
         db.execute(text("UPDATE plants.plants SET photo_data = :data, photo_digest = :digest WHERE id = :id"),

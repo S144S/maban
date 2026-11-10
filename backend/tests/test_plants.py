@@ -1,30 +1,22 @@
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, date, datetime
-from uuid import uuid4
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
 from alembic.config import Config
 from conftest import HEADERS
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from test_families import accept, account, create, invite
 from test_users import register
 
-from app.plants.service import next_due
+from app.plants.service import fingerprint
 
 
 def payload(**changes):
-    return {"name": "پتوس خونه", "location": "کنار پنجره", "soil_interval": 3,
-            "soil_due": "2026-01-01", "fertilizer_interval": 20, "fertilizer_due": "2030-01-01",
+    return {"name": "پتوس خونه", "location": "کنار پنجره",
             "request_id": str(uuid4()), **changes}
-
-
-def test_next_due_uses_local_day_not_utc_or_previous_due():
-    assert next_due(datetime(2026, 12, 31, 21, tzinfo=UTC), 3) == date(2027, 1, 4)
-    assert next_due(datetime(2028, 2, 28, 21, tzinfo=UTC), 1) == date(2028, 3, 1)
-    assert next_due(datetime(2026, 3, 7, 23, tzinfo=UTC), 1, "America/New_York") == date(2026, 3, 8)
-    with pytest.raises(ValueError):
-        next_due(datetime(2026, 1, 1), 1)
 
 
 def test_full_flow_and_durable_retries(client, monkeypatch):
@@ -37,7 +29,7 @@ def test_full_flow_and_durable_retries(client, monkeypatch):
     response = client.post(base, json=data)
     assert response.status_code == 201, response.text
     plant = response.json()["plant"]
-    assert plant["soil"]["status"] == "overdue"
+    assert "soil" not in plant and "fertilizer" not in plant
     assert client.post(base, json=data).json() == response.json()
     assert client.post(base, json={**data, "name": "دیگه"}).status_code == 409
     url = f"{base}/{plant['id']}"
@@ -47,22 +39,31 @@ def test_full_flow_and_durable_retries(client, monkeypatch):
     result = client.post(url + "/care", json=care)
     assert result.status_code == 201, result.text
     event = result.json()["event"]
-    assert event["next_due"] == "2027-01-04" and event["actor_id"] == user["id"]
+    assert "next_due" not in event and event["actor_id"] == user["id"]
+    assert event["performed_at"] == "2026-12-31T21:00:00+00:00"
     fields = {k: v for k, v in data.items() if k != "request_id"}
-    fields.update(name="پتوس بزرگ", soil_interval=5, soil_due="2027-02-01")
+    fields.update(name="پتوس بزرگ")
     assert client.put(url, json=fields).status_code == 200
-    # A late retry returns its original receipt without overwriting a newer schedule.
+    # A late retry returns its original receipt without changing plant metadata.
     assert client.post(url + "/care", json=care).json() == result.json()
     detail = client.get(url).json()["plant"]
-    assert detail["soil"]["next_due"] == "2027-02-01"
-    assert detail["fertilizer"]["next_due"] == "2030-01-01"
+    assert detail["name"] == "پتوس بزرگ"
+    assert "soil" not in detail and "fertilizer" not in detail
     assert client.post(url + "/care", json={**care, "action": "watered"}).status_code == 409
     watered = client.post(url + "/care", json={"request_id": str(uuid4()), "action": "watered"})
-    assert watered.json()["event"]["next_due"] == "2027-01-06"
+    assert watered.status_code == 201
     fertilized = client.post(url + "/care", json={"request_id": str(uuid4()), "action": "fertilized"})
-    assert fertilized.json()["event"]["next_due"] == "2027-01-21"
+    assert fertilized.status_code == 201
     events = client.get(url + "/history").json()["events"]
     assert len(events) == 3
+    for action in ("soil_changed", "repotted", "examined"):
+        request = {"request_id": str(uuid4()), "action": action, "note": "رسیدگی تازه"}
+        saved = client.post(url + "/care", json=request)
+        assert saved.status_code == 201 and saved.json()["event"]["action"] == action
+        assert client.post(url + "/care", json=request).json() == saved.json()
+        assert client.post(url + "/care", json={**request, "action": "watered"}).status_code == 409
+    assert len(client.get(url + "/history").json()["events"]) == 6
+    assert client.post(url + "/care", json={"request_id": str(uuid4()), "action": "invalid"}).status_code == 422
     assert all(e["actor_name"] == "سعید آزمایشی" and e["performed_at"].endswith("+00:00") for e in events)
     assert client.post(base, json=data).json()["plant"]["name"] == "پتوس بزرگ"
     assert client.delete(url).status_code == 204
@@ -74,23 +75,16 @@ def test_full_flow_and_durable_retries(client, monkeypatch):
     assert client.post(base, json=data).status_code == 409
 
 
-def test_statuses_follow_tehran_midnight_without_schedule_writes(client, monkeypatch):
-    monkeypatch.setattr("app.plants.service.now", lambda: datetime(2026, 1, 1, 20, tzinfo=UTC))
+def test_list_orders_newest_first_without_schedules(client, monkeypatch):
     register(client)
     base = f"/api/families/{create(client)}/plants"
-    plant = client.post(base, json=payload(soil_due="2026-01-02")).json()["plant"]
-    url = f"{base}/{plant['id']}"
-    assert plant["soil"]["status"] == "upcoming"
-    # Tehran has crossed midnight while the UTC date is still January 1.
-    monkeypatch.setattr("app.plants.service.now", lambda: datetime(2026, 1, 1, 21, tzinfo=UTC))
-    assert client.get(url).json()["plant"]["soil"]["status"] == "today"
-    monkeypatch.setattr("app.plants.service.now", lambda: datetime(2026, 1, 2, 21, tzinfo=UTC))
+    monkeypatch.setattr("app.plants.service.now", lambda: datetime(2026, 1, 1, tzinfo=UTC))
+    first = client.post(base, json=payload()).json()["plant"]
+    monkeypatch.setattr("app.plants.service.now", lambda: datetime(2026, 1, 2, tzinfo=UTC))
+    second = client.post(base, json=payload()).json()["plant"]
     listed = client.get(base).json()
+    assert listed["plants"] == [second, first]
     assert listed["timezone"] == "Asia/Tehran"
-    assert listed["plants"][0]["soil"] == {
-        "interval_days": 3, "next_due": "2026-01-02", "status": "overdue"
-    }
-    assert client.get(url + "/history").json()["events"] == []
 
 
 def test_family_isolation_assignment_and_member_actor(client, app):
@@ -142,20 +136,60 @@ def test_concurrent_care_retries_are_atomic(client, app):
     assert len(client.get(url + "/history").json()["events"]) == 1
 
 
-def test_validation_optional_fertilizer_and_migration(client):
+def test_validation_rejects_removed_schedules_and_migration(client):
     register(client)
     base = f"/api/families/{create(client)}/plants"
-    for changes in ({"name": " "}, {"location": ""}, {"soil_interval": 0}, {"soil_interval": 366},
-                    {"soil_interval": True}, {"soil_interval": 1.5}, {"soil_due": "2026-02-30"},
-                    {"soil_due": 123}, {"soil_due": "2200-01-01"}, {"note": "x" * 2001},
+    for changes in ({"name": " "}, {"location": ""}, {"note": "x" * 2001},
+                    {"soil_interval": 3}, {"soil_due": "2026-01-01"},
                     {"fertilizer_interval": None}, {"fertilizer_due": None}, {"user_id": str(uuid4())}):
         response = client.post(base, json=payload(**changes))
         assert response.status_code == 422, response.text
-    row = client.post(base, json=payload(fertilizer_interval=None, fertilizer_due=None)).json()["plant"]
+    row = client.post(base, json=payload()).json()["plant"]
     url = f"{base}/{row['id']}"
-    assert row["fertilizer"] is None
-    assert client.post(url + "/care", json={"request_id": str(uuid4()), "action": "fertilized"}).status_code == 409
+    assert client.post(url + "/care", json={"request_id": str(uuid4()), "action": "fertilized"}).status_code == 201
+    fields = {k: v for k, v in payload().items() if k != "request_id"}
+    assert client.put(url, json={**fields, "soil_interval": 3}).status_code == 422
     assert client.get(base + "?offset=-1").status_code == 422
     command.check(Config("alembic.ini"))
     with pytest.raises(RuntimeError, match="Refusing"):
-        command.downgrade(Config("alembic.ini"), "a25431a9e6f7")
+        command.downgrade(Config("alembic.ini"), "d58764dc192a")
+
+
+@pytest.mark.parametrize("app", ["d58764dc192a"], indirect=True)
+def test_upgrade_preserves_plant_photo_and_history(client, app):
+    user = register(client)
+    family = UUID(create(client))
+    plant_id, event_id, request_id = uuid4(), uuid4(), uuid4()
+    actor_id = UUID(user["id"])
+    note = "رسیدگی قبل از مهاجرت"
+    digest = fingerprint({"plant_id": plant_id, "actor_id": actor_id, "action": "fertilized", "note": note})
+    with app.state.engine.begin() as db:
+        db.execute(text("""
+            INSERT INTO plants.plants
+                (id, family_id, name, species, location, note, soil_interval, soil_due,
+                 fertilizer_interval, fertilizer_due, created_by, request_id, request_fingerprint,
+                 created_at, photo_key, photo_digest)
+            VALUES (:id, :family, 'قدیمی', 'پتوس', 'پذیرایی', '', 3, '2026-01-01',
+                    20, '2026-02-01', :actor, :request, :fingerprint, now(), :key, :photo_digest)
+        """), {"id": plant_id, "family": family, "actor": actor_id, "request": uuid4(),
+                 "fingerprint": "a" * 64, "key": f"plants/{family}/{plant_id}/old.jpg", "photo_digest": "b" * 64})
+        db.execute(text("""
+            INSERT INTO plants.care_events
+                (id, family_id, plant_id, actor_id, action, note, performed_at,
+                 next_due, request_id, request_fingerprint)
+            VALUES (:id, :family, :plant, :actor, 'fertilized', :note,
+                    '2026-01-01T21:00:00+00:00', '2026-01-22', :request, :fingerprint)
+        """), {"id": event_id, "family": family, "plant": plant_id, "actor": actor_id,
+                 "note": note, "request": request_id, "fingerprint": digest})
+    command.upgrade(Config("alembic.ini"), "head")
+    command.check(Config("alembic.ini"))
+    base = f"/api/families/{family}/plants/{plant_id}"
+    plant = client.get(base).json()["plant"]
+    assert plant["name"] == "قدیمی" and plant["photo_url"].endswith("?v=" + "b" * 64)
+    assert "soil" not in plant and "fertilizer" not in plant
+    event = client.get(base + "/history").json()["events"][0]
+    assert event["id"] == str(event_id) and event["note"] == note
+    assert event["performed_at"] == "2026-01-01T21:00:00+00:00" and "next_due" not in event
+    retry = client.post(base + "/care", json={"request_id": str(request_id), "action": "fertilized", "note": note})
+    assert retry.status_code == 201 and retry.json()["event"]["id"] == str(event_id)
+    assert len(client.get(base + "/history").json()["events"]) == 1

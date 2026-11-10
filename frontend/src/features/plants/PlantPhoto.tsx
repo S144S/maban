@@ -45,8 +45,7 @@ export function PlantPhoto({ plant, familyId, onSaved, activity, initialFile = n
     } finally { pending.current = false; setBusy(false); }
   }
   function submit(event: FormEvent) { event.preventDefault(); void save(); }
-  return <section className="plant-photo-editor" aria-labelledby="plant-photo-title">
-    <h2 id="plant-photo-title">عکس گلدون</h2>
+  return <section className="plant-photo-editor" aria-label={`ویرایش عکس ${plant.name}`}>
     {plant.photo_url && <PlantImage key={plant.photo_url} src={plant.photo_url} name={plant.name} />}
     <form onSubmit={submit}><fieldset className="dash-form plants-form" disabled={busy}>
       <Button type="button" variant="outline" aria-describedby="plant-photo-hint" onClick={() => input.current?.click()}>{plant.photo_url ? "انتخاب عکس تازه" : "افزودن عکس (اختیاری)"}</Button>

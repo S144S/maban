@@ -1,4 +1,6 @@
 .plants-page { display: grid; gap: 18px; min-width: 0; color: var(--foreground); }
+.plants-page > .dash-welcome { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; width: 100%; align-items: stretch; justify-content: stretch; }
+.plants-page > .dash-welcome > [data-slot="button"] { width: 100%; }
 .plants-page h1, .plants-page h2, .plant-card h2 { overflow-wrap: anywhere; }
 .plants-page h2 { font-family: var(--font-heading); font-size: 19px; font-weight: 700; }
 .plants-home > .dash-welcome > h2 { font-size: 22px; font-weight: 800; }
@@ -14,23 +16,15 @@
 .plants-home-copy { display: grid; gap: 2px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
 .plants-home-copy strong { font-size: 14px; font-weight: 600; }
 .plants-home-copy > span { font-size: 12px; color: var(--muted-foreground); }
-.plants-home-copy > span[data-due="true"] { color: var(--warning); }
 .plants-home-arrow { width: 18px; height: 18px; flex-shrink: 0; transform: rotate(180deg); }
 .plants-home > .plants-empty { gap: 8px; padding: 16px; }
 .plants-home > .plants-empty > svg { width: 28px; height: 28px; }
-.plants-family { color: var(--muted-foreground); font-size: 14px; overflow-wrap: anywhere; }
 .plants-list, .plant-history ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
 .plant-card { display: grid; gap: 12px; min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: 24px; background: var(--card); color: var(--card-foreground); overflow-wrap: anywhere; }
 .plant-symbol { color: var(--primary); width: 28px; height: 28px; }
 .plant-card [data-slot="button"], .plants-page .dash-welcome [data-slot="button"] { white-space: normal; text-align: center; }
-.plant-schedule { display: grid; gap: 4px; padding: 12px; border-radius: 16px; background: var(--muted); font-size: 14px; }
-.plant-schedule[data-due="true"] { border-inline-start: 3px solid var(--warning); background: var(--warning-bg); color: var(--warning); }
-.plant-schedule[data-due="true"] .dash-muted { color: inherit; }
 .plant-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .plant-actions > * { flex: 1 1 auto; white-space: normal; }
-.plant-info { display: grid; gap: 12px; }
-.plant-info dt { font-size: 13px; color: var(--muted-foreground); }
-.plant-info dd { margin: 0; overflow-wrap: anywhere; }
 .plant-note { white-space: pre-wrap; overflow-wrap: anywhere; }
 .plant-history { display: grid; gap: 16px; }
 .plant-history li { display: grid; gap: 6px; padding-block: 16px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
@@ -42,12 +36,8 @@
 .plants-notice-warning { color: var(--warning); background: var(--warning-bg); }
 .plants-form .plant-photo-editor bdi { overflow-wrap: anywhere; }
 .plants-form textarea { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--foreground); font: inherit; resize: vertical; }
-.plants-schedule-form { display: grid; gap: 14px; min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: 18px; }
-.plants-schedule-form legend { padding-inline: 6px; font-weight: 600; }
-.plants-schedule-form p { font-size: 14px; }
-.dash-form .plants-checkbox { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 48px; }
-.dash-form .plants-checkbox input { width: 24px; height: 24px; min-height: 24px; accent-color: var(--primary); flex-shrink: 0; }
 .plant-delete { color: var(--destructive); }
+.plant-actions > .plant-delete, .plant-actions > .plant-edit { flex: 0 0 44px; }
 .plant-confirm-delete:not(:disabled) { background: var(--destructive); color: var(--destructive-foreground); }
 .plant-confirm-delete:not(:disabled):hover { background: var(--destructive-hover); }
 .plant-photo-editor, .plant-photo-confirm { display: grid; gap: 14px; min-width: 0; }

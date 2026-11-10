@@ -1,12 +1,11 @@
 import hashlib
 import json
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Protocol
 from uuid import UUID, uuid4
-from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select, text
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.plants.errors import PlantError
@@ -14,7 +13,7 @@ from app.plants.models import CareEvent, Plant
 from app.plants.photos import normalize_photo
 from app.plants.storage import PhotoStorage
 
-# Families have no timezone setting yet. All daily care uses this explicit default.
+# Default display timezone; event timestamps are stored in UTC.
 TIMEZONE = "Asia/Tehran"
 logger = logging.getLogger(__name__)
 
@@ -26,12 +25,6 @@ def lock_family(db, family_id):
 
 def now():
     return datetime.now(UTC)
-
-
-def next_due(performed_at: datetime, interval: int, timezone: str = TIMEZONE):
-    if performed_at.tzinfo is None or performed_at.utcoffset() is None:
-        raise ValueError("Care time must include a timezone")
-    return performed_at.astimezone(ZoneInfo(timezone)).date() + timedelta(days=interval)
 
 
 def fingerprint(data):
@@ -70,22 +63,14 @@ class Plants:
         row.photo_key = row.photo_digest = None
 
     def lock(self, family_id):
-        # Same module lock for creation, schedule edits, deletion and care retries.
+        # Same module lock for creation, metadata edits, deletion and care retries.
         lock_family(self.db, family_id)
 
     def view(self, row):
-        today = now().astimezone(ZoneInfo(TIMEZONE)).date()
-
-        def schedule(interval, due):
-            return None if due is None else {"interval_days": interval, "next_due": due.isoformat(),
-                                            "status": "overdue" if due < today else "today" if due == today else "upcoming"}
-
         return {"id": str(row.id), "name": row.name, "species": row.species,
                 "location": row.location, "note": row.note,
                 "assignee_id": str(row.assignee_id) if row.assignee_id else None,
-                "photo_url": f"/api/families/{row.family_id}/plants/{row.id}/photo?v={row.photo_digest}" if row.photo_digest else None,
-                "soil": schedule(row.soil_interval, row.soil_due),
-                "fertilizer": schedule(row.fertilizer_interval, row.fertilizer_due)}
+                "photo_url": f"/api/families/{row.family_id}/plants/{row.id}/photo?v={row.photo_digest}" if row.photo_digest else None}
 
     def get(self, family_id, plant_id, include_deleted=False):
         row = self.db.scalar(select(Plant).where(Plant.family_id == family_id, Plant.id == plant_id))
@@ -96,8 +81,7 @@ class Plants:
     def list(self, family_id, user_id, offset):
         self.access.authorize(family_id, user_id)
         query = select(Plant).where(Plant.family_id == family_id, Plant.deleted_at.is_(None))
-        due = func.least(Plant.soil_due, Plant.fertilizer_due)
-        rows = self.db.scalars(query.order_by(due, Plant.id).offset(offset).limit(51)).all()
+        rows = self.db.scalars(query.order_by(Plant.created_at.desc(), Plant.id.desc()).offset(offset).limit(51)).all()
         return {"plants": [self.view(row) for row in rows[:50]], "has_more": len(rows) > 50,
                 "timezone": TIMEZONE}
 
@@ -180,13 +164,12 @@ class Plants:
     @staticmethod
     def event_view(row):
         return {"id": str(row.id), "actor_id": str(row.actor_id), "action": row.action,
-                "note": row.note, "performed_at": row.performed_at.isoformat(),
-                "next_due": row.next_due.isoformat()}
+                "note": row.note, "performed_at": row.performed_at.isoformat()}
 
     def care(self, family_id, user_id, plant_id, data):
         self.access.authorize(family_id, user_id)
         self.lock(family_id)
-        row = self.get(family_id, plant_id)
+        self.get(family_id, plant_id)
         digest = fingerprint({"plant_id": plant_id, "actor_id": user_id,
                               "action": data.action, "note": data.note})
         existing = self.db.scalar(select(CareEvent).where(CareEvent.family_id == family_id,
@@ -195,19 +178,10 @@ class Plants:
             if existing.request_fingerprint != digest:
                 raise PlantError("این درخواست قبلاً با اطلاعات دیگه ثبت شده؛ فرم رو دوباره باز کنین.")
             return self.event_view(existing)
-        fertilizer = data.action == "fertilized"
-        interval = row.fertilizer_interval if fertilizer else row.soil_interval
-        if interval is None:
-            raise PlantError("اول برنامهٔ کوددهی رو برای این گلدون تنظیم کنین.")
         performed = now()
-        due = next_due(performed, interval)
         event = CareEvent(id=uuid4(), family_id=family_id, plant_id=plant_id, actor_id=user_id,
-                          action=data.action, note=data.note, performed_at=performed, next_due=due,
+                          action=data.action, note=data.note, performed_at=performed,
                           request_id=data.request_id, request_fingerprint=digest)
-        if fertilizer:
-            row.fertilizer_due = due
-        else:
-            row.soil_due = due
         self.db.add(event)
         self.db.flush()
         return self.event_view(event)
