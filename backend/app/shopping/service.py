@@ -45,9 +45,10 @@ class Shopping:
         purchased = ShoppingItem.purchased_at.is_not(None)
         counts = self.db.execute(select(func.count().filter(~purchased), func.count().filter(purchased))
                                  .where(*scope)).one()
-        rows = self.db.scalars(select(ShoppingItem).where(*scope, purchased if status == "purchased" else ~purchased)
+        filtered_scope = scope if status == "all" else (*scope, purchased if status == "purchased" else ~purchased)
+        rows = self.db.scalars(select(ShoppingItem).where(*filtered_scope)
             .order_by(ShoppingItem.created_at.desc(), ShoppingItem.id.desc()).offset(offset).limit(50)).all()
-        count = counts[1 if status == "purchased" else 0]
+        count = sum(counts) if status == "all" else counts[1 if status == "purchased" else 0]
         result = {"items": [self.view(row) for row in rows], "pending_count": counts[0],
                   "purchased_count": counts[1], "has_more": offset + len(rows) < count}
         if list_id is not None:
@@ -139,9 +140,18 @@ class Shopping:
         self.db.flush()
         return {"completed_count": completed_count, "expense_id": str(expense_id) if expense_id else None}
 
-    def lists(self, family_id, user_id, offset):
+    def lists(self, family_id, user_id, offset, status="all"):
         self.access.authorize(family_id, user_id)
-        rows = self.db.scalars(select(ShoppingList).where(ShoppingList.family_id == family_id)
+        live = (ShoppingItem.family_id == family_id, ShoppingItem.list_id == ShoppingList.id,
+                ShoppingItem.deleted_at.is_(None))
+        has_items = select(ShoppingItem.id).where(*live).exists()
+        has_pending = select(ShoppingItem.id).where(*live, ShoppingItem.purchased_at.is_(None)).exists()
+        scope = (ShoppingList.family_id == family_id,)
+        if status == "purchased":
+            scope += (has_items, ~has_pending)
+        elif status == "pending":
+            scope += (~has_items | has_pending,)
+        rows = self.db.scalars(select(ShoppingList).where(*scope)
             .order_by(ShoppingList.created_at.desc(), ShoppingList.id.desc()).offset(offset).limit(51)).all()
         ids = [row.id for row in rows[:50]]
         counts = {row[0]: (row[1], row[2]) for row in self.db.execute(select(ShoppingItem.list_id,

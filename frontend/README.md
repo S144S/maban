@@ -117,10 +117,10 @@ uses in-app reminders only and defaults daily care to Asia/Tehran.
 ## Household shopping
 
 Management → «خریدهای خونه» opens the selected family’s server-backed named shopping lists
-(`/dashboard?page=purchases`). Requires backend 3.3.0 and migrations through `e8a1d6342fc9`.
+(`/dashboard?page=purchases`). Requires backend 3.4.0 and migrations through `e8a1d6342fc9`.
 Add names with optional free-text quantities/notes; mark purchases, return them to
-the pending list, edit or confirm deletion. Both views show total counts and page
-at 50 items. Refresh explicitly to see other members’ latest changes; stale edits
+the unchecked state, edit or confirm deletion. All items appear together with
+checkboxes, keeping purchased items in place. The list pages at 50 items. Refresh explicitly to see other members’ latest changes; stale edits
 require reloading the list. Form values survive request failures. No offline data
 store is used. Checking an item saves its purchase directly without asking for a cost.
 After the final pending item is checked, refreshed list state opens the optional
@@ -133,4 +133,8 @@ continues to show this entry to the family creator/spouse.
 
 Create a named list and add multiple item rows before saving. Open a list card to manage its items; counts and progress reflect that list only. Existing items appear in a default list.
 
-Inside a list, «لیست رو تکمیل کردم» also opens the total-cost dialog. Confirmation completes all remaining items (including other pages) and optionally creates one expense named after the list. Category defaults to Other. Cancel preserves all previously saved checkmarks. If any current item or prior list checkout has an expense, completion is available without a new total to prevent duplicate charges; rechecking the final item does not prompt for another cost.
+Inside a list, «خریدم» also opens the total-cost dialog. Confirmation completes all remaining items (including other pages) and optionally creates one expense named after the list. Category defaults to Other. Cancel preserves all previously saved checkmarks. If any current item or prior list checkout has an expense, completion is available without a new total to prevent duplicate charges; rechecking the final item does not prompt for another cost.
+
+The shopping list index filters lists with «در انتظار خرید» and «خرید شده». Nonempty lists with all live items checked are purchased; partially purchased and empty lists remain pending. Item detail keeps both checked and unchecked items together.
+
+Each nonempty shopping list has a direct completion action on the list index. It loads a fresh checkout snapshot, opens the optional total-cost/category dialog and returns the completed list to the purchased view after confirmation.

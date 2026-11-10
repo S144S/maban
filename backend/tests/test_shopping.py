@@ -26,6 +26,49 @@ def make_checkout_list(client, count=3):
     return family, base, view, f"{base}/lists/{list_id}/complete", list_id
 
 
+def test_list_status_filters_empty_partial_complete_and_undone_lists(client):
+    register(client)
+    _, base, view, _, list_id = make_checkout_list(client, 2)
+    empty = client.post(base + "/lists", json={"name": "Empty", "request_id": str(uuid4())}).json()["list"]
+    items = client.get(view + "&status=all").json()["items"]
+    def ids(status, offset=0):
+        response = client.get(base + f"/lists?status={status}&offset={offset}")
+        assert response.status_code == 200, response.text
+        return [row["id"] for row in response.json()["lists"]]
+    assert set(ids("pending")) == {list_id, empty["id"]}
+    assert ids("purchased") == []
+    assert client.put(base + f"/{items[0]['id']}/status", json={"purchased": True, "version": 1}).status_code == 200
+    assert list_id in ids("pending") and ids("purchased") == []
+    assert client.put(base + f"/{items[1]['id']}/status", json={"purchased": True, "version": 1}).status_code == 200
+    assert ids("purchased") == [list_id]
+    assert ids("pending") == [empty["id"]]
+    assert ids("purchased", 1) == []
+    assert set(ids("all")) == {list_id, empty["id"]}
+    assert client.put(base + f"/{items[0]['id']}/status", json={"purchased": False, "version": 2}).status_code == 200
+    assert ids("purchased") == [] and list_id in ids("pending")
+
+
+def test_all_items_view_preserves_order_and_paginates_mixed_statuses(client):
+    register(client)
+    _, base, view, _, _ = make_checkout_list(client, 55)
+    before = client.get(view + "&status=all").json()
+    item = before["items"][0]
+    assert client.put(base + f"/{item['id']}/status", json={
+        "purchased": True, "version": item["version"]}).status_code == 200
+    response = client.get(view + "&status=all")
+    assert response.status_code == 200
+    first = response.json()
+    assert first["pending_count"] == 54 and first["purchased_count"] == 1
+    assert first["items"][0]["id"] == item["id"] and first["items"][0]["purchased"]
+    assert [row["id"] for row in first["items"]] == [row["id"] for row in before["items"]]
+    assert len(first["items"]) == 50 and first["has_more"]
+    last = client.get(view + "&status=all&offset=50").json()
+    assert len(last["items"]) == 5 and not last["has_more"]
+    assert len({row["id"] for row in first["items"] + last["items"]}) == 55
+    assert client.get(view + "&status=purchased").json()["items"][0]["id"] == item["id"]
+    assert all(not row["purchased"] for row in client.get(view).json()["items"])
+
+
 def test_complete_whole_list_one_expense_all_pages_and_durable_retry(client):
     register(client)
     family, base, view, checkout, list_id = make_checkout_list(client, 55)

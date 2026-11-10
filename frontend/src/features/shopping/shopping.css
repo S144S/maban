@@ -1,10 +1,11 @@
 .shopping-page { min-width: 0; }
 .shopping-page .management-title-row h1 { min-width: 0; overflow-wrap: anywhere; }
-.shopping-list-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 20px 16px; border: 1px solid var(--input); border-radius: 24px; background: var(--card); color: var(--card-foreground); text-align: start; cursor: pointer; }
-.shopping-list-card:hover { background: var(--accent); }
-.shopping-list-card:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
-.shopping-list-card > svg { flex-shrink: 0; }
-.shopping-list-card > span { display: grid; gap: 10px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.shopping-list-card { min-width: 0; padding: 12px; border: 1px solid var(--input); border-radius: 24px; background: var(--card); color: var(--card-foreground); }
+.shopping-list-open { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 4px; border-radius: 12px; color: inherit; text-align: start; cursor: pointer; }
+.shopping-list-open:hover { background: var(--accent); }
+.shopping-list-open:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.shopping-list-open > svg { flex-shrink: 0; }
+.shopping-list-open > span { display: grid; gap: 10px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .shopping-list-card strong { font-size: 17px; }
 .shopping-list-card span span { font-size: 13px; color: var(--muted-foreground); }
 .shopping-list-card progress { width: 100%; height: 6px; appearance: none; border: 0; border-radius: 8px; overflow: hidden; background: var(--muted); color: var(--primary); }
@@ -12,23 +13,23 @@
 .shopping-list-card progress::-webkit-progress-value { background: var(--primary); border-radius: 8px; }
 .shopping-list-card progress::-moz-progress-bar { background: var(--primary); border-radius: 8px; }
 .shopping-draft-items { display: grid; gap: 12px; }
-.shopping-draft-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 18px; }
-.shopping-draft-row label { grid-column: 1; min-width: 0; }
-.shopping-draft-row > button { grid-column: 2; grid-row: 1; }
-@media (min-width: 540px) { .shopping-draft-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; } .shopping-draft-row label { grid-column: auto; } .shopping-draft-row > button { grid-column: 3; } }
+.shopping-draft-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) 44px; align-items: end; gap: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 18px; }
+.shopping-draft-row label { min-width: 0; }
+.shopping-draft-row > button { grid-column: 3; grid-row: 1; margin-block-end: 3px; }
+.shopping-draft-delete { color: var(--error); }
+.shopping-draft-delete:hover, .shopping-draft-delete:active { background: var(--error-bg); color: var(--error); }
 .shopping-family { display: flex; align-items: center; gap: 8px; margin-block: 12px 0; color: var(--muted-foreground); font-size: 14px; overflow-wrap: anywhere; }
 .shopping-family svg { flex-shrink: 0; }
 .shopping-intro { margin-block: 12px 20px; font-size: 14px; color: var(--muted-foreground); line-height: 1.9; }
 .shopping-add { width: 100%; }
+.shopping-new-list { margin-block-start: 16px; }
+.shopping-list-status { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-block: 16px; }
+.shopping-list-status > button { min-height: 44px; white-space: normal; border: 1px solid var(--input); background: var(--secondary); color: var(--secondary-foreground); }
+.shopping-list-status > button[aria-pressed="true"] { background: var(--scene-blue); color: var(--foreground); }
+.shopping-list-status > button:hover { background: var(--accent); color: var(--accent-foreground); }
 .shopping-complete { width: 100%; margin-block-start: 12px; white-space: normal; }
 .shopping-notice { margin-block: 12px; color: var(--success); font-size: 14px; overflow-wrap: anywhere; }
 .shopping-notice:empty { display: none; }
-.shopping-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-block: 24px 12px; }
-.shopping-filters button { min-height: 48px; min-width: 0; padding: 8px; border: 1px solid var(--input); border-radius: 16px; color: var(--foreground); background: var(--card); font-size: 14px; cursor: pointer; }
-.shopping-filters button[aria-pressed="true"] { background: var(--accent); color: var(--accent-foreground); font-weight: 700; box-shadow: inset 0 -3px 0 var(--primary); }
-.shopping-filters button:hover { background: var(--accent); }
-.shopping-filters button:disabled { background: var(--disabled); color: var(--disabled-foreground); cursor: default; }
-.shopping-filters span { display: inline-block; margin-inline-start: 4px; font-variant-numeric: tabular-nums; }
 .shopping-list-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-block: 12px; }
 .shopping-list-heading h2 { font-size: 18px; font-weight: 700; }
 .shopping-list { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; }
@@ -63,6 +64,6 @@
 .shopping-error > button { white-space: normal; }
 .shopping-delete { background: var(--destructive); color: var(--destructive-foreground); }
 .shopping-delete:hover { background: var(--destructive-hover); }
-.shopping-check:focus-visible, .shopping-filters button:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.shopping-check:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 
 .shopping-cost-hint { font-size: 14px; line-height: 1.9; color: var(--muted-foreground); overflow-wrap: anywhere; }

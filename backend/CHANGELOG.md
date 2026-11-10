@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `3.3.0`. No backend release has been published.
+Current development version: `3.4.0`. No backend release has been published.
 
 ### Added
+
+- Add the optional `status=all` shopping-item view with combined pagination, retaining existing pending/purchased filters and counts. List-index reads also accept pending/purchased status, filtering before pagination; empty lists remain pending and completed lists require all live items to be purchased.
 
 - Added named family shopping lists with atomic multi-item creation, per-list counts, durable batch retries, item quantities/notes, pending/purchased filters and counts, paginated reads, reversible purchase marking, version-checked edits/deletion and durable idempotent creation. All endpoints require authenticated family membership. Purchase confirmation accepts an optional total in toman and expense category; supplying an amount atomically records one expense through the expenses public interface, attributed to the confirming member and defaulting to Other. Whole-list checkout completes every live item across pages and optionally records one total expense, using a list snapshot and durable receipts to reject stale edits and duplicate charges. Lists with existing item/list expenses can still complete without a new total. Undo/deletion preserves expenses and rechecking cannot charge twice. Migration `c31ea8507b42` groups existing items into a default list and preserves expense links; legacy item endpoints remain compatible. Run migrations through `e8a1d6342fc9` before deploying frontend 1.6.0; downgrade refuses to discard existing shopping data or expense links.
 

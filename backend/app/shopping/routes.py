@@ -12,15 +12,16 @@ router = APIRouter(prefix="/api/families/{family_id}/shopping", tags=["shopping"
 
 @router.get("")
 def list_items(family_id: UUID, current: CurrentUser, service: Service,
-               status: Literal["pending", "purchased"] = "pending",
+               status: Literal["pending", "purchased", "all"] = "pending",
                offset: Annotated[int, Query(ge=0, le=1000000)] = 0, list_id: UUID | None = None):
     return service.list(family_id, current.id, status, offset, list_id)
 
 
 @router.get("/lists")
 def lists(family_id: UUID, current: CurrentUser, service: Service,
-          offset: Annotated[int, Query(ge=0, le=1000000)] = 0):
-    return service.lists(family_id, current.id, offset)
+          offset: Annotated[int, Query(ge=0, le=1000000)] = 0,
+          status: Literal["all", "pending", "purchased"] = "all"):
+    return service.lists(family_id, current.id, offset, status)
 
 
 @router.post("/lists", status_code=201)

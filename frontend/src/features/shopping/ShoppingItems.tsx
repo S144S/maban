@@ -15,14 +15,12 @@ type Item = { id: string; name: string; quantity: string; note: string; purchase
 type List = { items: Item[]; pending_count: number; purchased_count: number; has_more: boolean;
   checkout: { token: string; has_expense: boolean } };
 type Modal = { kind: "add" } | { kind: "complete"; token: string; hasExpense: boolean } | { kind: "edit" | "delete" | "undo"; item: Item };
-type Filter = "pending" | "purchased";
 const number = (value: number) => value.toLocaleString("fa-IR");
 
 export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack: () => void; onFamilies: () => void; listId: string; listName: string }) {
   const { selected, setSelected } = useActiveFamily();
   const [family, setFamily] = useState<Family | null>(null);
   const [list, setList] = useState<List | null>(null);
-  const [filter, setFilter] = useState<Filter>("pending");
   const [offset, setOffset] = useState(0);
   const [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -50,7 +48,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
       const active = families.find(item => item.id === selected) ?? null;
       setFamily(active);
       if (!active) { setList(null); return; }
-      const result = await api<List>(`/families/${active.id}/shopping?list_id=${listId}&status=${filter}&offset=${offset}`, { signal });
+      const result = await api<List>(`/families/${active.id}/shopping?list_id=${listId}&status=all&offset=${offset}`, { signal });
       if (signal.aborted) return;
       if (offset && !result.items.length) { setOffset(0); return; }
       setList(result);
@@ -58,7 +56,6 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
       if (check?.familyId === active.id && check.listId === listId) {
         completionCheck.current = null;
         if (!result.pending_count && result.purchased_count > 0) {
-          setFilter("purchased"); setOffset(0);
           if (!result.checkout.has_expense) show({ kind: "complete", token: result.checkout.token, hasExpense: false });
         }
       }
@@ -66,7 +63,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
     void load().catch(err => { if (!signal.aborted) setError(errorMessage(err)); })
       .finally(() => { if (!signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [selected, setSelected, filter, offset, revision, listId]);
+  }, [selected, setSelected, offset, revision, listId]);
 
   function show(next: Modal) {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -83,7 +80,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
     try {
       await api(path, { method, body });
       if (checkCompletion && family) completionCheck.current = { familyId: family.id, listId };
-      if (path.endsWith("/complete")) { setFilter("purchased"); setOffset(0); }
+      if (path.endsWith("/complete")) setOffset(0);
       setModal(null); setNotice(message); setRevision(value => value + 1);
       if (!inDialog) heading.current?.focus({ preventScroll: true });
     } catch (err) {
@@ -106,11 +103,10 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
       modal.kind === "add" ? { ...body, list_id: listId, request_id: request.current.id } : { ...body, version: modal.item.version },
       modal.kind === "add" ? "کالا به لیست خرید اضافه شد." : "تغییرات کالا ذخیره شد.", true);
   }
-  function choose(next: Filter) { if (!busy) { setFilter(next); setOffset(0); setNotice(""); } }
   function purchase(item: Item) {
     if (!family) return;
     void mutate(`/families/${family.id}/shopping/${item.id}/status`, "PUT",
-      { purchased: true, version: item.version }, "کالا توی خریدشده‌هاست.", false, true);
+      { purchased: true, version: item.version }, "خرید کالا ثبت شد.", false, true);
   }
   function undo(item: Item, inDialog: boolean) {
     if (!family) return;
@@ -136,15 +132,11 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
     {family && list && list.pending_count + list.purchased_count > 0 && <Button className="shopping-complete" variant="outline"
       disabled={unavailable || (!list.pending_count && list.checkout.has_expense)}
       onClick={() => show({ kind: "complete", token: list.checkout.token, hasExpense: list.checkout.has_expense })}>
-      <ListChecks aria-hidden="true" />{!list.pending_count && list.checkout.has_expense ? "لیست تکمیل شده" : "لیست رو تکمیل کردم"}</Button>}
+      <ListChecks aria-hidden="true" />{!list.pending_count && list.checkout.has_expense ? "لیست تکمیل شده" : "خریدم"}</Button>}
     <p className="shopping-notice" role="status">{notice}</p>
     {error && <div className="shopping-error" role="alert"><p>{error}</p><Button variant="outline" disabled={busy} onClick={refresh}><RefreshCw aria-hidden="true" />دریافت دوبارهٔ لیست</Button></div>}
     {loading ? <p className="dash-empty" role="status">در حال دریافت لیست خرید…</p> : !family && !error ? <div className="shopping-empty"><ShoppingBasket aria-hidden="true" /><h2>لیست خرید رو با خانواده شروع کنین</h2><p>اول خانوادهٔ فعال رو انتخاب کنین یا یه خانواده بسازین.</p><Button onClick={onFamilies}>رفتن به خانواده</Button></div> : family && list && <>
-      <div className="shopping-filters" role="group" aria-label="وضعیت کالاها">
-        <button type="button" aria-pressed={filter === "pending"} disabled={busy} onClick={() => choose("pending")}>برای خرید <span>{number(list.pending_count)}</span></button>
-        <button type="button" aria-pressed={filter === "purchased"} disabled={busy} onClick={() => choose("purchased")}>خریدشده‌ها <span>{number(list.purchased_count)}</span></button>
-      </div>
-      <div className="shopping-list-heading"><h2>{filter === "pending" ? "برای خرید" : "خریدشده‌ها"}</h2><Button variant="ghost" size="icon" aria-label="تازه‌سازی لیست خرید" disabled={unavailable} onClick={refresh}><RefreshCw aria-hidden="true" /></Button></div>
+      <div className="shopping-list-heading"><h2>کالاهای لیست</h2><Button variant="ghost" size="icon" aria-label="تازه‌سازی لیست خرید" disabled={unavailable} onClick={refresh}><RefreshCw aria-hidden="true" /></Button></div>
       {list.items.length ? <ul className="shopping-list">{list.items.map(item => <li key={item.id} className="shopping-item" data-purchased={item.purchased}>
         <div className="shopping-item-main">
           <button type="button" className="shopping-check" role="checkbox" aria-checked={item.purchased} disabled={unavailable}
@@ -157,7 +149,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
           </div>
         </div>
         <div className="shopping-item-actions"><Button variant="ghost" size="icon" aria-label={`ویرایش ${item.name}`} disabled={unavailable} onClick={() => show({ kind: "edit", item })}><Pencil aria-hidden="true" /></Button><Button variant="ghost" size="icon" aria-label={`حذف ${item.name}`} disabled={unavailable} onClick={() => show({ kind: "delete", item })}><Trash2 aria-hidden="true" /></Button></div>
-      </li>)}</ul> : <div className="shopping-empty"><ShoppingBasket aria-hidden="true" /><h3>{filter === "pending" ? "چیزی برای خرید ندارین" : "هنوز خریدی تیک نخورده"}</h3><p>{filter === "pending" ? "یه کالا اضافه کنین تا موقع خرید یادتون بمونه." : "بعد از خرید، کنار کالا تیک بزنین تا اینجا بیاد."}</p></div>}
+      </li>)}</ul> : <div className="shopping-empty"><ShoppingBasket aria-hidden="true" /><h3>هنوز کالایی توی لیست نیست</h3><p>یه کالا اضافه کنین تا موقع خرید یادتون بمونه.</p></div>}
       {(offset > 0 || list.has_more) && <div className="shopping-pagination"><Button variant="outline" disabled={!offset || unavailable} onClick={() => setOffset(value => Math.max(0, value - 50))}>قبلی</Button><span>صفحهٔ {number(offset / 50 + 1)}</span><Button variant="outline" disabled={!list.has_more || unavailable} onClick={() => setOffset(value => value + 50)}>بعدی</Button></div>}
     </>}
     <Dialog open={modal !== null} onOpenChange={open => { if (!pending.current && !open) setModal(null); }}>
