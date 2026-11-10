@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.5.0`. No frontend release has been published.
+Current development version: `1.6.0`. No frontend release has been published.
 
 ### Added
+
+- Added «خریدهای خونه» as named persistent family shopping lists with a multi-item creation form, per-list progress, quantities/notes, pending and purchased views with counts, reversible purchase marking, editing, confirmed deletion, pagination, refresh/retry feedback and conflict protection for shared edits. The list index omits the redundant shared-family subtitle. Item rows align the checkbox, name/quantity and edit/delete actions horizontally, allowing long text to wrap. Uses a basket icon and a distinct soft-blue Management button; Family spans the full Management grid width. Item checkboxes save purchases directly without requesting individual costs. The cost dialog omits explanatory copy and labels the amount with the list name, falling back to «این لیست» when unnamed. Checking the final pending item opens the whole-list total-cost/category dialog using refreshed list state; the completion button also opens this dialog. Confirmation completes all remaining items and optionally records one expense for the list, reusing existing financial categories. Cancelling the dialog preserves saved checkmarks; stale lists require refresh, and prior charges prevent duplicate expenses. Linked expenses survive undo/deletion and cannot be duplicated by rechecking. Migration `c31ea8507b42` preserves existing items and expense links inside a default list. Requires backend 3.3.0 and migrations through `e8a1d6342fc9`.
 
 - Added an online-only service worker with a build fingerprint and a Persian RTL update notice on all pages. The compact card uses contextual icons, clear title/body hierarchy, equal touch-friendly actions, a reversible save-confirmation step, and explicit loading/error/retry feedback. New builds wait for explicit confirmation, warn about unsaved forms, support deferral and activation retry, and reload only the accepting tab. Check on startup, return to the app, restored connectivity and once per visible online minute; never cache financial data or queue offline writes. Production hosting must serve `/sw.js` as JavaScript with revalidation and retain old hashed assets for open tabs.
 

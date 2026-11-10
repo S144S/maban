@@ -4,6 +4,7 @@
  * No dark theme or framework dependency is introduced here.
  */
 :root {
+  --scene-blue: #DEEAF5;
   --scene-rose: #F5DEE7;
   --scene-lime: #E7EFCB;
   --scene-peach: #F9E3CF;

@@ -279,3 +279,27 @@ immutable care events in its own schema. It depends only on public family access
 and user identity/directory contracts. All members can collaborate. Per-family
 transaction locks and unique request receipts serialize care and schedule updates.
 No finance or reminder persistence is imported. See [plants](../docs/plants.md).
+
+## Shopping module
+
+`app/shopping` owns `shopping.lists`, `shopping.items` and `shopping.checkouts` and depends on family membership authorization,
+authenticated user identity and the expenses writer through public contracts. Family/user IDs are opaque
+references, without cross-module foreign keys. All family members may read and change
+items through the API; the current Management entry follows the existing creator/spouse
+navigation policy. Quantities are human-readable strings, not monetary amounts.
+
+Creation uses a family-scoped request ID and an immutable fingerprint including the
+creator. Soft deletion retains that receipt so delayed retries cannot recreate deleted
+items. Item creation and mutations lock the parent list before item locks; updates, purchase marking and deletion also check item versions; stale
+writes return 409. Pending/purchased views are paginated at 50 rows with family-wide
+counts. Optional purchase amounts create an expense using `expenses.public.PurchaseExpenses`,
+with the writer bound in composition to the same session/transaction as the item update.
+The shopping service depends on a small writer protocol and never imports expense persistence.
+The confirming member is the payer; omitted categories resolve to Other inside expenses.
+An opaque `expense_id` links each item to at most one expense. Row locks/version checks and
+a deterministic request ID prevent duplicate charges. Undo and soft deletion preserve the
+financial record and link. Rechecking a linked item cannot create a second expense. No SMS is sent.
+
+Shopping items reference a list in the same family through a module-local composite foreign key. Named-list batch creation and its initial items share one transaction and a durable actor-bound request fingerprint. Legacy item creation without a list ID uses a deterministic default list; reads remain side-effect free.
+
+Whole-list completion locks the list, validates a snapshot of all live item IDs/versions, and completes every item atomically with at most one total expense. A durable checkout receipt binds the request to its actor/payload and preserves safe retries after subsequent undo/deletion. All items covered by a total reference the same expense. Existing live-item expenses or a previously charged list prevent another total; completion without an amount remains available. Receipt retention prevents a second total even after linked items are deleted.
