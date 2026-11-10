@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.3.1`. No frontend release has been published.
+Current development version: `1.4.0`. No frontend release has been published.
 
 ### Fixed
+
+- Replaced grouped cashflow bars with daily solid line charts, using green income/red expense strokes and circle/square markers from central chart tokens. Preserve zero-transaction days and exact daily values, with dated ticks, contained keyboard-accessible horizontal scrolling and the existing daily table; removed multi-day aggregation and the redundant line-style legend.
 
 - Removed the redundant «شروع:» prefix and Tehran suffix from reminder-card dates, including the next SMS date, while preserving Tehran time formatting.
 
@@ -16,6 +18,8 @@ Current development version: `1.3.1`. No frontend release has been published.
 - Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
 
 ### Added
+
+- Added an income/expense switch to the cashflow chart with independent per-series scales and empty states, so larger income values no longer flatten the expense trend. Show a labeled vertical axis with rounded Persian amount ticks in toman, reserving space for large values without losing integer precision. Keep the combined daily table available in either view.
 
 - Added a collapsed "last three transactions" section below Home's financial actions, combining the selected family's newest income and expenses by timestamp with green income/red expense labels, Persian dates and amounts, loading/error/empty states and balance-visibility support. Reuses existing authenticated data requests and refreshes after recording income or expenses.
 

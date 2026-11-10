@@ -60,6 +60,8 @@
   --chart-3: var(--brand-aqua);
   --chart-4: var(--brand-gold);
   --chart-5: var(--muted-foreground);
+  --chart-income: var(--success);
+  --chart-expense: var(--error);
   --disabled: var(--muted);
   --disabled-foreground: var(--muted-foreground);
 }

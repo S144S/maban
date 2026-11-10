@@ -42,8 +42,15 @@
 .report-legend small { color: var(--muted-foreground); }
 .report-chart { display: block; width: 100%; height: auto; margin-top: 20px; overflow: visible; direction: ltr; }
 .report-gridline { stroke: var(--border); stroke-dasharray: 3 4; }
-.report-income-bar { fill: var(--chart-1); }
-.report-expense-bar { fill: var(--chart-2); }
+.cashflow-chart-scroll { max-width: 100%; overflow-x: auto; border-radius: 8px; }
+.cashflow-chart-scroll:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.cashflow-chart { overflow: hidden; }
+.cashflow-axis { stroke: var(--muted-foreground); }
+.cashflow-chart path { fill: none; stroke-width: 2; stroke-linejoin: round; }
+.cashflow-income-line, .cashflow-income-point { stroke: var(--chart-income); }
+.cashflow-expense-line, .cashflow-expense-point { stroke: var(--chart-expense); }
+.cashflow-income-point { fill: var(--chart-income); }
+.cashflow-expense-point { fill: var(--card); stroke-width: 2; }
 .report-chart text { fill: var(--muted-foreground); font-family: var(--font-sans); font-size: 11px; }
 .report-chart-scale { font-size: 12px; line-height: 1.9; color: var(--muted-foreground); margin-top: 8px; }
 .report-daily { margin-top: 12px; font-size: 12px; }
