@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Check, ChevronLeft, ListChecks, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Check, ListChecks, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagementBack } from "@/components/ManagementBack";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,9 +8,9 @@ import { useActiveFamily } from "../families/ActiveFamily";
 import type { Family } from "../families/api";
 import { ShoppingItems } from "./ShoppingItems";
 import { ListCheckout } from "./ListCheckout";
+import { ShoppingListCard, type ShoppingList } from "./ShoppingListCard";
 import "./shopping.css";
 
-type ShoppingList = { id: string; name: string; pending_count: number; purchased_count: number };
 type Result = { lists: ShoppingList[]; has_more: boolean };
 const number = (value: number) => value.toLocaleString("fa-IR");
 
@@ -97,17 +97,9 @@ export function Shopping({ onBack, onFamilies }: { onBack: () => void; onFamilie
     {loading ? <p className="dash-empty" role="status">در حال دریافت لیست‌های خرید…</p> : !error && !family ?
       <div className="shopping-empty"><h2>خرید رو با خانواده شروع کنین</h2><Button onClick={onFamilies}>رفتن به خانواده</Button></div> : !error && result && <>
       <div className="shopping-list-heading"><h2>لیست‌های خرید</h2><Button variant="ghost" size="icon" aria-label="تازه‌سازی لیست‌ها" onClick={() => setRevision(value => value + 1)}><RefreshCw aria-hidden="true" /></Button></div>
-      {result.lists.length ? <ul className="shopping-list">{result.lists.map(list => <li key={list.id} className="shopping-list-card">
-        <button type="button" className="shopping-list-open" onClick={() => family && setActive({ ...list, familyId: family.id })}>
-          <ListChecks aria-hidden="true" /><span><strong><bdi>{list.name}</bdi></strong>
-          <span>{number(list.pending_count)} کالا برای خرید · {number(list.purchased_count)} خریدشده</span>
-          <progress aria-label={`پیشرفت ${list.name}`} value={list.purchased_count} max={Math.max(1, list.pending_count + list.purchased_count)} /></span><ChevronLeft aria-hidden="true" />
-        </button>
-        {list.pending_count + list.purchased_count > 0 && <Button variant="outline" className="shopping-complete"
-          aria-label={`خریدم؛ ${list.name}`}
-          onClick={() => { if (family) { setNotice(""); setCheckout({ ...list, familyId: family.id }); } }}>
-          <ListChecks aria-hidden="true" />خریدم</Button>}
-      </li>)}</ul> : <div className="shopping-empty"><ListChecks aria-hidden="true" /><h2>{status === "purchased" ? "هنوز لیست خریدشده‌ای ندارین" : "لیستی در انتظار خرید ندارین"}</h2><p>{status === "purchased" ? "لیست‌هایی که همهٔ کالاهاشون تیک خورده باشن اینجا نمایش داده می‌شن." : "یه لیست خرید جدید بسازین و کالاهاش رو اضافه کنین."}</p></div>}
+      {result.lists.length ? <ul className="shopping-list">{result.lists.map(list => <ShoppingListCard key={list.id} list={list}
+        onOpen={() => family && setActive({ ...list, familyId: family.id })}
+        onComplete={() => { if (family) { setNotice(""); setCheckout({ ...list, familyId: family.id }); } }} />)}</ul> : <div className="shopping-empty"><ListChecks aria-hidden="true" /><h2>{status === "purchased" ? "هنوز لیست خریدشده‌ای ندارین" : "لیستی در انتظار خرید ندارین"}</h2><p>{status === "purchased" ? "لیست‌هایی که همهٔ کالاهاشون تیک خورده باشن اینجا نمایش داده می‌شن." : "یه لیست خرید جدید بسازین و کالاهاش رو اضافه کنین."}</p></div>}
       {(offset > 0 || result.has_more) && <div className="shopping-pagination"><Button variant="outline" disabled={!offset} onClick={() => setOffset(value => value - 50)}>قبلی</Button><span>صفحهٔ {number(offset / 50 + 1)}</span><Button variant="outline" disabled={!result.has_more} onClick={() => setOffset(value => value + 50)}>بعدی</Button></div>}
     </>}
     {checkout && checkout.familyId === selected && <ListCheckout key={`${checkout.familyId}:${checkout.id}`} familyId={checkout.familyId}

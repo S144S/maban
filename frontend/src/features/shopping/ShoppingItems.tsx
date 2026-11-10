@@ -17,7 +17,7 @@ type List = { items: Item[]; pending_count: number; purchased_count: number; has
 type Modal = { kind: "add" } | { kind: "complete"; token: string; hasExpense: boolean } | { kind: "edit" | "delete" | "undo"; item: Item };
 const number = (value: number) => value.toLocaleString("fa-IR");
 
-export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack: () => void; onFamilies: () => void; listId: string; listName: string }) {
+export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel = "بازگشت به لیست‌های خرید" }: { onBack: () => void; onFamilies: () => void; listId: string; listName: string; backLabel?: string }) {
   const { selected, setSelected } = useActiveFamily();
   const [family, setFamily] = useState<Family | null>(null);
   const [list, setList] = useState<List | null>(null);
@@ -125,7 +125,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName }: { onBack
   const unavailable = loading || busy || !!error;
 
   return <section className="shopping-page" aria-labelledby="shopping-title">
-    <div className="dash-welcome management-title-row"><h1 id="shopping-title" ref={heading} tabIndex={-1}>{listName}</h1><ManagementBack onBack={onBack} label="بازگشت به لیست‌های خرید" /></div>
+    <div className="dash-welcome management-title-row"><h1 id="shopping-title" ref={heading} tabIndex={-1}>{listName}</h1><ManagementBack onBack={onBack} label={backLabel} /></div>
     {family && <p className="shopping-family"><Users size={16} aria-hidden="true" /><span>لیست مشترک <bdi>{family.name}</bdi></span></p>}
     <p className="shopping-intro">هر چی برای خونه لازمه اینجا بنویسین؛ بعد از خرید، تیکش رو بزنین.</p>
     {family && <Button className="shopping-add" disabled={unavailable} onClick={() => show({ kind: "add" })}><Plus aria-hidden="true" />افزودن کالا</Button>}

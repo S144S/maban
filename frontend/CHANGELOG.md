@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.7.0`. No frontend release has been published.
+Current development version: `1.8.0`. No frontend release has been published.
 
 ### Added
+
+- Show the active family's unfinished shopping-list cards below Home reminders, hiding the section when none remain. Reuse list progress and checkout actions, support pagination and retry, open items with a return to Home, and refresh the wallet after checkout. Keep the Home section heading free of a manual refresh action.
 
 - Show all shopping-list items together with their purchase checkboxes, preserving checked items in place and removing the per-item pending/purchased tabs. Each nonempty list card contains a separate «خریدم» action inside its border, opening the total-cost dialog directly with a fresh checkout snapshot, retry/conflict handling and duplicate-expense protection. The list index offers «در انتظار خرید» and «خرید شده» filters; a nonempty list is purchased when every live item is checked, while empty lists remain pending. Show red draft-item delete actions only after an item name is entered, aligned with the name/quantity fields; deleting the final item resets it to an empty row. Add spacing above the new-list action and use soft secondary filter colors with a selected check icon instead of underlined text. Requires backend 3.4.0.
 

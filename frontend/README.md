@@ -138,3 +138,5 @@ Inside a list, «خریدم» also opens the total-cost dialog. Confirmation com
 The shopping list index filters lists with «در انتظار خرید» and «خرید شده». Nonempty lists with all live items checked are purchased; partially purchased and empty lists remain pending. Item detail keeps both checked and unchecked items together.
 
 Each nonempty shopping list has a direct completion action on the list index. It loads a fresh checkout snapshot, opens the optional total-cost/category dialog and returns the completed list to the purchased view after confirmation.
+
+Home also shows the selected family’s pending shopping-list cards below «یادت نره!». The section is hidden when no unfinished lists remain. Cards open their items with a return to Home and offer «خریدم» for whole-list checkout; successful checkout refreshes both pending lists and the wallet. Lists paginate at 50 entries and use the same pending definition as the shopping index.
