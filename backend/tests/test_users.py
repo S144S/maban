@@ -271,6 +271,7 @@ def test_production_never_accepts_fixed_development_code(app, monkeypatch):
         sms_api_key="test-provider-key",
         sms_template="test-template",
         sms_line_number="30001234",
+        minio_secure=True,
     )
 
     class Sms:
