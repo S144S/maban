@@ -13,6 +13,7 @@ from app.families.bootstrap import install as install_families
 from app.income.bootstrap import install as install_income
 from app.investments.bootstrap import install as install_investments
 from app.money_locations.bootstrap import install as install_locations
+from app.plants.bootstrap import install as install_plants
 from app.reminders.bootstrap import install as install_reminders
 from app.users.bootstrap import install
 
@@ -36,6 +37,7 @@ def create_app(settings: Settings | None = None):
     install_investments(app)
     install_assets(app)
     install_reminders(app)
+    install_plants(app)
 
     @app.middleware("http")
     async def security(request: Request, call_next):

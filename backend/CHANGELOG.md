@@ -5,9 +5,33 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `2.0.0`. No backend release has been published.
+Current development version: `3.2.0`. No backend release has been published.
+
+### Fixed
+
+- Display family members by their complete given name in member lists, income attribution and plant care history; keep stored surnames and profile editing unchanged.
+
+### Removed
+
+- **Breaking:** Removed plant schedule inputs/outputs and care `next_due`; all care actions now log independently without calculating reminders. Migration `e69875ed203b` drops scheduling columns while preserving plant metadata, photo references and performed care. Back up before upgrade, deploy with the matching frontend and reopen pending forms; rollback requires restoring the backup. Plant lists now order newest first.
 
 ### Added
+
+- Added authenticated, paginated `/api/reminders/upcoming` for occurrences within the inclusive next 24 hours. Calculates recurring dates in Tehran independently of SMS availability; excludes past one-time and deleted reminders and other users.
+
+- Added fortnightly reminder recurrence (`fortnightly`), retaining Tehran wall-clock time every 14 days and skipping missed occurrences without duplicate delivery. Run migration `d2ea71b93508` before deploying; downgrade requires explicitly changing any fortnightly reminders first.
+
+- Added optional personal reminder notes (up to 2,000 characters), persisted by migration `c1df3920ab72`. Legacy edits preserve notes and stored amounts; retries remain compatible. Notes are not included in SMS.
+
+- Added optional family/plant references to personal reminders via the Plants public authorization interface. Migration `a8ba970f425d` preserves existing reminders; omitted reference fields preserve links and legacy retry fingerprints. Linked reminders remain private and survive plant deletion; downgrade refuses to discard links.
+
+- Added soil replacement, repotting and examination care events with migration `f7a986fe314c`; preserved legacy no-water-needed history and retries.
+
+- Added one optional private photo per family plant with authenticated read, replacement and deletion. JPEG, PNG and WebP uploads are bounded to 5 MiB/20 megapixels, normalized to static JPEG and stripped of metadata. Files use a private MinIO bucket; PostgreSQL stores object keys only. Configure MABAN_MINIO_* and initialize the bucket; run Alembic upgrade head (refuses unexpected legacy blobs). Upload/commit failure recovery preserves current photos; a reconciliation command removes abandoned objects after a 24-hour grace period. Local Compose includes persistent MinIO storage; back up it and PostgreSQL separately.
+
+- Added family-owned plants, member assignment, immutable manual care history and atomic idempotent care recording. All family members may collaborate; data is isolated by family. Event times display in the documented Asia/Tehran default. Run Alembic upgrade head; no notification worker or delivery settings are required.
+
+- Accept beauty (`sparkles`), loan (`hand-coins`) and internet (`wifi`) icons when creating or editing expense categories; preserve existing icon identifiers.
 
 - Connected signup/login/recovery OTP and separately configured reminder patterns to IranPayamak through a shared PostgreSQL job queue and independent SMS worker. Challenge/job and reminder occurrence/job writes are atomic; OTP jobs have priority, encrypted short-lived payloads, expiry and supersession checks. Concurrent claims are serialized and interrupted sends become unknown without automatic retries. Daily/weekly Tehran and monthly Persian-calendar recurrence skip historical backlogs; UI-facing reminder delivery status and next occurrence are exposed. Run Alembic upgrade head and supervise `python -m app.sms_worker`; reminders require separate enablement.
 

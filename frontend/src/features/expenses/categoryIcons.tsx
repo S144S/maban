@@ -1,4 +1,4 @@
-import { Tag, House, ShoppingBasket, Utensils, Car, Bus, HeartPulse, GraduationCap, Shirt, Gamepad2, Gift, Plane, Receipt, Wrench, Baby, PawPrint } from "lucide-react";
+import { Tag, House, ShoppingBasket, Utensils, Car, Bus, HeartPulse, GraduationCap, Shirt, Gamepad2, Gift, Plane, Receipt, Wrench, Baby, PawPrint, Sparkles, HandCoins, Wifi } from "lucide-react";
 
 export const categoryIcons = [
   { value: "tag", label: "عمومی", Icon: Tag },
@@ -13,7 +13,10 @@ export const categoryIcons = [
   { value: "gamepad-2", label: "تفریح", Icon: Gamepad2 },
   { value: "gift", label: "هدیه", Icon: Gift },
   { value: "plane", label: "سفر", Icon: Plane },
-  { value: "receipt", label: "قبض", Icon: Receipt },
+  { value: "sparkles", label: "زیبایی", Icon: Sparkles },
+  { value: "hand-coins", label: "وام", Icon: HandCoins },
+  { value: "wifi", label: "اینترنت", Icon: Wifi },
+  { value: "receipt", label: "قبوض", Icon: Receipt },
   { value: "wrench", label: "تعمیرات", Icon: Wrench },
   { value: "baby", label: "کودک", Icon: Baby },
   { value: "paw-print", label: "حیوانات", Icon: PawPrint },

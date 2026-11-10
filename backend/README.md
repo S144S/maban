@@ -401,3 +401,13 @@ The API returns `delivery_status` (`not_available`, `scheduled`, `accepted`,
 statuses without claiming delivery to a handset. Rollback refuses to drop a
 nonempty attempt ledger; export and explicitly clear it only after assessing the
 risk of repeated sends. No financial balances are modified.
+
+## Family plants
+
+See [Plants setup, API and care rules](../docs/plants.md) for migration and local
+workflow instructions. Open **گلدون‌ها** after selecting a family. This feature
+uses in-app reminders only and defaults daily care to Asia/Tehran.
+Optional photos use a private MinIO bucket. Start `docker compose up -d minio`,
+configure `MABAN_MINIO_*` from `.env.example`, apply migrations, and initialize
+with `uv run python -m app.plants.storage`. PostgreSQL stores object keys only.
+See the linked guide for scoped credentials, backup and reconciliation commands.

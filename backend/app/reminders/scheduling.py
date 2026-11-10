@@ -22,8 +22,8 @@ def occurrence_window(anchor: datetime, recurrence: str, now: datetime) -> tuple
     anchor, now = anchor.astimezone(TEHRAN), now.astimezone(TEHRAN)
     if recurrence == "none":
         return anchor.astimezone(UTC), None
-    if recurrence in {"daily", "weekly"}:
-        days = 1 if recurrence == "daily" else 7
+    if recurrence in {"daily", "weekly", "fortnightly"}:
+        days = {"daily": 1, "weekly": 7, "fortnightly": 14}[recurrence]
         index = max(0, (now.date() - anchor.date()).days // days)
         due = anchor + timedelta(days=index * days)
         if due > now and index:

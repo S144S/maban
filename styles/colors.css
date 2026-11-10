@@ -41,6 +41,10 @@
   --warning-bg: #FFFBEB;
   --error: #B91C1C;
   --error-bg: #FEE2E2;
+  --reminder-neutral-bg: var(--card);
+  --reminder-gentle-bg: #FFF5F5;
+  --reminder-near-bg: #FEE2E2;
+  --reminder-urgent-bg: #FECACA;
   --info: #1D4ED8;
   --info-bg: #DBEAFE;
   --sidebar: var(--card);
@@ -56,6 +60,8 @@
   --chart-3: var(--brand-aqua);
   --chart-4: var(--brand-gold);
   --chart-5: var(--muted-foreground);
+  --chart-income: var(--success);
+  --chart-expense: var(--error);
   --disabled: var(--muted);
   --disabled-foreground: var(--muted-foreground);
 }

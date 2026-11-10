@@ -35,7 +35,7 @@ def detail(family_id: UUID, current: CurrentUser, service: Service, directory: D
     profiles = directory.profiles([UUID(m["user_id"]) for m in members])
     for member in members:
         profile = profiles.get(UUID(member["user_id"]))
-        member["name"] = f"{profile.first_name} {profile.last_name}" if profile else "کاربر مابان"
+        member["name"] = profile.first_name if profile else "کاربر مابان"
     return {"family": family, "members": members}
 
 

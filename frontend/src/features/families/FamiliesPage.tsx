@@ -3,6 +3,7 @@ import { useActiveFamily } from "./ActiveFamily";
 import { Select } from "@/components/ui/select";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Users, UserPlus, Plus, Copy, Mail, Trash2, Check } from "lucide-react";
+import { ManagementBack } from "@/components/ManagementBack";
 import { AccountMenu } from "../auth/AccountMenu";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +16,7 @@ import "../auth/auth.css";
 import "../auth/account.css";
 import "./families.css";
 
-export function FamiliesPage({ user }: { user: User }) {
+export function FamiliesPage({ user, onBack }: { user: User; onBack: () => void }) {
   const [families, setFamilies] = useState<Family[]>([]);
   const { selected, setSelected } = useActiveFamily();
   const [detail, setDetail] = useState<{family: Family; members: Member[]} | null>(null);
@@ -81,7 +82,7 @@ export function FamiliesPage({ user }: { user: User }) {
   function open(next: "create" | "invite") { setModalError(""); setLink(""); setMessage(""); setModal(next); }
   return <main className="account-shell family-shell family-with-nav" dir="rtl">
     <header className="account-header"><a href="/dashboard" aria-label="مابان، داشبورد"><ReferenceArtwork variant="brand" /></a><AccountMenu /></header>
-    <div className="family-page-heading"><h1>خانواده‌های من</h1><p>کنار هم، همه چی آسون‌تره <span aria-hidden="true">😊❤️</span></p></div>
+    <div className="family-page-heading"><div className="management-title-row"><h1>خانواده‌های من</h1><ManagementBack onBack={onBack} /></div><p>کنار هم، همه چی آسون‌تره <span aria-hidden="true">😊❤️</span></p></div>
     {error && <div className="family-error" role="alert"><p className="auth-error">{error}</p><Button variant="outline" disabled={busy} onClick={() => setReload(n => n + 1)}>تلاش دوباره</Button></div>}
     {message && <p role="status" className="auth-feedback">{message}</p>}
     {loading ? <p role="status">در حال دریافت خانواده‌ها…</p> : <>

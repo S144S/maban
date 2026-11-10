@@ -2,15 +2,32 @@ from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 
 class ReminderFields(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
     due_at: AwareDatetime
-    recurrence: Literal["none", "daily", "weekly", "monthly"] = "none"
+    recurrence: Literal["none", "daily", "weekly", "fortnightly", "monthly"] = "none"
     amount_toman: Annotated[int, Field(strict=True, gt=0, le=1_000_000_000_000)] | None = None
+    plant_family_id: UUID | None = None
+    plant_id: UUID | None = None
+    note: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)] | None = None
+
+    @model_validator(mode="after")
+    def complete_plant_reference(self):
+        if (self.plant_family_id is None) != (self.plant_id is None):
+            raise ValueError("Plant and family must be provided together")
+        return self
 
     @field_validator("due_at", mode="before")
     @classmethod

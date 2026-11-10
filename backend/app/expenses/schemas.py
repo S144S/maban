@@ -22,7 +22,7 @@ class CreateExpense(BaseModel):
         return self
 
 
-CategoryIcon = Literal["tag", "house", "shopping-basket", "utensils", "car", "bus", "heart-pulse", "graduation-cap", "shirt", "gamepad-2", "gift", "plane", "receipt", "wrench", "baby", "paw-print"]
+CategoryIcon = Literal["tag", "house", "shopping-basket", "utensils", "car", "bus", "heart-pulse", "graduation-cap", "shirt", "gamepad-2", "gift", "plane", "receipt", "wrench", "baby", "paw-print", "sparkles", "hand-coins", "wifi"]
 
 
 class UpdateCategory(BaseModel):

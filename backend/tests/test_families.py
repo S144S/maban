@@ -41,8 +41,12 @@ def test_create_membership_and_one_owned_family(client, app):
     data = client.get(f"/api/families/{family_id}").json()
     assert data["family"]["owner_id"] == user["id"]
     assert data["members"][0]["relationship"] is None
-    assert data["members"][0]["name"] == "سعید آزمایشی"
+    assert data["members"][0]["name"] == "سعید"
     assert "phone" not in data["members"][0]
+    updated = client.patch("/api/users/me", json={"first_name": "محمد رضا", "last_name": "آزمایشی"})
+    assert updated.status_code == 200
+    assert updated.json()["user"]["last_name"] == "آزمایشی"
+    assert client.get(f"/api/families/{family_id}").json()["members"][0]["name"] == "محمد رضا"
     assert len(client.get("/api/families").json()["families"]) == 1
     with app.state.sessions() as db:
         assert db.scalar(select(Family)).owner_id == UUID(user["id"])
