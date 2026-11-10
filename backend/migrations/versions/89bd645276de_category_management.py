@@ -1,6 +1,6 @@
 """Preserve original expense assignment for retries after category management."""
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "89bd645276de"
 down_revision = "78ac534165cd"

@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import uuid4
 
-from test_assets import property_data, car_data
+from test_assets import car_data, property_data
 from test_families import account
 from test_users import register
 
@@ -24,7 +24,7 @@ def test_asset_rates_are_private_exact_and_preserve_purchase_prices(client, app)
     for asset_id, price in zip(ids, [200, 1000000000000, 1000], strict=True):
         assert client.put(f"/api/assets/rates/{asset_id}", json={"unit_price_toman": price}).status_code == 200
     summary = client.get("/api/assets/current-summary").json()
-    assert Decimal(summary["total_toman"]) == Decimal("1000000000000000018050")
+    assert Decimal(summary["total_toman"]) == Decimal(1000000000000000018050)
     assert summary["unpriced_count"] == 0
     assert client.get("/api/assets/summary").json() == historical
     for data, asset_id in zip(inputs, ids, strict=True):

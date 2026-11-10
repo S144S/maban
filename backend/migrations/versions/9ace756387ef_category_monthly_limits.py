@@ -1,6 +1,6 @@
 """Add optional recurring monthly category limits in tomans."""
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "9ace756387ef"
 down_revision = "89bd645276de"
