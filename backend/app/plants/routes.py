@@ -78,5 +78,5 @@ def history(family_id: UUID, plant_id: UUID, current: CurrentUser, service: Serv
     profiles = directory.profiles(list({UUID(event["actor_id"]) for event in result["events"]}))
     for event in result["events"]:
         profile = profiles.get(UUID(event["actor_id"]))
-        event["actor_name"] = f"{profile.first_name} {profile.last_name}" if profile else "عضو خانواده"
+        event["actor_name"] = profile.first_name if profile else "عضو خانواده"
     return result

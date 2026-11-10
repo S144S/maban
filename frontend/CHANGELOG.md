@@ -5,9 +5,17 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.0.0`. No frontend release has been published.
+Current development version: `1.1.0`. No frontend release has been published.
+
+### Added
+
+- Added «هر دو هفته» to reminder recurrence options in both entry points and editing, with the selected recurrence displayed in the list.
+
+- Unified general reminder creation/editing from Reminders and plant details using the same blank form: title, start date, Tehran time, recurrence and an optional 2,000-character note. Removed type, plant, family, topic and amount controls; notes are preserved in edits and shown in the list. Existing stored amounts, legacy links and delivery settings remain compatible.
 
 ### Changed
+
+- Collapsed plant care history behind a keyboard-accessible disclosure, preserving its open state while paging through events. Display each event's action, member and local date/time in a compact row without the Tehran suffix; long entries wrap on narrow screens.
 
 - Care entry now offers watering, fertilizing, soil replacement, repotting and examination; legacy no-water-needed events remain readable in history.
 

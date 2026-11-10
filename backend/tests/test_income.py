@@ -29,7 +29,7 @@ def test_income_sources_totals_and_idempotency(client):
     assert result["count"] == 4
     assert result["total_toman"] == "60000000"
     assert result["currency"] == "IRT"
-    assert all(e["from_member_name"] == "سعید آزمایشی" for e in result["entries"])
+    assert all(e["from_member_name"] == "سعید" for e in result["entries"])
     assert client.get(url + "?offset=4").json()["entries"] == []
 
 

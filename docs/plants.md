@@ -200,6 +200,31 @@ nonempty plant/history data; export and explicitly clear it before rolling back.
 
 ## Current limits
 
+Plant details and Management → Reminders use the same personal reminder dialog.
+Both entry points open the same blank general form with no plant/family/topic
+selection or automatic plant title. Enter a title, Persian start date, Tehran time
+and recurrence (none, daily, weekly, every 14 days, or Persian monthly).
+Fortnightly reminders retain the Tehran wall-clock time; run migration
+`d2ea71b93508` before deployment. Titles accept up to 80 characters. Optional notes accept up to
+2,000 characters and appear in the list and edit form; they are not sent in SMS.
+Amount controls are removed; existing API amounts remain supported and preserved
+when omitted on edit. Migration `c1df3920ab72` adds nullable notes; downgrade
+refuses to discard notes. Omitted notes preserve existing values; null clears them.
+New reminders from either screen do not carry plant links; existing links remain
+compatible with the API and are preserved when editing from this form.
+`POST/PUT /api/reminders` accept optional `plant_family_id` and `plant_id` together;
+GET returns them. The reminders module owns these references without cross-module
+foreign keys and validates new/changed targets via Plants' public authorization
+interface. Reminders stay private even among members of the same family.
+Omitting both fields on edit preserves the link; sending both as null detaches it.
+Old retry fingerprints remain compatible. Plant deletion/renaming preserves
+existing reminders and their titles; a deleted/inaccessible plant cannot receive
+new reminders. Existing linked reminders can still be edited or detached.
+Run `cd backend` then `uv run alembic upgrade head` for migration
+`a8ba970f425d` before deploying; it adds nullable columns without rewriting existing
+reminders. Downgrade refuses to discard plant links. Existing SMS settings and
+worker behavior apply; no new delivery channel is introduced.
+
 Plant care is a manual shared log with no scheduling, due statuses or delivery
 jobs. Family selection stays in the existing Families screen. No diagnosis or
 treatment recommendations are included. The species selector is a small list

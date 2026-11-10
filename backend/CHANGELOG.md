@@ -5,13 +5,23 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `3.0.0`. No backend release has been published.
+Current development version: `3.1.0`. No backend release has been published.
+
+### Fixed
+
+- Display family members by their complete given name in member lists, income attribution and plant care history; keep stored surnames and profile editing unchanged.
 
 ### Removed
 
 - **Breaking:** Removed plant schedule inputs/outputs and care `next_due`; all care actions now log independently without calculating reminders. Migration `e69875ed203b` drops scheduling columns while preserving plant metadata, photo references and performed care. Back up before upgrade, deploy with the matching frontend and reopen pending forms; rollback requires restoring the backup. Plant lists now order newest first.
 
 ### Added
+
+- Added fortnightly reminder recurrence (`fortnightly`), retaining Tehran wall-clock time every 14 days and skipping missed occurrences without duplicate delivery. Run migration `d2ea71b93508` before deploying; downgrade requires explicitly changing any fortnightly reminders first.
+
+- Added optional personal reminder notes (up to 2,000 characters), persisted by migration `c1df3920ab72`. Legacy edits preserve notes and stored amounts; retries remain compatible. Notes are not included in SMS.
+
+- Added optional family/plant references to personal reminders via the Plants public authorization interface. Migration `a8ba970f425d` preserves existing reminders; omitted reference fields preserve links and legacy retry fingerprints. Linked reminders remain private and survive plant deletion; downgrade refuses to discard links.
 
 - Added soil replacement, repotting and examination care events with migration `f7a986fe314c`; preserved legacy no-water-needed history and retries.
 

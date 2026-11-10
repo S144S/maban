@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowRight, Leaf, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, BellPlus, ChevronDown, Leaf, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagementBack } from "@/components/ManagementBack";
 import { Select } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { useActiveFamily } from "../families/ActiveFamily";
 import type { Family, Member } from "../families/api";
 import { PlantForm, type PlantFields } from "./PlantForm";
 import { PlantImage, PlantPhoto } from "./PlantPhoto";
+import { ReminderDialog } from "../reminders/ReminderDialog";
 import { careLabels, type CareAction, type CareEvent, type Plant } from "./model";
 import "./plants.css";
 
@@ -27,6 +28,8 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
   const [history, setHistory] = useState<History>({ events: [], has_more: false });
   const [offset, setOffset] = useState(0);
   const [historyOffset, setHistoryOffset] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [reminderOpen, setReminderOpen] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,6 +48,8 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
   const cancelDelete = useRef<HTMLButtonElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const focusedDetail = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => { setHistoryOpen(false); setReminderOpen(false); }, [plantId, selected]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -144,12 +149,14 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
           {plant.photo_url && <PlantImage key={plant.photo_url} src={plant.photo_url} name={plant.name} />}
           <p><bdi>{plant.name}</bdi> در <bdi>{plant.location}</bdi> زندگی می‌کنه <span aria-hidden="true">😊❤️</span></p>
           {plant.note && <p className="plant-note">{plant.note}</p>}
-          <div className="plant-actions"><Button onClick={() => show("care")}>ثبت رسیدگی</Button><Button variant="ghost" size="icon" className="plant-edit" aria-label={`ویرایش گلدون ${plant.name}`} title="ویرایش گلدون" onClick={() => show("edit")}><Pencil aria-hidden="true" /></Button><Button variant="ghost" size="icon" className="plant-delete" aria-label={`حذف گلدون ${plant.name}`} title="حذف گلدون" onClick={() => showDelete(plant)}><Trash2 aria-hidden="true" /></Button></div>
+          <div className="plant-actions"><Button onClick={() => show("care")}>ثبت رسیدگی</Button><Button variant="outline" onClick={() => { setNotice(""); setReminderOpen(true); }}><BellPlus aria-hidden="true" />ثبت یادآور</Button><Button variant="ghost" size="icon" className="plant-edit" aria-label={`ویرایش گلدون ${plant.name}`} title="ویرایش گلدون" onClick={() => show("edit")}><Pencil aria-hidden="true" /></Button><Button variant="ghost" size="icon" className="plant-delete" aria-label={`حذف گلدون ${plant.name}`} title="حذف گلدون" onClick={() => showDelete(plant)}><Trash2 aria-hidden="true" /></Button></div>
         </article>
-        <section className="plant-history" aria-labelledby="history-title"><h2 id="history-title">تاریخچهٔ رسیدگی</h2>
-          {history.events.length ? <ol>{history.events.map(event => <li key={event.id}><strong>{careLabels[event.action]}</strong><span>{event.actor_name}</span><time dateTime={event.performed_at}>{formatReminderDate(event.performed_at)} · تهران</time>{event.note && <p className="plant-note">{event.note}</p>}</li>)}</ol> : <p className="dash-muted">هنوز رسیدگی‌ای ثبت نشده؛ اولین رسیدگی رو ثبت کنین.</p>}
+        <details className="plant-history" open={historyOpen} onToggle={event => setHistoryOpen(event.currentTarget.open)}><summary><h2>تاریخچهٔ رسیدگی</h2><ChevronDown size={20} aria-hidden="true" /></summary>
+          <div className="plant-history-body">
+          {history.events.length ? <ol>{history.events.map(event => <li key={event.id}><div className="plant-history-row"><strong>{careLabels[event.action]}</strong><span>{event.actor_name}</span><time dateTime={event.performed_at}>{formatReminderDate(event.performed_at)}</time></div>{event.note && <p className="plant-note">{event.note}</p>}</li>)}</ol> : <p className="dash-muted">هنوز رسیدگی‌ای ثبت نشده؛ اولین رسیدگی رو ثبت کنین.</p>}
           {(historyOffset > 0 || history.has_more) && <div className="plant-actions"><Button variant="outline" disabled={!historyOffset} onClick={() => setHistoryOffset(n => Math.max(0, n - 50))}>رسیدگی‌های جدیدتر</Button><Button variant="outline" disabled={!history.has_more} onClick={() => setHistoryOffset(n => n + 50)}>رسیدگی‌های قدیمی‌تر</Button></div>}
-        </section>
+          </div>
+        </details>
       </> : <>
         {items.length ? embedded ? <ul className="plants-home-list">{visibleItems.map(item => {
           return <li key={item.id}><button type="button" className="plants-home-row" onClick={() => { setPlantId(item.id); setHistoryOffset(0); setNotice(""); }} aria-label={`جزئیات و رسیدگی به ${item.name}`}>
@@ -161,6 +168,7 @@ export function Plants({ onFamilies, embedded = false, onAllPlants, onBack }: { 
         {embedded && !!items.length && onAllPlants && <Button variant="outline" onClick={onAllPlants}>همهٔ گلدون‌ها</Button>}
         {!embedded && (offset > 0 || hasMore) && <div className="plant-actions"><Button variant="outline" disabled={!offset} onClick={() => setOffset(n => Math.max(0, n - 50))}>قبلی</Button><Button variant="outline" disabled={!hasMore} onClick={() => setOffset(n => n + 50)}>بعدی</Button></div>}
       </>}
+    {reminderOpen && plant && family && <ReminderDialog onClose={() => setReminderOpen(false)} onSaved={() => { setReminderOpen(false); setNoticeWarning(false); setNotice("یادآور ثبت شد؛ در بخش «یادآورها» می‌تونین مدیریتش کنین."); }} />}
     <Dialog open={modal !== null} onOpenChange={open => { if (!pending.current && !open) setModal(null); }}>
       <DialogContent className="plants-sheet" dir="rtl" showCloseButton={!busy}
         onOpenAutoFocus={event => { if (modal === "delete") { event.preventDefault(); cancelDelete.current?.focus(); } }}

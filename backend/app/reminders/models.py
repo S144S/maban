@@ -11,20 +11,26 @@ class Reminder(Base):
     __tablename__ = "entries"
     __table_args__ = (
         UniqueConstraint("user_id", "request_id", name="reminder_request"),
-        CheckConstraint("recurrence IN ('none', 'daily', 'weekly', 'monthly')", name="reminder_recurrence"),
+        CheckConstraint("recurrence IN ('none', 'daily', 'weekly', 'fortnightly', 'monthly')",
+                        name="reminder_recurrence"),
         CheckConstraint("amount_toman IS NULL OR (amount_toman > 0 AND amount_toman <= 1000000000000)",
                         name="reminder_amount"),
         Index("ix_reminders_user_due", "user_id", "due_at", "id"),
         Index("ix_reminders_next_sms", "next_sms_at", "id"),
         CheckConstraint("sms_status IN ('pending', 'accepted', 'unknown', 'skipped')", name="reminder_sms_status"),
+        CheckConstraint("(plant_family_id IS NULL AND plant_id IS NULL) OR "
+                        "(plant_family_id IS NOT NULL AND plant_id IS NOT NULL)", name="reminder_plant_reference"),
         {"schema": "reminders"},
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column()
     title: Mapped[str] = mapped_column(String(80))
+    note: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    recurrence: Mapped[str] = mapped_column(String(7), server_default="none")
+    recurrence: Mapped[str] = mapped_column(String(11), server_default="none")
     amount_toman: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    plant_family_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    plant_id: Mapped[UUID | None] = mapped_column(nullable=True)
     request_id: Mapped[UUID] = mapped_column()
     request_fingerprint: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

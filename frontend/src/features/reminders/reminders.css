@@ -4,3 +4,4 @@
 .reminder-actions, .reminder-pagination { display: flex; gap: 4px; flex-shrink: 0; }
 .reminder-pagination { justify-content: space-between; }
 .reminders-body [data-slot="button"] { min-width: 44px; min-height: 48px; }
+.reminder-form textarea { width: 100%; min-height: 96px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 18px; background: var(--card); color: var(--foreground); font: inherit; resize: vertical; }

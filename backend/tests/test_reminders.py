@@ -91,9 +91,81 @@ def test_reminder_schema_ownership():
     assert all(table.schema == "reminders" and not table.foreign_keys for table in TABLES)
 
 
+def test_reminder_notes_persist_retry_and_preserve_legacy_edits(client):
+    register(client)
+    data = payload(note="  خاک رو قبل از آب دادن بررسی کنیم\nآب کم  ")
+    response = client.post("/api/reminders", json=data)
+    assert response.status_code == 201, response.text
+    row = response.json()["reminder"]
+    assert row["note"] == "خاک رو قبل از آب دادن بررسی کنیم\nآب کم"
+    assert client.post("/api/reminders", json=data).json() == response.json()
+    assert client.post("/api/reminders", json={**data, "note": "تغییر"}).status_code == 409
+    assert client.get("/api/reminders").json()["reminders"][0]["note"] == row["note"]
+    url = f"/api/reminders/{row['id']}"
+    edit = {"title": "عنوان جدید", "due_at": data["due_at"]}
+    legacy = client.put(url, json=edit).json()["reminder"]
+    assert legacy["note"] == row["note"] and legacy["amount_toman"] == data["amount_toman"]
+    updated = client.put(url, json={**edit, "note": "توضیح جدید"}).json()["reminder"]
+    assert updated["note"] == "توضیح جدید"
+    assert client.put(url, json={**edit, "note": None}).json()["reminder"]["note"] is None
+    for invalid in ("x" * 2001, 123):
+        assert client.post("/api/reminders", json=payload(note=invalid)).status_code == 422
+
+
+def test_plant_reminders_preserve_links_and_retry_after_deletion(client):
+    from test_plants import payload as plant_payload
+
+    register(client)
+    family = create(client)
+    base = f"/api/families/{family}/plants"
+    plant = client.post(base, json=plant_payload()).json()["plant"]
+    data = payload(title="بررسی خاک · پتوس", amount_toman=None,
+                   plant_family_id=family, plant_id=plant["id"])
+    response = client.post("/api/reminders", json=data)
+    assert response.status_code == 201, response.text
+    reminder = response.json()["reminder"]
+    url = f"/api/reminders/{reminder['id']}"
+    assert reminder["plant_id"] == plant["id"] and reminder["plant_family_id"] == family
+    assert client.post("/api/reminders", json=data).json() == response.json()
+    assert client.post("/api/reminders", json={**data, "plant_id": str(uuid4())}).status_code == 409
+    # Old clients preserve links when editing; explicit nulls detach them.
+    legacy = {"title": "عنوان جدید", "due_at": data["due_at"], "amount_toman": None}
+    assert client.put(url, json=legacy).json()["reminder"]["plant_id"] == plant["id"]
+    assert client.delete(f"{base}/{plant['id']}").status_code == 204
+    assert client.post("/api/reminders", json=data).status_code == 201
+    assert client.post("/api/reminders", json={**data, "request_id": str(uuid4())}).status_code == 404
+    assert client.put(url, json={**legacy, "plant_id": plant["id"], "plant_family_id": family}).status_code == 200
+    detached = client.put(url, json={**legacy, "plant_id": None, "plant_family_id": None})
+    assert detached.json()["reminder"]["plant_id"] is None
+    assert len(client.get("/api/reminders").json()["reminders"]) == 1
+
+
+def test_plant_reminder_reference_authorization(client, app):
+    from test_plants import payload as plant_payload
+
+    register(client)
+    family = create(client)
+    plant = client.post(f"/api/families/{family}/plants", json=plant_payload()).json()["plant"]
+    data = payload(plant_family_id=family, plant_id=plant["id"])
+    other, _ = account(app, "09123456780")
+    with other:
+        other_family = create(other)
+        assert other.post("/api/reminders", json=data).status_code == 404
+        assert client.post("/api/reminders", json={**data, "plant_family_id": other_family}).status_code == 404
+        assert accept(other, invite(client, family)["token"]).status_code == 200
+        assert other.post("/api/reminders", json=data).status_code == 201
+        assert client.get("/api/reminders").json()["reminders"] == []
+        own = client.post("/api/reminders", json=payload()).json()["reminder"]
+        assert other.put(f"/api/reminders/{own['id']}", json={k: v for k, v in data.items() if k != "request_id"}).status_code == 404
+        forged = {k: v for k, v in data.items() if k != "request_id"}
+        assert client.put(f"/api/reminders/{own['id']}", json={**forged, "plant_family_id": other_family}).status_code == 404
+        for changes in ({"plant_id": plant["id"]}, {"plant_family_id": family}):
+            assert client.post("/api/reminders", json=payload(**changes)).status_code == 422
+
+
 def test_recurrence_creation_editing_and_retries(client):
     register(client)
-    for recurrence in ("daily", "weekly", "monthly"):
+    for recurrence in ("daily", "weekly", "fortnightly", "monthly"):
         data = payload(recurrence=recurrence)
         created = client.post("/api/reminders", json=data)
         assert created.status_code == 201, created.text

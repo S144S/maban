@@ -64,7 +64,7 @@ def test_full_flow_and_durable_retries(client, monkeypatch):
         assert client.post(url + "/care", json={**request, "action": "watered"}).status_code == 409
     assert len(client.get(url + "/history").json()["events"]) == 6
     assert client.post(url + "/care", json={"request_id": str(uuid4()), "action": "invalid"}).status_code == 422
-    assert all(e["actor_name"] == "سعید آزمایشی" and e["performed_at"].endswith("+00:00") for e in events)
+    assert all(e["actor_name"] == "سعید" and e["performed_at"].endswith("+00:00") for e in events)
     assert client.post(base, json=data).json()["plant"]["name"] == "پتوس بزرگ"
     assert client.delete(url).status_code == 204
     assert client.delete(url).status_code == 204
