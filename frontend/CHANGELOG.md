@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.3.0`. No frontend release has been published.
+Current development version: `1.3.1`. No frontend release has been published.
 
 ### Fixed
+
+- Removed the redundant «شروع:» prefix and Tehran suffix from reminder-card dates, including the next SMS date, while preserving Tehran time formatting.
 
 - Show the Management tab and hub/finance routes only for the selected family's creator or spouse, using authenticated family membership. Fail closed during permission loading/failure and adapt Home/Reports navigation to two columns. Family selection/onboarding, personal reminders and shared plant care remain available; existing server operation permissions are unchanged.
 

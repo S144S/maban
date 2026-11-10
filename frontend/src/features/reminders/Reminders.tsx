@@ -61,12 +61,12 @@ export function Reminders() {
         <div className="reminder-actions"><Button variant="ghost" size="icon" aria-label={`ویرایش یادآور ${item.title}`} onClick={() => showForm(item)}><Pencil size={18} aria-hidden="true" /></Button>
           <Button variant="ghost" size="icon" className="management-delete" aria-label={`حذف یادآور ${item.title}`} onClick={() => { setDeleting(item); setFormError(""); }}><Trash2 size={18} aria-hidden="true" /></Button></div>
         </div>
-        <p className="reminder-date"><CalendarDays size={18} aria-hidden="true" /><span>شروع: <time dateTime={item.due_at}>{formatReminderDate(item.due_at)}</time> · تهران</span></p>
+        <p className="reminder-date"><CalendarDays size={18} aria-hidden="true" /><span><time dateTime={item.due_at}>{formatReminderDate(item.due_at)}</time></span></p>
         <div className="reminder-meta"><span><Repeat2 size={16} aria-hidden="true" />{recurrenceLabels[item.recurrence ?? "none"]}</span></div>
         {item.note && <p className="reminder-note">{item.note}</p>}
         <details className="reminder-delivery"><summary><MessageSquare size={18} aria-hidden="true" /><span>وضعیت پیامک</span><ChevronDown size={18} aria-hidden="true" /></summary><div>
           <p>{deliveryLabels[item.delivery_status] ?? "وضعیت پیامک مشخص نیست"}</p>
-          {item.next_delivery_at && <p>موعد پیامک بعدی: <time dateTime={item.next_delivery_at}>{formatReminderDate(item.next_delivery_at)}</time> · تهران</p>}
+          {item.next_delivery_at && <p>موعد پیامک بعدی: <time dateTime={item.next_delivery_at}>{formatReminderDate(item.next_delivery_at)}</time></p>}
         </div></details>
       </article></li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Bell size={32} aria-hidden="true" /></span><h3>اولین یادآورتون رو ثبت کنین</h3><p>مثلاً رسیدگی به گلدون، وقت دکتر، تولد عزیزان یا پرداخت قسط.</p></div>}
       {(offset > 0 || hasMore) && <div className="reminder-pagination"><Button variant="outline" disabled={offset === 0} onClick={() => setOffset(value => Math.max(0, value - 50))}>قبلی</Button><Button variant="outline" disabled={!hasMore} onClick={() => setOffset(value => value + 50)}>بعدی</Button></div>}
