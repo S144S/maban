@@ -236,3 +236,14 @@ Migration `f7a986fe314c` adds soil replacement, repotting and examination action
 The care dialog offers these alongside watering and fertilizing. Legacy
 `not_needed` events and retries remain supported by the API and history.
 Downgrade refuses while new action records exist; export or restore a backup.
+
+## Home reminders
+
+Home shows personal reminder occurrences from now through 24 hours ahead (both
+boundaries inclusive), ordered by occurrence then ID, in pages of 50 through
+`GET /api/reminders/upcoming?offset=0`. Past one-time reminders are excluded;
+recurring reminders use the next Tehran occurrence, independently of SMS state.
+The widget refreshes when Home is opened again or the page is reloaded, without
+periodic polling or window-focus requests. Plants are
+available through Management rather than Home. No database migration is needed
+for this endpoint.

@@ -1,6 +1,6 @@
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Protocol
 from uuid import UUID, uuid4
 
@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.reminders.models import Reminder
+from app.reminders.scheduling import occurrence_window
 
 
 class ReminderError(Exception):
@@ -42,6 +43,21 @@ class Reminders:
             Reminder.user_id == user_id, Reminder.deleted_at.is_(None)
         ).order_by(Reminder.due_at, Reminder.id).offset(offset).limit(51)).all()
         return {"reminders": [self.view(row) for row in rows[:50]], "has_more": len(rows) > 50}
+
+    def upcoming(self, user_id, offset=0, *, now=None):
+        now = now or datetime.now(UTC)
+        end = now + timedelta(hours=24)
+        rows = self.db.scalars(select(Reminder).where(
+            Reminder.user_id == user_id, Reminder.deleted_at.is_(None), Reminder.due_at <= end,
+        ).execution_options(yield_per=100))
+        matches = []
+        for row in rows:
+            due, following = occurrence_window(row.due_at, row.recurrence, now)
+            next_due = due if due >= now else following
+            if next_due is not None and now <= next_due <= end:
+                matches.append({**self.view(row), "occurrence_at": next_due.isoformat()})
+        matches.sort(key=lambda item: (item["occurrence_at"], item["id"]))
+        return {"reminders": matches[offset:offset + 50], "has_more": len(matches) > offset + 50}
 
     def create(self, user_id, data):
         fields = data.model_dump(exclude={"request_id"})

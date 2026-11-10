@@ -12,6 +12,7 @@ import type { Destination } from "@/components/BottomNavigation";
 const Reports = lazy(() => import("../reports/Reports").then(module => ({ default: module.Reports })));
 const Plants = lazy(() => import("../plants/Plants").then(module => ({ default: module.Plants })));
 const Reminders = lazy(() => import("../reminders/Reminders").then(module => ({ default: module.Reminders })));
+const UpcomingReminders = lazy(() => import("../reminders/UpcomingReminders").then(module => ({ default: module.UpcomingReminders })));
 type Page = "home" | "reports" | "budgets" | "plants" | "finance" | "reminders";
 export function DashboardPage({ user, page, onNavigate }: { user: User; page: Page; onNavigate: (page: Destination) => void }) {
   return <div className="dash-shell">
@@ -19,7 +20,7 @@ export function DashboardPage({ user, page, onNavigate }: { user: User; page: Pa
     <header className="dash-header"><a href="/" aria-label="مابان، صفحهٔ اصلی"><ReferenceArtwork variant="brand" /></a><AccountMenu /></header>
     <main id="dashboard-main" className="dash-main">
       {page === "home" && <><FamilyWallet userId={user.id} /><hr className="dash-section-divider" />
-        <Suspense fallback={<p role="status">در حال آماده‌سازی گلدون‌ها…</p>}><Plants embedded onFamilies={() => onNavigate("families")} onAllPlants={() => onNavigate("plants")} /></Suspense>
+        <Suspense fallback={<p role="status">در حال آماده‌سازی یادآورها…</p>}><UpcomingReminders key={user.id} onManage={() => onNavigate("reminders")} /></Suspense>
       </>}
       {page === "reports" && <Suspense fallback={<p role="status">در حال آماده‌سازی گزارش…</p>}><Reports key={user.id} /></Suspense>}
       {page === "budgets" && <ManagementHub onNavigate={onNavigate} />}

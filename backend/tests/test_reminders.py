@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from alembic import command
@@ -89,6 +90,60 @@ def test_reminder_pagination_and_migration(client):
 def test_reminder_schema_ownership():
     from app.reminders.persistence import TABLES
     assert all(table.schema == "reminders" and not table.foreign_keys for table in TABLES)
+
+
+def test_upcoming_window_recurrence_privacy_and_pagination(client, app, monkeypatch):
+    import jdatetime
+
+    from app.reminders import service
+
+    now = datetime(2030, 3, 21, 5, 30, tzinfo=UTC)
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return now.astimezone(tz)
+
+    monkeypatch.setattr(service, "datetime", Clock)
+    assert client.get("/api/reminders/upcoming").status_code == 401
+    register(client)
+    expected = set()
+
+    def add_at(when, **changes):
+        result = client.post("/api/reminders", json=payload(due_at=when.isoformat(), **changes))
+        assert result.status_code == 201, result.text
+        return result.json()["reminder"]["id"]
+
+    expected.add(add_at(now))
+    expected.add(add_at(now + timedelta(hours=24)))
+    add_at(now - timedelta(seconds=1))
+    add_at(now + timedelta(hours=24, seconds=1))
+    deleted = add_at(now + timedelta(hours=1))
+    assert client.delete(f"/api/reminders/{deleted}").status_code == 204
+    for recurrence, days in [("daily", 1), ("weekly", 7), ("fortnightly", 14)]:
+        expected.add(add_at(now - timedelta(days=days) + timedelta(hours=2), recurrence=recurrence))
+    previous_month = jdatetime.date(1408, 12, 1).togregorian()
+    monthly_anchor = now.replace(year=previous_month.year, month=previous_month.month,
+                                 day=previous_month.day) + timedelta(hours=3)
+    expected.add(add_at(monthly_anchor, recurrence="monthly"))
+    # A future anchor must not be advanced to its second occurrence.
+    expected.add(add_at(now + timedelta(hours=4), recurrence="daily"))
+    other, _ = account(app, "09123456780")
+    with other:
+        assert other.get("/api/reminders/upcoming").json()["reminders"] == []
+        assert other.post("/api/reminders", json=payload(due_at=now.isoformat())).status_code == 201
+    for index in range(46):
+        expected.add(add_at(now + timedelta(minutes=index + 1)))
+    first = client.get("/api/reminders/upcoming").json()
+    second = client.get("/api/reminders/upcoming?offset=50").json()
+    assert first["has_more"] and len(first["reminders"]) == 50
+    assert not second["has_more"]
+    rows = first["reminders"] + second["reminders"]
+    assert {row["id"] for row in rows} == expected
+    occurrences = [datetime.fromisoformat(row["occurrence_at"]) for row in rows]
+    assert occurrences == sorted(occurrences)
+    assert all(now <= value <= now + timedelta(hours=24) for value in occurrences)
+    assert client.get("/api/reminders/upcoming?offset=-1").status_code == 422
 
 
 def test_reminder_notes_persist_retry_and_preserve_legacy_edits(client):

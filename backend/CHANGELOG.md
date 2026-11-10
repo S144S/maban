@@ -5,7 +5,7 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `3.1.0`. No backend release has been published.
+Current development version: `3.2.0`. No backend release has been published.
 
 ### Fixed
 
@@ -16,6 +16,8 @@ Current development version: `3.1.0`. No backend release has been published.
 - **Breaking:** Removed plant schedule inputs/outputs and care `next_due`; all care actions now log independently without calculating reminders. Migration `e69875ed203b` drops scheduling columns while preserving plant metadata, photo references and performed care. Back up before upgrade, deploy with the matching frontend and reopen pending forms; rollback requires restoring the backup. Plant lists now order newest first.
 
 ### Added
+
+- Added authenticated, paginated `/api/reminders/upcoming` for occurrences within the inclusive next 24 hours. Calculates recurring dates in Tehran independently of SMS availability; excludes past one-time and deleted reminders and other users.
 
 - Added fortnightly reminder recurrence (`fortnightly`), retaining Tehran wall-clock time every 14 days and skipping missed occurrences without duplicate delivery. Run migration `d2ea71b93508` before deploying; downgrade requires explicitly changing any fortnightly reminders first.
 
