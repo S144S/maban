@@ -271,3 +271,11 @@ Network I/O holds job and domain locks to serialize against cancellation. Abando
 claims become unknown and never retry automatically; all terminal outcomes clear
 encrypted payloads. The queue stores operational state, while each domain owns
 eligibility, content, expiry, recurrence and cancellation rules.
+
+## Plants
+
+`plants` owns family-scoped plant metadata, daily soil/fertilizer schedules and
+immutable care events in its own schema. It depends only on public family access
+and user identity/directory contracts. All members can collaborate. Per-family
+transaction locks and unique request receipts serialize care and schedule updates.
+No finance or reminder persistence is imported. See [plants](../docs/plants.md).

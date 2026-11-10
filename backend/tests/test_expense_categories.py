@@ -94,6 +94,25 @@ def test_category_icons_validation_persistence_and_retry(client):
         assert category(client, family, icon=icon).status_code == 422
 
 
+
+def test_new_category_icons_create_edit_and_list(client):
+    register(client)
+    family = create(client)
+    path = f"/api/families/{family}/expenses/categories"
+    for icon in ("sparkles", "hand-coins", "wifi", "receipt"):
+        response = category(client, family, name=icon, icon=icon)
+        assert response.status_code == 201, response.text
+        saved = response.json()["category"]
+        assert saved["icon"] == icon
+        assert saved in client.get(path).json()["categories"]
+        edited = client.patch(f"{path}/{saved['id']}", json={"name": icon, "icon": "tag"})
+        assert edited.status_code == 200, edited.text
+        edited = client.patch(f"{path}/{saved['id']}", json={"name": icon, "icon": icon})
+        assert edited.status_code == 200, edited.text
+        assert edited.json()["category"]["icon"] == icon
+        assert edited.json()["category"] in client.get(path).json()["categories"]
+
+
 def test_icon_migration_defaults_existing_categories(client):
     register(client)
     family = create(client)

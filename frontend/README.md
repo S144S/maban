@@ -92,3 +92,9 @@ Login/signup preserve the validated token in the URL fragment; only `/families`
 is an allowed non-default auth return path. Family creation and invitation forms
 reuse the RTL bottom sheet and shared controls. Financial dashboard data is still
 sample data; family membership is persisted by the backend.
+
+## Family plants
+
+See [Plants setup, API and care rules](../docs/plants.md) for migration and local
+workflow instructions. Open **گلدون‌ها** after selecting a family. This feature
+uses in-app reminders only and defaults daily care to Asia/Tehran.

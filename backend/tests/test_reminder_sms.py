@@ -168,7 +168,28 @@ def test_monthly_uses_persian_month_and_recovers_original_day():
     assert due == persian(1403, 12, 30) and following == persian(1404, 1, 30)
 
 
-@pytest.mark.parametrize("recurrence,days", [("daily", 1), ("weekly", 7)])
+@pytest.mark.parametrize("recurrence,days", [("daily", 1), ("weekly", 7), ("fortnightly", 14)])
 def test_recurrence_retains_tehran_hour(recurrence, days):
     due, following = occurrence_window(NOW, recurrence, NOW + timedelta(days=days, seconds=-1))
     assert due == NOW and following == NOW + timedelta(days=days)
+
+
+def test_fortnightly_boundary_and_missed_occurrences():
+    for elapsed, due_day, next_day in [(14, 14, 28), (27, 14, 28), (70, 70, 84)]:
+        due, following = occurrence_window(NOW, "fortnightly", NOW + timedelta(days=elapsed))
+        assert due == NOW + timedelta(days=due_day)
+        assert following == NOW + timedelta(days=next_day)
+
+
+def test_fortnightly_delivery_advances_once_per_occurrence(client, app):
+    register(client)
+    row = create(client, recurrence="fortnightly")
+    sender = Sender()
+    assert run_batch(app.state.sessions, enabled(), sender, now=NOW) == 1
+    assert run_batch(app.state.sessions, enabled(), sender, now=NOW + timedelta(days=7)) == 0
+    following = NOW + timedelta(days=14)
+    assert run_batch(app.state.sessions, enabled(), sender, now=following) == 1
+    assert run_batch(app.state.sessions, enabled(), sender, now=following) == 0
+    with app.state.sessions() as db:
+        assert db.get(Reminder, UUID(row["id"])).next_sms_at == NOW + timedelta(days=28)
+    assert len(sender.calls) == 2

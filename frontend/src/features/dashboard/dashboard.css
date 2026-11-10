@@ -5,6 +5,17 @@
 .dash-account:hover { outline: 2px solid var(--border); outline-offset: 2px; }
 .dash-account:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 .dash-main { padding: 26px 24px 110px; }
+.dash-section-divider { width: 100%; margin-block: 28px; border: 0; border-block-start: 1px solid var(--border); }
+.management-hub { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-block-start: 24px; }
+.management-hub > button { min-width: 0; min-height: 96px; padding: 12px 4px; flex-direction: column; gap: 12px; border-radius: 24px; white-space: normal; }
+.management-hub > button svg { width: 24px; height: 24px; }
+.management-hub > .management-family-action { --management-action-bg: var(--scene-rose); }
+.management-hub > .management-finance-action { --management-action-bg: var(--scene-peach); }
+.management-hub > .management-plants-action { --management-action-bg: var(--scene-lime); }
+.management-hub > .management-reminders-action { --management-action-bg: var(--muted); }
+.management-hub > button { background: var(--management-action-bg); color: var(--foreground); }
+.management-hub > button:hover { background: var(--accent); color: var(--accent-foreground); }
+.management-hub > button:active { background: var(--secondary); color: var(--secondary-foreground); }
 .dash-welcome, .dash-row, .dash-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .dash-welcome { flex-wrap: wrap; }
 .dash-welcome h1 { font-size: 27px; font-weight: 800; color: var(--foreground); }
@@ -103,3 +114,23 @@
 .wallet-fund-switch button[aria-pressed="true"] { background: var(--card); color: var(--foreground); border-color: var(--input); }
 .wallet-fund-switch button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .wallet-fund-note { color: var(--muted-foreground); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+
+.wallet-recent { margin-block-start: 20px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 24px; background: var(--card); color: var(--card-foreground); }
+.wallet-recent > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; border-radius: 12px; font-weight: 600; }
+.wallet-recent > summary::-webkit-details-marker { display: none; }
+.wallet-recent > summary svg { flex-shrink: 0; }
+.wallet-recent[open] > summary svg { transform: rotate(180deg); }
+.wallet-recent > summary:hover { background: var(--accent); }
+.wallet-recent > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.wallet-recent-body { padding-block: 8px; font-size: 13px; }
+.wallet-recent ul { list-style: none; margin: 0; padding: 0; }
+.wallet-recent li { display: flex; align-items: center; gap: 12px; padding-block: 12px; }
+.wallet-recent li + li { border-block-start: 1px solid var(--border); }
+.wallet-recent-copy { flex: 1; min-width: 0; }
+.wallet-recent-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.wallet-transaction-kind { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+.wallet-transaction-kind[data-kind="income"] { background: var(--success-bg); color: var(--success); }
+.wallet-transaction-kind[data-kind="expense"] { background: var(--error-bg); color: var(--error); }
+.wallet-recent time { display: block; margin-block-start: 4px; color: var(--muted-foreground); font-size: 12px; }
+.wallet-recent-amount { display: flex; flex-direction: column; text-align: end; max-width: 45%; overflow-wrap: anywhere; font-weight: 600; }
+.wallet-recent-amount small { color: var(--muted-foreground); font-size: 11px; font-weight: 400; }

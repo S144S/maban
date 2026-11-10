@@ -5,9 +5,61 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `0.26.2`. No frontend release has been published.
+Current development version: `1.4.0`. No frontend release has been published.
+
+### Fixed
+
+- Replaced grouped cashflow bars with daily solid line charts, using green income/red expense strokes and circle/square markers from central chart tokens. Preserve zero-transaction days and exact daily values, with dated ticks, contained keyboard-accessible horizontal scrolling and the existing daily table; removed multi-day aggregation and the redundant line-style legend.
+
+- Removed the redundant «شروع:» prefix and Tehran suffix from reminder-card dates, including the next SMS date, while preserving Tehran time formatting.
+
+- Show the Management tab and hub/finance routes only for the selected family's creator or spouse, using authenticated family membership. Fail closed during permission loading/failure and adapt Home/Reports navigation to two columns. Family selection/onboarding, personal reminders and shared plant care remain available; existing server operation permissions are unchanged.
+
+- Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
+
+### Added
+
+- Added an income/expense switch to the cashflow chart with independent per-series scales and empty states, so larger income values no longer flatten the expense trend. Show a labeled vertical axis with rounded Persian amount ticks in toman, reserving space for large values without losing integer precision. Keep the combined daily table available in either view.
+
+- Added a collapsed "last three transactions" section below Home's financial actions, combining the selected family's newest income and expenses by timestamp with green income/red expense labels, Persian dates and amounts, loading/error/empty states and balance-visibility support. Reuses existing authenticated data requests and refreshes after recording income or expenses.
+
+- Replaced home plants with upcoming personal reminders within the next 24 hours under «یادت نره!», including the next recurring occurrence, notes, empty/loading/error states, pagination and an accessible bell icon button to open all reminders. Home cards use two equal columns and time-based backgrounds (white above 18 hours, progressively redder at 18, 12 and 6 hours remaining), omit recurrence badges and the Tehran suffix, with no introductory description below the heading. Refreshes on returning to Home or reloading, without polling or window-focus requests; plant management remains available.
+
+- Added «هر دو هفته» to reminder recurrence options in both entry points and editing, with the selected recurrence displayed in the list.
+
+- Unified general reminder creation/editing from Reminders and plant details using the same blank form: title, start date, Tehran time, recurrence and an optional 2,000-character note. Removed type, plant, family, topic and amount controls; notes are preserved in edits and shown in the list. Existing stored amounts, legacy links and delivery settings remain compatible.
 
 ### Changed
+
+- Collapsed plant care history behind a keyboard-accessible disclosure, preserving its open state while paging through events. Display each event's action, member and local date/time in a compact row without the Tehran suffix; long entries wrap on narrow screens.
+
+- Care entry now offers watering, fertilizing, soil replacement, repotting and examination; legacy no-water-needed events remain readable in history.
+
+- Plant detail back arrows now return to the plant list, including embedded details; removed the redundant detail list button while preserving list-to-Management navigation.
+
+- Moved detail photos into the plant information card, replaced location/species rows with a friendly name-and-location sentence, removed the separate album section and assignee display, and placed photo controls in the edit dialog, opened with an accessible borderless pencil icon matching the delete control.
+
+- Renamed plant section and browser titles to «گلدون‌های ما», removed the family/shared-care subtitle and made the header add button full-width with more space below the title.
+
+- Exposed plant deletion as a labeled, 44-pixel trash icon on list cards and details with a named confirmation, safe initial cancel focus, duplicate-submit protection and success/error feedback; kept deletion available in details.
+
+- **Breaking:** Removed soil-check/fertilizer scheduling, due states and next-date history from all plant screens. Care remains a manual shared log; deploy with backend 3.0.0 and migrate the database. Home rows show location and newest plants first.
+
+- Simplified new-plant creation with 30 common plant types, unknown/custom options and shared family care; preserved existing custom species when editing.
+
+- Display plant-list photos as compact square thumbnails beside each plant name and location, preserving full-size detail photos and accessible image retry.
+
+- Moved personal reminders out of Finance into a dedicated «یادآورها» Management page, preserving existing reminder actions, back navigation and Management selection.
+
+- Grouped Management into softly colored Family, Finance and Plants buttons with dedicated pages and compact left-arrow back controls aligned with page titles. Finance preserves accounts, categories, rates and reminders; all three pages keep Management selected in bottom navigation, including on direct visits.
+
+- Simplified bottom navigation to Home, Management and Reports in RTL order, preserving existing page routes and content.
+
+- Added optional photo selection and preview directly to the new-plant form. Saving uploads the photo after plant creation; failed uploads retain the selected file in details for retry without creating another plant.
+
+- Added a home-page plants section below the financial divider, showing up to three compact photo/name/next-care rows ordered by care due date, sized similarly to the financial section with existing creation, detail and care flows, family selection, loading/error/empty states and navigation to all plants.
+
+- Added a horizontal divider below the financial section on the home page using the shared border token.
 
 - Replaced report-type buttons with equal-width underlined RTL tabs, keyboard navigation and labeled panels while preserving the selected date range.
 
@@ -30,6 +82,12 @@ Current development version: `0.26.2`. No frontend release has been published.
 - Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 ### Added
+
+- Added optional plant photos in lists and details, with selection, preview, upload feedback, replacement and confirmed removal. New plants open their details for optional photo upload without resubmitting plant creation.
+
+- Added the Persian RTL Plants destination (گلدون‌ها), with family-scoped lists, due indicators, plant creation/editing/deletion, member assignment, Persian care schedules, care outcomes and paginated history. Reuses shared sheets, calendar and navigation; includes pending/retry/error/empty/success states. Requires backend 2.2.0.
+
+- Add beauty, loan and internet expense-category icons, and label the existing bill icon as bills. Requires backend 2.1.0 for the new icons.
 
 - Added an online-only installable web app manifest, Persian app identity, standalone dashboard launch, and PNG installation icons using the existing brand artwork, including iOS home-screen metadata. No service worker or offline financial data cache is introduced.
 

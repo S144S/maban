@@ -13,9 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { api, ApiError, errorMessage } from "@/lib/http";
 import type { Family, Member } from "../families/api";
 import { parseAmount } from "./model";
+import { RecentTransactions } from "./RecentTransactions";
+import { recentTransactions, type IncomeEntry, type ExpenseEntry, type RecentTransaction } from "./recent-transactions";
 
 const sources = [{ value: "salary", label: "حقوق" }, { value: "subsidy", label: "یارانه" }, { value: "voucher", label: "کالابرگ" }, { value: "gift", label: "هدیه" }];
-type Wallet = { familyId: string; members: Member[]; balance: string };
+type Wallet = { familyId: string; members: Member[]; balance: string; recent: RecentTransaction[] };
 const funds = [{ value: "general", label: "روزمره" }, { value: "investments", label: "سرمایه" }, { value: "assets", label: "دارایی" }] as const;
 type Fund = typeof funds[number]["value"];
 type Kind = "income" | "expenses";
@@ -57,10 +59,10 @@ export function FamilyWallet({ userId }: { userId: string }) {
       if (!familyId) return;
       const [detail, income, expenses] = await Promise.all([
         api<{ members: Member[] }>(`/families/${familyId}`, { signal: controller.signal }),
-        api<{ total_toman: string }>(`/families/${familyId}/income`, { signal: controller.signal }),
-        api<{ total_toman: string }>(`/families/${familyId}/expenses`, { signal: controller.signal }),
+        api<{ total_toman: string; entries: IncomeEntry[] }>(`/families/${familyId}/income`, { signal: controller.signal }),
+        api<{ total_toman: string; entries: ExpenseEntry[] }>(`/families/${familyId}/expenses`, { signal: controller.signal }),
       ]);
-      if (!controller.signal.aborted) setWallet({ familyId, members: detail.members, balance: (BigInt(income.total_toman) - BigInt(expenses.total_toman)).toString() });
+      if (!controller.signal.aborted) setWallet({ familyId, members: detail.members, balance: (BigInt(income.total_toman) - BigInt(expenses.total_toman)).toString(), recent: recentTransactions(income.entries, expenses.entries) });
     }
     void load().catch(err => { if (!controller.signal.aborted) setError(report(err)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
@@ -139,5 +141,6 @@ export function FamilyWallet({ userId }: { userId: string }) {
         </fieldset></form>
       </DialogContent>
     </Dialog>
+    <RecentTransactions items={wallet?.recent ?? []} loading={loading} error={error} hasFamily={!!wallet} hidden={hidden} onRetry={() => setRevision(n => n + 1)} />
   </>;
 }

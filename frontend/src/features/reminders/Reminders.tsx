@@ -1,25 +1,13 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bell, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bell, CalendarDays, ChevronDown, MessageSquare, Pencil, Plus, Repeat2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MoneyInput } from "@/components/ui/money-input";
-import { Select } from "@/components/ui/select";
-import { PersianDatePicker } from "@/components/ui/persian-date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { api, errorMessage } from "@/lib/http";
-import { formatMoney, parseAmount } from "../dashboard/model";
-import { formatReminderDate, parseReminderDate, reminderDateFields } from "./date";
+import { formatReminderDate } from "./date";
 import "./reminders.css";
 
-const recurrenceLabels = { none: "بدون تکرار", daily: "روزانه", weekly: "هفتگی", monthly: "ماهانه" };
-const recurrenceOptions = Object.entries(recurrenceLabels).map(([value, label]) => ({ value, label }));
-const deliveryLabels = {
-  not_available: "ارسال پیامک فعال نیست",
-  scheduled: "پیامک در انتظار موعد",
-  accepted: "آخرین پیامک به سرویس‌دهنده ارسال شد؛ تحویل به گوشی تأیید نشده",
-  unknown: "نتیجهٔ آخرین ارسال مشخص نیست؛ برای جلوگیری از پیامک تکراری دوباره ارسال نمی‌شه",
-  skipped: "آخرین نوبت پیامک ارسال نشد",
-};
-type Reminder = { id: string; title: string; due_at: string; recurrence: keyof typeof recurrenceLabels; amount_toman: number | null; delivery_status: keyof typeof deliveryLabels; next_delivery_at?: string | null };
+import { ReminderDialog } from "./ReminderDialog";
+import { recurrenceLabels, deliveryLabels, type Reminder } from "./model";
 type ReminderPage = { reminders: Reminder[]; has_more: boolean };
 
 export function Reminders() {
@@ -36,7 +24,6 @@ export function Reminders() {
   const [formError, setFormError] = useState("");
   const [notice, setNotice] = useState("");
   const pending = useRef(false);
-  const request = useRef({ payload: "", id: "" });
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError("");
@@ -53,33 +40,7 @@ export function Reminders() {
 
   function showForm(item: Reminder | null) {
     setEditing(item); setFormError(""); setNotice("");
-    request.current = { payload: "", id: "" }; setOpen(true);
-  }
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (pending.current) return;
-    const fields = new FormData(event.currentTarget);
-    const title = String(fields.get("title") ?? "").trim();
-    const due_at = parseReminderDate(String(fields.get("date") ?? ""), String(fields.get("time") ?? ""));
-    const rawAmount = String(fields.get("amount") ?? "").trim();
-    const amount_toman = rawAmount ? parseAmount(rawAmount) : null;
-    if (!title) { setFormError("عنوان یادآور رو وارد کنین."); return; }
-    if (!due_at) { setFormError("تاریخ شمسی معتبر بین سال‌های ۱۴۰۳ تا ۱۴۹۸ و ساعت بین ۰۰:۰۰ تا ۲۳:۵۹ وارد کنین."); return; }
-    if (rawAmount && amount_toman === null) { setFormError("مبلغ رو به تومان و بین ۱ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰٬۰۰۰ وارد کنین."); return; }
-    const recurrence = String(fields.get("recurrence") ?? "none");
-    const body = { title, due_at, amount_toman, recurrence };
-    const payload = JSON.stringify(body);
-    if (request.current.payload !== payload) request.current = { payload, id: crypto.randomUUID() };
-    pending.current = true; setBusy(true); setFormError("");
-    try {
-      await api(`/reminders${editing ? `/${editing.id}` : ""}`, {
-        method: editing ? "PUT" : "POST", body: editing ? body : { ...body, request_id: request.current.id },
-      });
-      setOpen(false); setNotice("یادآور ذخیره شد. وضعیت پیامک رو در فهرست می‌تونین ببینین.");
-      setOffset(0); setRevision(value => value + 1);
-    } catch (err) { setFormError(errorMessage(err)); }
-    finally { pending.current = false; setBusy(false); }
+    setOpen(true);
   }
 
   async function remove() {
@@ -92,40 +53,26 @@ export function Reminders() {
     finally { pending.current = false; setBusy(false); }
   }
 
-  const initial = editing ? reminderDateFields(editing.due_at) : { date: "", time: "09:00" };
   return <div className="management-body reminders-body">
+    <Button className="management-add" onClick={() => showForm(null)}><Plus aria-hidden="true" />افزودن یادآور</Button>
     {loading ? <p role="status">در حال دریافت یادآورها…</p> : error ? <div role="alert"><p className="dash-error">{error}</p><Button variant="outline" onClick={() => setRevision(value => value + 1)}>تلاش دوباره</Button></div> : <>
-      {items.length ? <ul className="management-list reminders-list">{items.map(item => <li key={item.id}>
-        <div className="management-account-copy"><strong>{item.title}</strong><span className="reminder-date">{formatReminderDate(item.due_at)} · تهران</span>
-          <span>تکرار: {recurrenceLabels[item.recurrence ?? "none"]}</span>
-          <span>{deliveryLabels[item.delivery_status] ?? "وضعیت پیامک مشخص نیست"}</span>
-          {item.next_delivery_at && <span>موعد پیامک بعدی: {formatReminderDate(item.next_delivery_at)} · تهران</span>}
-          {item.amount_toman !== null && <span><bdi>{formatMoney(item.amount_toman)}</bdi> تومان</span>}
-        </div>
+      {items.length ? <ul className="reminders-list">{items.map(item => <li key={item.id}><article className="reminder-card" aria-labelledby={`reminder-${item.id}`}>
+        <div className="reminder-card-header"><h2 id={`reminder-${item.id}`}>{item.title}</h2>
         <div className="reminder-actions"><Button variant="ghost" size="icon" aria-label={`ویرایش یادآور ${item.title}`} onClick={() => showForm(item)}><Pencil size={18} aria-hidden="true" /></Button>
           <Button variant="ghost" size="icon" className="management-delete" aria-label={`حذف یادآور ${item.title}`} onClick={() => { setDeleting(item); setFormError(""); }}><Trash2 size={18} aria-hidden="true" /></Button></div>
-      </li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Bell size={32} aria-hidden="true" /></span><h3>اولین یادآورتون رو ثبت کنین</h3><p>مثلاً قسط وام، اجاره یا تمدید بیمه.</p></div>}
+        </div>
+        <p className="reminder-date"><CalendarDays size={18} aria-hidden="true" /><span><time dateTime={item.due_at}>{formatReminderDate(item.due_at)}</time></span></p>
+        <div className="reminder-meta"><span><Repeat2 size={16} aria-hidden="true" />{recurrenceLabels[item.recurrence ?? "none"]}</span></div>
+        {item.note && <p className="reminder-note">{item.note}</p>}
+        <details className="reminder-delivery"><summary><MessageSquare size={18} aria-hidden="true" /><span>وضعیت پیامک</span><ChevronDown size={18} aria-hidden="true" /></summary><div>
+          <p>{deliveryLabels[item.delivery_status] ?? "وضعیت پیامک مشخص نیست"}</p>
+          {item.next_delivery_at && <p>موعد پیامک بعدی: <time dateTime={item.next_delivery_at}>{formatReminderDate(item.next_delivery_at)}</time></p>}
+        </div></details>
+      </article></li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Bell size={32} aria-hidden="true" /></span><h3>اولین یادآورتون رو ثبت کنین</h3><p>مثلاً رسیدگی به گلدون، وقت دکتر، تولد عزیزان یا پرداخت قسط.</p></div>}
       {(offset > 0 || hasMore) && <div className="reminder-pagination"><Button variant="outline" disabled={offset === 0} onClick={() => setOffset(value => Math.max(0, value - 50))}>قبلی</Button><Button variant="outline" disabled={!hasMore} onClick={() => setOffset(value => value + 50)}>بعدی</Button></div>}
     </>}
-    <Button className="management-add" onClick={() => showForm(null)}><Plus aria-hidden="true" />افزودن یادآور</Button>
     {notice && <p className="management-notice" role="status">{notice}</p>}
-    <Dialog open={open} onOpenChange={value => { if (!pending.current) setOpen(value); }}>
-      <DialogContent className="management-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={event => {
-        if (busy || event.target instanceof Element && event.target.closest('[data-calendar-open="true"]')) event.preventDefault();
-      }} onInteractOutside={event => { if (busy) event.preventDefault(); }}>
-        <DialogHeader><DialogTitle>{editing ? "ویرایش یادآور" : "افزودن یادآور"}</DialogTitle><DialogDescription>موعد و تکرار یادآور رو تنظیم کنین. اگر ارسال پیامک فعال باشه، یادآور به شمارهٔ حساب شما فرستاده می‌شه. تکرار ماهانه بر اساس ماه شمسیه و مبلغ از موجودی کم نمی‌شه.</DialogDescription></DialogHeader>
-        <form onSubmit={submit}><fieldset className="dash-form" disabled={busy}>
-          <label htmlFor="reminder-title">عنوان یادآور<input id="reminder-title" name="title" defaultValue={editing?.title ?? ""} maxLength={80} required placeholder="مثلاً قسط وام مسکن" /></label>
-          <PersianDatePicker id="reminder-date" name="date" defaultValue={initial.date} required disabled={busy} />
-          <label htmlFor="reminder-time">ساعت به وقت تهران<input id="reminder-time" name="time" dir="ltr" defaultValue={initial.time} required maxLength={5} placeholder="۰۹:۰۰" aria-describedby="reminder-time-help" /></label>
-          <p id="reminder-time-help" className="text-sm text-muted-foreground">ساعت ۲۴ساعته؛ مثلاً ۱۸:۳۰</p>
-          <label htmlFor="reminder-recurrence">تکرار<Select id="reminder-recurrence" name="recurrence" defaultValue={editing?.recurrence ?? "none"} options={recurrenceOptions} disabled={busy} /></label>
-          <label htmlFor="reminder-amount">مبلغ (تومان، اختیاری)<MoneyInput id="reminder-amount" name="amount" defaultValue={editing?.amount_toman ?? ""} maxLength={24} placeholder="مثلاً ۲٬۵۰۰٬۰۰۰" /></label>
-          {formError && <p className="dash-error" role="alert">{formError}</p>}
-          <Button type="submit">{busy ? "در حال ذخیره…" : "ذخیره یادآور"}</Button>
-        </fieldset></form>
-      </DialogContent>
-    </Dialog>
+    {open && <ReminderDialog reminder={editing} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); setNotice("یادآور ذخیره شد. وضعیت پیامک رو در فهرست می‌تونین ببینین."); setOffset(0); setRevision(value => value + 1); }} />}
     <Dialog open={!!deleting} onOpenChange={value => { if (!pending.current && !value) setDeleting(null); }}>
       <DialogContent className="management-sheet" dir="rtl" showCloseButton={!busy} onEscapeKeyDown={event => { if (busy) event.preventDefault(); }} onInteractOutside={event => { if (busy) event.preventDefault(); }}>
         <DialogHeader><DialogTitle>حذف یادآور</DialogTitle><DialogDescription>یادآور «{deleting?.title}» از فهرست شما حذف می‌شه. این کار روی تراکنش‌ها و موجودی تأثیری نداره.</DialogDescription></DialogHeader>

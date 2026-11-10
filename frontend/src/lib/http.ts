@@ -8,8 +8,8 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     response = await fetch(`/api${path}`, {
       method: options.method ?? "GET", credentials: "same-origin",
       signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
-      headers: { "Content-Type": "application/json", "X-Maban-Request": "1" },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      headers: { "Content-Type": options.body instanceof Blob ? options.body.type : "application/json", "X-Maban-Request": "1" },
+      body: options.body === undefined ? undefined : options.body instanceof Blob ? options.body : JSON.stringify(options.body),
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;

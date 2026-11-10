@@ -20,6 +20,11 @@ def create_reminder(data: CreateReminder, current: CurrentUser, service: Service
     return {"reminder": service.create(current.id, data)}
 
 
+@router.get("/upcoming")
+def upcoming_reminders(current: CurrentUser, service: Service, offset: Annotated[int, Query(ge=0)] = 0):
+    return service.upcoming(current.id, offset)
+
+
 @router.put("/{reminder_id}")
 def update_reminder(reminder_id: UUID, data: ReminderFields, current: CurrentUser, service: Service):
     return {"reminder": service.update(current.id, reminder_id, data)}

@@ -1,6 +1,6 @@
 """Store personal reminders; delivery is not enabled."""
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "abdf867498f0"
 down_revision = "9ace756387ef"

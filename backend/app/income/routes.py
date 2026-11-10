@@ -23,7 +23,7 @@ def list_income(
     profiles = directory.profiles(list({UUID(row["from_member_id"]) for row in result["entries"]}))
     for row in result["entries"]:
         profile = profiles.get(UUID(row["from_member_id"]))
-        row["from_member_name"] = f"{profile.first_name} {profile.last_name}" if profile else "عضو خانواده"
+        row["from_member_name"] = profile.first_name if profile else "عضو خانواده"
     return result
 
 
