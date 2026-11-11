@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.wallets.errors import WalletError
 from app.wallets.models import Entry, Topup, Wallet
+from app.wallets.pricing import ENGLISH_PART_TOMAN, PERSIAN_PART_TOMAN
 
 
 def locked_wallet(db, user_id):
@@ -57,7 +58,8 @@ class Wallets:
 
     def summary(self, user_id):
         balance = self.db.scalar(select(Wallet.balance_toman).where(Wallet.user_id == user_id)) or 0
-        return {"balance_toman": balance, "sms_price_toman": self.settings.sms_price_toman,
+        return {"balance_toman": balance, "sms_persian_part_toman": PERSIAN_PART_TOMAN,
+                "sms_english_part_toman": ENGLISH_PART_TOMAN,
                 "topup_enabled": bool(self.settings.payment_merchant_id and self.settings.payment_callback_url)}
 
     def entries(self, user_id, offset):

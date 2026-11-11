@@ -8,8 +8,9 @@ from sqlalchemy import select
 from app.messaging.public import enqueue_sms
 from app.reminders.models import Reminder, SmsAttempt
 from app.reminders.scheduling import occurrence_window, pattern_attributes
+from app.sms_parts import render_pattern
 from app.users.public import notification_phone
-from app.wallets.public import reserve_sms, settle_sms, sms_reserved
+from app.wallets.public import message_price, reserve_sms, settle_sms, sms_reserved
 
 MAX_LATENESS = timedelta(hours=24)
 
@@ -28,7 +29,9 @@ def schedule_one(sessions, settings, now):
         db.add(SmsAttempt(id=attempt_id, reminder_id=row.id, revision=row.sms_revision,
                           due_at=due, attempted_at=now, status="unknown"))
         row.next_sms_at, row.sms_status = following, "pending"
-        if not reserve_sms(db, row.user_id, attempt_id, settings.sms_price_toman):
+        attributes = pattern_attributes(row.title, due, row.amount_toman)
+        price = message_price(render_pattern(settings.sms_reminder_body, attributes))
+        if not reserve_sms(db, row.user_id, attempt_id, price):
             db.flush()
             db.get(SmsAttempt, attempt_id).status = "skipped"
             row.sms_status = "skipped"
@@ -36,7 +39,8 @@ def schedule_one(sessions, settings, now):
         # Occurrence reservation, next schedule and queue insertion commit together.
         enqueue_sms(db, kind="reminder", reference_id=attempt_id, priority=10,
                     available_at=now, expires_at=due + MAX_LATENESS,
-                    secret_key=settings.secret_key)
+                    secret_key=settings.secret_key,
+                    payload={"pattern": settings.sms_reminder_template, "attributes": attributes})
         return True
 
 
@@ -54,8 +58,10 @@ def deliver(db, settings, sender, attempt_id, payload, now):
     # Jobs created before wallet billing was deployed have no prepaid reservation.
     if not sms_reserved(db, attempt_id):
         return "skipped"
-    sender.send_pattern(phone, settings.sms_reminder_template,
-                        pattern_attributes(row.title, attempt.due_at, row.amount_toman))
+    # Legacy jobs have no priced content snapshot: refund rather than send at a guessed price.
+    if not payload.get("pattern") or not payload.get("attributes"):
+        return "skipped"
+    sender.send_pattern(phone, payload["pattern"], payload["attributes"])
     return "accepted"
 
 

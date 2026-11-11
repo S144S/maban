@@ -18,7 +18,7 @@ def settings(**overrides):
         "sms_api_key": "private-key",
         "sms_template": "otp-pattern",
         "sms_line_number": "30001234",
-        "sms_price_toman": 200,
+        "sms_reminder_body": "یادآوری: {title}، {date} ساعت {time}، {amount} تومان",
         **overrides,
     })
 
@@ -113,6 +113,8 @@ def test_api_key_not_in_settings_repr():
 
 @pytest.mark.parametrize("overrides", [
     {"sms_reminder_template": ""}, {"sms_reminder_template": " "},
+    {"sms_reminder_body": ""}, {"sms_reminder_body": " "},
+    {"sms_reminder_body": "{unknown}"}, {"sms_reminder_body": "{title!r}"},
     {"sms_reminder_template": "otp-pattern"}, {"environment": "local"},
     {"environment": "develop"}, {"environment": "test"},
 ])

@@ -9,7 +9,7 @@ import "@/features/auth/auth.css";
 import "@/features/auth/account.css";
 import "./wallet.css";
 
-type Summary = { balance_toman: number; sms_price_toman: number; topup_enabled: boolean };
+type Summary = { balance_toman: number; sms_persian_part_toman: number; sms_english_part_toman: number; topup_enabled: boolean };
 type Entry = { id: string; kind: "topup" | "sms" | "sms_refund"; amount_toman: number; balance_after: number; created_at: string };
 type Topup = { id: string; amount_toman: number; status: "pending" | "paid"; reference: string | null; checkout_url: string | null; created_at: string };
 const entryLabels = { topup: "شارژ کیف پول", sms: "رزرو هزینهٔ پیامک", sms_refund: "برگشت هزینهٔ پیامک" };
@@ -91,8 +91,9 @@ export function WalletPage() {
       <section className="account-card credit-wallet-overview" aria-label="موجودی کیف پول" aria-busy={loading}>
         <div className="account-section-title"><span className="account-symbol"><Wallet size={22} aria-hidden="true" /></span><h2>موجودی قابل استفاده</h2></div>
         <p className="credit-wallet-balance"><bdi>{formatMoney(summary.balance_toman)}</bdi> <small>تومان</small></p>
-        <p className="credit-wallet-tariff"><MessageSquare size={18} aria-hidden="true" />{summary.sms_price_toman > 0 ? `هر پیامک یادآوری: ${formatMoney(summary.sms_price_toman)} تومان` : "تعرفهٔ پیامک یادآوری هنوز تعیین نشده."}</p>
-        {summary.sms_price_toman > 0 && summary.balance_toman < summary.sms_price_toman && <p className="credit-wallet-warning">موجودی برای پیامک یادآوری کافی نیست؛ برای ارسال یادآوری‌های بعدی کیف پولتون رو شارژ کنین.</p>}
+        <p className="credit-wallet-tariff"><MessageSquare size={18} aria-hidden="true" />هر پارت فارسی {formatMoney(summary.sms_persian_part_toman)} و انگلیسی {formatMoney(summary.sms_english_part_toman)} تومان</p>
+        <p className="credit-wallet-muted">هزینهٔ نهایی به متن کامل و تعداد پارت‌های پیامک بستگی داره. متن ترکیبی با حروف فارسی هم با تعرفهٔ فارسی حساب می‌شه.</p>
+        {summary.balance_toman < Math.min(summary.sms_persian_part_toman, summary.sms_english_part_toman) && <p className="credit-wallet-warning">موجودی برای پیامک یادآوری کافی نیست؛ برای ارسال یادآوری‌های بعدی کیف پولتون رو شارژ کنین.</p>}
       </section>
       <section className="account-card credit-wallet-charge" aria-labelledby="credit-wallet-charge"><div className="account-section-title"><CreditCard size={22} aria-hidden="true" /><h2 id="credit-wallet-charge">شارژ کیف پول</h2></div>
         {!summary.topup_enabled && <p role="status" className="credit-wallet-notice">شارژ آنلاین هنوز فعال نشده؛ کمی بعد دوباره سر بزنین.</p>}

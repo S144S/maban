@@ -5,7 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.9.0`. No frontend release has been published.
+Current development version: `1.9.1`. No frontend release has been published.
+
+### Fixed
+
+- Show per-part reminder SMS prices (Persian 500 / English 750 tomans), explain final-content multipart billing and use the minimum part price for low-balance guidance. Requires backend 4.0.0 with the new wallet tariff fields.
 
 ### Added
 

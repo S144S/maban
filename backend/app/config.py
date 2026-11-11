@@ -4,6 +4,8 @@ from urllib.parse import urlsplit
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.sms_parts import render_pattern
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MABAN_", env_file=".env", extra="ignore")
@@ -18,7 +20,7 @@ class Settings(BaseSettings):
     sms_line_number: str = ""
     sms_reminder_template: str = ""
     reminder_sms_enabled: bool = False
-    sms_price_toman: int = Field(default=0, ge=0, le=1000000)
+    sms_reminder_body: str = ""
     payment_merchant_id: str = Field(default="", repr=False)
     payment_callback_url: str = ""
     minio_endpoint: str = ""
@@ -62,8 +64,9 @@ class Settings(BaseSettings):
             ):
                 raise ValueError("IranPayamak requires an ASCII numeric SMS_LINE_NUMBER")
         if self.reminder_sms_enabled:
-            if not self.sms_price_toman:
-                raise ValueError("Reminder SMS requires a positive SMS_PRICE_TOMAN")
+            if not self.sms_reminder_body.strip():
+                raise ValueError("Reminder SMS requires the approved SMS_REMINDER_BODY")
+            render_pattern(self.sms_reminder_body, dict.fromkeys(("title", "date", "time", "amount"), ""))
             if self.environment != "production":
                 raise ValueError("Reminder SMS is restricted to production")
             if not self.sms_reminder_template.strip():

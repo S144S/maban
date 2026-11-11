@@ -5,7 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `3.5.0`. No backend release has been published.
+Current development version: `4.0.0`. No backend release has been published.
+
+### Changed
+
+- **Breaking:** Replace the flat `sms_price_toman` wallet response with `sms_persian_part_toman` (500) and `sms_english_part_toman` (750). Bill each reminder from its complete rendered pattern using UTF-16 part counts and the supplied multipart overhead algorithm. Replace `MABAN_SMS_PRICE_TOMAN` with the exact approved `MABAN_SMS_REMINDER_BODY` before enabling delivery; update wallet clients and deploy API/worker/frontend together. Queue the priced pattern/attributes snapshot; legacy jobs without a snapshot skip and refund their original reservation. Existing ledger entries remain unchanged; no database migration is needed.
 
 ### Added
 

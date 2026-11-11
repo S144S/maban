@@ -55,7 +55,7 @@ def charge(client, amount=50000, request_id=None):
 def test_empty_wallet_is_private_and_not_family_funds(client):
     assert client.get("/api/wallet").status_code == 401
     register(client)
-    assert client.get("/api/wallet").json() == {"balance_toman": 0, "sms_price_toman": 0, "topup_enabled": False}
+    assert client.get("/api/wallet").json() == {"balance_toman": 0, "sms_persian_part_toman": 500, "sms_english_part_toman": 750, "topup_enabled": False}
     assert client.get("/api/wallet/entries").json() == {"entries": [], "has_more": False}
     assert charge(client).status_code == 503
     assert client.post("/api/wallet/withdraw", json={"amount_toman": 1}).status_code == 404
@@ -169,7 +169,7 @@ def test_empty_balance_skips_reminder_without_send(client, app):
     assert client.get("/api/reminders").json()["reminders"][0]["delivery_status"] == "skipped"
 
 
-@pytest.mark.parametrize("failure,expected", [("accepted", 9800), ("rejected", 10000), ("unknown", 9800)])
+@pytest.mark.parametrize("failure,expected", [("accepted", 9500), ("rejected", 10000), ("unknown", 9500)])
 def test_sms_billing_follows_delivery_result(client, app, failure, expected):
     from test_reminder_sms import NOW, Sender, enabled
     from test_reminders import payload
@@ -259,10 +259,10 @@ def test_cancelled_and_expired_sms_refund_reserved_price(client, app):
     fund(app)
     reminder = client.post("/api/reminders", json=payload(due_at=NOW.isoformat())).json()["reminder"]
     assert schedule_sms(app.state.sessions, enabled(), NOW)
-    assert client.get("/api/wallet").json()["balance_toman"] == 9800
+    assert client.get("/api/wallet").json()["balance_toman"] == 9500
     assert client.delete(f"/api/reminders/{reminder['id']}").status_code == 204
     sender = Sender()
-    run_batch(app.state.sessions, enabled().model_copy(update={"sms_price_toman": 500}), sender, now=NOW)
+    run_batch(app.state.sessions, enabled().model_copy(update={"sms_reminder_body": "changed " * 100}), sender, now=NOW)
     assert client.get("/api/wallet").json()["balance_toman"] == 10000
     assert sender.calls == []
     client.post("/api/reminders", json=payload(due_at=NOW.isoformat()))
@@ -270,3 +270,69 @@ def test_cancelled_and_expired_sms_refund_reserved_price(client, app):
     run_batch(app.state.sessions, enabled(), sender, now=NOW + timedelta(days=2))
     assert client.get("/api/wallet").json()["balance_toman"] == 10000
     assert sender.calls == []
+
+
+@pytest.mark.parametrize("body,title,amount,price", [
+    ("a" * 80 + "{title}", "a" * 80, 1, 750),
+    ("a" * 81 + "{title}", "a" * 80, 1, 1500),
+    ("{title}", "س" * 71, 1, 1000),
+    ("ی" * 65 + "{title}", "123456", 1, 1000),
+    ("{title} {date} {time} {amount}", "English", None, 500),
+])
+def test_full_rendered_content_is_reserved_and_snapshot_is_sent(client, app, body, title, amount, price):
+    from test_reminder_sms import NOW, Sender, enabled
+    from test_reminders import payload
+
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app, price)
+    config = enabled().model_copy(update={"sms_reminder_body": body})
+    assert client.post("/api/reminders", json=payload(
+        title=title, amount_toman=amount, due_at=NOW.isoformat())).status_code == 201
+    assert schedule_sms(app.state.sessions, config, NOW)
+    assert client.get("/api/wallet").json()["balance_toman"] == 0
+    debit = client.get("/api/wallet/entries").json()["entries"][0]
+    assert debit["amount_toman"] == -price
+    sender = Sender()
+    changed = config.model_copy(update={"sms_reminder_template": "new-pattern", "sms_reminder_body": "changed"})
+    assert run_batch(app.state.sessions, changed, sender, now=NOW) == 1
+    assert sender.calls[0][1] == "reminder-pattern"
+    assert sender.calls[0][2]["title"] == title
+    assert client.get("/api/wallet").json()["balance_toman"] == 0
+
+
+def test_multipart_insufficient_balance_does_not_send_or_debit(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+    from test_reminders import payload
+
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app, 500)
+    client.post("/api/reminders", json=payload(title="س" * 71, due_at=NOW.isoformat()))
+    sender = Sender()
+    config = enabled().model_copy(update={"sms_reminder_body": "{title}"})
+    assert run_batch(app.state.sessions, config, sender, now=NOW) == 0
+    assert sender.calls == []
+    assert client.get("/api/wallet").json()["balance_toman"] == 500
+
+
+def test_legacy_queued_content_is_skipped_and_original_charge_refunded(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+    from test_reminders import payload
+
+    from app.messaging.models import SmsJob
+    from app.messaging.security import payload_cipher
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app)
+    client.post("/api/reminders", json=payload(due_at=NOW.isoformat()))
+    assert schedule_sms(app.state.sessions, enabled(), NOW)
+    with app.state.sessions.begin() as db:
+        job = db.scalar(select(SmsJob).where(SmsJob.kind == "reminder"))
+        job.encrypted_payload = payload_cipher(enabled().secret_key).encrypt(b"{}").decode()
+    sender = Sender()
+    assert run_batch(app.state.sessions, enabled(), sender, now=NOW) == 1
+    assert sender.calls == []
+    assert client.get("/api/wallet").json()["balance_toman"] == 10000
