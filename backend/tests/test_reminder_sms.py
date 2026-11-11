@@ -39,6 +39,8 @@ def enabled():
 
 
 def create(client, **changes):
+    from test_wallets import fund
+    fund(client.app)
     response = client.post("/api/reminders", json=payload(due_at=NOW.isoformat(), **changes))
     assert response.status_code == 201, response.text
     return response.json()["reminder"]

@@ -150,7 +150,9 @@ def test_expired_queued_job_is_scrubbed_without_dispatch(production):
 
 
 def test_otp_priority_and_disabled_reminders(production, client, app):
+    from test_wallets import fund
     user = register(client)
+    fund(app)
     allow_resend(app)
     now = datetime.now(UTC)
     config = settings(reminder_sms_enabled=True, sms_reminder_template="reminder-pattern")

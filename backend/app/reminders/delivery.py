@@ -9,6 +9,7 @@ from app.messaging.public import enqueue_sms
 from app.reminders.models import Reminder, SmsAttempt
 from app.reminders.scheduling import occurrence_window, pattern_attributes
 from app.users.public import notification_phone
+from app.wallets.public import reserve_sms, settle_sms, sms_reserved
 
 MAX_LATENESS = timedelta(hours=24)
 
@@ -27,6 +28,11 @@ def schedule_one(sessions, settings, now):
         db.add(SmsAttempt(id=attempt_id, reminder_id=row.id, revision=row.sms_revision,
                           due_at=due, attempted_at=now, status="unknown"))
         row.next_sms_at, row.sms_status = following, "pending"
+        if not reserve_sms(db, row.user_id, attempt_id, settings.sms_price_toman):
+            db.flush()
+            db.get(SmsAttempt, attempt_id).status = "skipped"
+            row.sms_status = "skipped"
+            return True
         # Occurrence reservation, next schedule and queue insertion commit together.
         enqueue_sms(db, kind="reminder", reference_id=attempt_id, priority=10,
                     available_at=now, expires_at=due + MAX_LATENESS,
@@ -45,6 +51,9 @@ def deliver(db, settings, sender, attempt_id, payload, now):
     phone = notification_phone(db, row.user_id)
     if phone is None:
         return "skipped"
+    # Jobs created before wallet billing was deployed have no prepaid reservation.
+    if not sms_reserved(db, attempt_id):
+        return "skipped"
     sender.send_pattern(phone, settings.sms_reminder_template,
                         pattern_attributes(row.title, attempt.due_at, row.amount_toman))
     return "accepted"
@@ -56,6 +65,7 @@ def record_result(db, attempt_id, status):
         return
     attempt.status = "skipped" if status == "failed" else status
     row = db.scalar(select(Reminder).where(Reminder.id == attempt.reminder_id).with_for_update())
+    settle_sms(db, attempt_id, status)
     if row is None or row.deleted_at is not None or row.sms_revision != attempt.revision:
         return
     # An old queued result must not overwrite a later recurrence's status.

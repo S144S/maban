@@ -29,6 +29,13 @@ test("external, protocol-relative and encoded return destinations are rejected",
     assert.equal(navigation(`https://maban.example/login?next=${next}`).exports.afterAuth(), "/dashboard");
   }
 });
+test("wallet payments remain recoverable across sign-in and signup navigation", () => {
+  for (const url of ["https://maban.example/wallet?payment=confirmed", "https://maban.example/login?next=/wallet"]) {
+    const state = navigation(url);
+    assert.equal(state.exports.authHref("/signup"), "/signup?next=/wallet");
+    assert.equal(state.exports.afterAuth(), "/wallet");
+  }
+});
 test("invalid invitation tokens never become a redirect or an auth link", () => {
   for (const token of ["short", "a".repeat(44), "https://evil.example", "a".repeat(42)+"%2F"]) {
     const state = navigation(`https://maban.example/login#invite=${token}`);

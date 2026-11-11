@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { LogOut, UserRound } from "lucide-react";
+import { LogOut, UserRound, Wallet } from "lucide-react";
 import { AccountAvatar } from "@/components/AccountAvatar";
 import { api, ApiError, errorMessage } from "@/lib/http";
 import "./account-menu.css";
@@ -59,6 +59,9 @@ export function AccountMenu() {
           <a href="/account" onClick={event => { if (pending.current) event.preventDefault(); }}><UserRound size={20} aria-hidden="true" />پروفایل من</a>
         </DropdownMenu.Item>
         <DropdownMenu.Separator className="account-menu-separator" />
+        <DropdownMenu.Item asChild disabled={busy} className="account-menu-item">
+          <a href="/wallet" onClick={event => { if (pending.current) event.preventDefault(); }}><Wallet size={20} aria-hidden="true" />کیف پول من</a>
+        </DropdownMenu.Item>
         <DropdownMenu.Item className="account-menu-item" disabled={busy} onSelect={event => { event.preventDefault(); void logout(); }}>
           <LogOut size={20} aria-hidden="true" />خروج
         </DropdownMenu.Item>

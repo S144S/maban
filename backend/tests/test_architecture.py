@@ -29,7 +29,7 @@ def imports(path):
 def test_module_import_boundaries():
     modules = {p.name for p in APP.iterdir() if p.is_dir() and (p / "__init__.py").exists()}
     exceptions = {
-        "main.py": {"app.users.bootstrap", "app.families.bootstrap", "app.income.bootstrap", "app.expenses.bootstrap", "app.money_locations.bootstrap", "app.investments.bootstrap", "app.assets.bootstrap", "app.reminders.bootstrap", "app.plants.bootstrap", "app.shopping.bootstrap"},
+        "main.py": {"app.users.bootstrap", "app.families.bootstrap", "app.income.bootstrap", "app.expenses.bootstrap", "app.money_locations.bootstrap", "app.investments.bootstrap", "app.assets.bootstrap", "app.reminders.bootstrap", "app.plants.bootstrap", "app.shopping.bootstrap", "app.wallets.bootstrap"},
         "cli.py": {"app.users.commands"},
     }
     for path in APP.rglob("*.py"):

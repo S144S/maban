@@ -18,6 +18,7 @@ def settings(**overrides):
         "sms_api_key": "private-key",
         "sms_template": "otp-pattern",
         "sms_line_number": "30001234",
+        "sms_price_toman": 200,
         **overrides,
     })
 

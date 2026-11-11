@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `3.4.0`. No backend release has been published.
+Current development version: `3.5.0`. No backend release has been published.
 
 ### Added
+
+- Added private prepaid user wallets, paginated immutable ledger/payment history, idempotent Zarinpal top-ups and server-verified callbacks with exact toman/rial conversion. Reminder SMS reserves a configured positive tariff before dispatch; insufficient funds skip the occurrence, rejected/cancelled sends refund once and uncertain sends retain the reservation for reconciliation. OTP remains free; no withdrawal, transfer or manual-credit API exists. Migrate through `bc854329da01` and configure payments/tariff before enabling reminder delivery; see `docs/wallets.md`.
 
 - Add the optional `status=all` shopping-item view with combined pagination, retaining existing pending/purchased filters and counts. List-index reads also accept pending/purchased status, filtering before pagination; empty lists remain pending and completed lists require all live items to be purchased.
 

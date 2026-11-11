@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, ChevronLeft, Users, ShieldCheck, UserRound, Smartphone, LogOut, KeyRound, BadgeCheck } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Users, ShieldCheck, UserRound, Smartphone, LogOut, KeyRound, BadgeCheck, Wallet } from "lucide-react";
 import { AccountAvatar } from "@/components/AccountAvatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -64,6 +64,7 @@ export function AccountPage({ user: initialUser }: { user: User }) {
       <div><h2>{user.first_name} {user.last_name}</h2><p><bdi dir="ltr">{user.phone.replace(/\d/g, digit => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)])}</bdi></p><span className="account-verified"><BadgeCheck size={16} aria-hidden="true" />شمارهٔ تأییدشده</span></div>
     </section>
     <a className="account-family" href="/families"><span className="account-symbol"><Users size={22} aria-hidden="true" /></span><span><strong>خانوادهٔ شما</strong><small>مدیریت خانواده و دعوت اعضا</small></span><ChevronLeft size={20} aria-hidden="true" /></a>
+    <a className="account-family" href="/wallet"><span className="account-symbol"><Wallet size={22} aria-hidden="true" /></span><span><strong>کیف پول من</strong><small>شارژ و هزینهٔ پیامک‌های یادآوری</small></span><ChevronLeft size={20} aria-hidden="true" /></a>
     <section className="account-card account-profile" aria-labelledby="profile-title"><div className="account-section-title"><UserRound size={22} aria-hidden="true" /><h2 id="profile-title">اطلاعات شما</h2></div>
       <form className="auth-form" onSubmit={saveProfile} aria-busy={busy}><fieldset className="auth-fields" disabled={busy}>
         <div className="auth-field"><label htmlFor="first-name">نام</label><input id="first-name" name="first_name" autoComplete="given-name" defaultValue={user.first_name} required maxLength={80} /></div>

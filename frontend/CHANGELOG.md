@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.8.0`. No frontend release has been published.
+Current development version: `1.9.0`. No frontend release has been published.
 
 ### Added
+
+- Added Persian RTL personal wallet at `/wallet`, linked from profile/account menus, with balance, configured SMS tariff, online top-up form, payment verification retries and independently paginated payment/ledger history. Match the shared 480px account shell, brand header, circular back control, pastel balance/top-up cards and capsule actions; place consumption details in an accessible disclosure. Explain insufficient funds, uncertain SMS charges and the absence of withdrawal/transfers; disable charging until the gateway is configured. Requires backend 3.5.0 and migration `bc854329da01`.
 
 - Show the active family's unfinished shopping-list cards below Home reminders, hiding the section when none remain. Reuse list progress and checkout actions, support pagination and retry, open items with a return to Home, and refresh the wallet after checkout. Keep the Home section heading free of a manual refresh action.
 
