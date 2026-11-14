@@ -2,6 +2,8 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Index, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -29,6 +31,8 @@ class Reminder(Base):
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     recurrence: Mapped[str] = mapped_column(String(11), server_default="none")
     amount_toman: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    sms_family_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    recipient_user_ids: Mapped[list[UUID]] = mapped_column(ARRAY(PGUUID(as_uuid=True)), server_default="{}")
     plant_family_id: Mapped[UUID | None] = mapped_column(nullable=True)
     plant_id: Mapped[UUID | None] = mapped_column(nullable=True)
     request_id: Mapped[UUID] = mapped_column()
@@ -45,12 +49,13 @@ class SmsAttempt(Base):
 
     __tablename__ = "sms_attempts"
     __table_args__ = (
-        UniqueConstraint("reminder_id", "revision", "due_at", name="reminder_sms_occurrence"),
+        UniqueConstraint("reminder_id", "revision", "due_at", "recipient_user_id", name="reminder_sms_occurrence"),
         CheckConstraint("status IN ('accepted', 'unknown', 'skipped')", name="reminder_attempt_status"),
         {"schema": "reminders"},
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     reminder_id: Mapped[UUID] = mapped_column()
+    recipient_user_id: Mapped[UUID] = mapped_column()
     revision: Mapped[int] = mapped_column()
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     attempted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

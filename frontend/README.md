@@ -40,13 +40,28 @@ use the browser's Install app action; on iOS Safari use Share → Add to Home Sc
 and enable Open as Web App where offered. Browser install UI and automatic prompts
 vary by platform. No custom install prompt or offline support is provided.
 
-There is deliberately no service worker, Cache Storage, or offline request queue.
-Network requests retain normal browser/server cache semantics; protected API
-responses remain `no-store`. Loading the app and financial operations need an
-internet connection. Updates load on the next navigation/reload, without a waiting
-service worker. Serve `index.html` and `manifest.webmanifest` with revalidation
-(`Cache-Control: no-cache`), PNG icons as `image/png`, and the manifest as
-`application/manifest+json`; keep SPA fallbacks out of `/api` and static assets.
+A production build emits `/sw.js` with a fingerprint derived from its output.
+It detects new builds on startup, on returning to a visible online app, and every
+visible online minute (checks are throttled to once per minute). A new worker
+waits for the Persian update notice's explicit confirmation. “Later” dismisses
+that worker's notice for the current page; another build or a reload can show it
+again. Before activation the notice warns that unsaved edits will be lost: save
+or defer first. Only the accepting tab reloads; other tabs keep their open forms.
+The first installation is silent. Registration is disabled in Vite development;
+use `npm run build` and `npm run preview` to test real updates between two builds.
+
+The worker does not use Cache Storage or an offline request queue. Navigations
+go directly to the network with `cache: no-store`; API and asset requests pass
+through untouched, and protected API responses remain `no-store`. Loading the
+app and financial operations still need an internet connection.
+
+Serve `index.html`, `sw.js` and `manifest.webmanifest` with revalidation
+(`Cache-Control: no-cache`), `/sw.js` as JavaScript, PNG icons as `image/png`,
+and the manifest as `application/manifest+json`. Keep SPA fallbacks out of `/api`,
+`/sw.js` and static assets. Deploy the entire build atomically and retain previous
+hashed assets for existing tabs. Purge any CDN cache of the worker and HTML when
+deploying. The first deployment of this mechanism needs one normal navigation or
+reload to register the worker; subsequent builds can display the update notice.
 Native installation and standalone launch must also be checked on target Android
 and iOS devices after deployment; the embedded development browser cannot prove
 OS-level installation.
@@ -98,3 +113,30 @@ sample data; family membership is persisted by the backend.
 See [Plants setup, API and care rules](../docs/plants.md) for migration and local
 workflow instructions. Open **گلدون‌ها** after selecting a family. This feature
 uses in-app reminders only and defaults daily care to Asia/Tehran.
+
+## Household shopping
+
+Management → «خریدهای خونه» opens the selected family’s server-backed named shopping lists
+(`/dashboard?page=purchases`). Requires backend 3.4.0 and migrations through `e8a1d6342fc9`.
+Add names with optional free-text quantities/notes; mark purchases, return them to
+the unchecked state, edit or confirm deletion. All items appear together with
+checkboxes, keeping purchased items in place. The list pages at 50 items. Refresh explicitly to see other members’ latest changes; stale edits
+require reloading the list. Form values survive request failures. No offline data
+store is used. Checking an item saves its purchase directly without asking for a cost.
+After the final pending item is checked, refreshed list state opens the optional
+whole-list total-cost/category dialog. An entered amount records one expense for the
+list as the confirming member; without a category it uses Other, and without an
+amount no expense is created. Linked
+items show their financial status; undo confirms that the expense remains, and rechecking
+cannot create another expense for the same item. The existing Management access policy
+continues to show this entry to the family creator/spouse.
+
+Create a named list and add multiple item rows before saving. Open a list card to manage its items; counts and progress reflect that list only. Existing items appear in a default list.
+
+Inside a list, «خریدم» also opens the total-cost dialog. Confirmation completes all remaining items (including other pages) and optionally creates one expense named after the list. Category defaults to Other. Cancel preserves all previously saved checkmarks. If any current item or prior list checkout has an expense, completion is available without a new total to prevent duplicate charges; rechecking the final item does not prompt for another cost.
+
+The shopping list index filters lists with «در انتظار خرید» and «خرید شده». Nonempty lists with all live items checked are purchased; partially purchased and empty lists remain pending. Item detail keeps both checked and unchecked items together.
+
+Each nonempty shopping list has a direct completion action on the list index. It loads a fresh checkout snapshot, opens the optional total-cost/category dialog and returns the completed list to the purchased view after confirmation.
+
+Home also shows the selected family’s pending shopping-list cards below «یادت نره!». The section is hidden when no unfinished lists remain. Cards open their items with a return to Home and offer «خریدم» for whole-list checkout; successful checkout refreshes both pending lists and the wallet. Lists paginate at 50 entries and use the same pending definition as the shopping index.

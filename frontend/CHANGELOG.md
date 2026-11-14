@@ -5,19 +5,27 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.4.0`. No frontend release has been published.
+Current development version: `1.12.1`. No pending changes.
 
-### Fixed
-
-- Replaced grouped cashflow bars with daily solid line charts, using green income/red expense strokes and circle/square markers from central chart tokens. Preserve zero-transaction days and exact daily values, with dated ticks, contained keyboard-accessible horizontal scrolling and the existing daily table; removed multi-day aggregation and the redundant line-style legend.
-
-- Removed the redundant «شروع:» prefix and Tehran suffix from reminder-card dates, including the next SMS date, while preserving Tehran time formatting.
-
-- Show the Management tab and hub/finance routes only for the selected family's creator or spouse, using authenticated family membership. Fail closed during permission loading/failure and adapt Home/Reports navigation to two columns. Family selection/onboarding, personal reminders and shared plant care remain available; existing server operation permissions are unchanged.
-
-- Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
+## [1.12.1] - 2026-11-14
 
 ### Added
+
+- Add an optional family-member checkbox group to reminder forms, with loading/retry/empty states, preserved edit selections and per-recipient SMS cost/privacy guidance. Automatically use the family wallet without a payment selector; retain an existing reminder's accessible wallet and use the active family for new reminders. Clear selections when the resolved family changes; the author remains a recipient. Show additional-recipient counts and partial delivery failures. Requires backend 5.2.0 and migration `e8da512fc940`.
+
+- Label registration gifts in the family wallet ledger and explain the one-time 5,000-toman gift to each new member's first family. Requires backend 5.1.0 and migration `d7c8412eab30`.
+
+- Use the shared active-family selection for family-owned service wallets, including shared payment/ledger history and a no-family state. Personal reminders use the family wallet automatically for SMS. Payment returns restore the charged family. Requires backend 5.0.0 and migration `ce965430eb12`.
+
+- Added Persian RTL family wallet at `/wallet`, linked from profile/account menus, with balance, configured SMS tariff, online top-up form, payment verification retries and independently paginated payment/ledger history. Match the shared 480px account shell, brand header, circular back control, pastel balance/top-up cards and capsule actions; place consumption details in an accessible disclosure. Explain insufficient funds, uncertain SMS charges and the absence of withdrawal/transfers; disable charging until the gateway is configured. Requires backend 5.0.0 and migration `ce965430eb12`.
+
+- Show the active family's unfinished shopping-list cards below Home reminders, hiding the section when none remain. Reuse list progress and checkout actions, support pagination and retry, open items with a return to Home, and refresh the wallet after checkout. Keep the Home section heading free of a manual refresh action.
+
+- Show all shopping-list items together with their purchase checkboxes, preserving checked items in place and removing the per-item pending/purchased tabs. Each nonempty list card contains a separate «خریدم» action inside its border, opening the total-cost dialog directly with a fresh checkout snapshot, retry/conflict handling and duplicate-expense protection. The list index offers «در انتظار خرید» and «خرید شده» filters; a nonempty list is purchased when every live item is checked, while empty lists remain pending. Show red draft-item delete actions only after an item name is entered, aligned with the name/quantity fields; deleting the final item resets it to an empty row. Add spacing above the new-list action and use soft secondary filter colors with a selected check icon instead of underlined text. Requires backend 3.4.0.
+
+- Added «خریدهای خونه» as named persistent family shopping lists with a multi-item creation form, per-list progress, quantities/notes, pending and purchased views with counts, reversible purchase marking, editing, confirmed deletion, pagination, refresh/retry feedback and conflict protection for shared edits. The list index omits the redundant shared-family subtitle and introductory description. Item rows align the checkbox, name/quantity and edit/delete actions horizontally, allowing long text to wrap. Uses a basket icon and a distinct soft-blue Management button; Family spans the full Management grid width. Item checkboxes save purchases directly without requesting individual costs. The cost dialog omits explanatory copy and labels the amount with the list name, falling back to «این لیست» when unnamed. Checking the final pending item opens the whole-list total-cost/category dialog using refreshed list state; the completion button also opens this dialog. Confirmation completes all remaining items and optionally records one expense for the list, reusing existing financial categories. Cancelling the dialog preserves saved checkmarks; stale lists require refresh, and prior charges prevent duplicate expenses. Linked expenses survive undo/deletion and cannot be duplicated by rechecking. Migration `c31ea8507b42` preserves existing items and expense links inside a default list. Requires backend 3.3.0 and migrations through `e8a1d6342fc9`.
+
+- Added an online-only service worker with a build fingerprint and a Persian RTL update notice on all pages. The compact card uses contextual icons, clear title/body hierarchy, equal touch-friendly actions, a reversible save-confirmation step, and explicit loading/error/retry feedback. New builds wait for explicit confirmation, warn about unsaved forms, support deferral and activation retry, and reload only the accepting tab. Check on startup, return to the app, restored connectivity and once per visible online minute; never cache financial data or queue offline writes. Production hosting must serve `/sw.js` as JavaScript with revalidation and retain old hashed assets for open tabs.
 
 - Added an income/expense switch to the cashflow chart with independent per-series scales and empty states, so larger income values no longer flatten the expense trend. Show a labeled vertical axis with rounded Persian amount ticks in toman, reserving space for large values without losing integer precision. Keep the combined daily table available in either view.
 
@@ -28,60 +36,6 @@ Current development version: `1.4.0`. No frontend release has been published.
 - Added «هر دو هفته» to reminder recurrence options in both entry points and editing, with the selected recurrence displayed in the list.
 
 - Unified general reminder creation/editing from Reminders and plant details using the same blank form: title, start date, Tehran time, recurrence and an optional 2,000-character note. Removed type, plant, family, topic and amount controls; notes are preserved in edits and shown in the list. Existing stored amounts, legacy links and delivery settings remain compatible.
-
-### Changed
-
-- Collapsed plant care history behind a keyboard-accessible disclosure, preserving its open state while paging through events. Display each event's action, member and local date/time in a compact row without the Tehran suffix; long entries wrap on narrow screens.
-
-- Care entry now offers watering, fertilizing, soil replacement, repotting and examination; legacy no-water-needed events remain readable in history.
-
-- Plant detail back arrows now return to the plant list, including embedded details; removed the redundant detail list button while preserving list-to-Management navigation.
-
-- Moved detail photos into the plant information card, replaced location/species rows with a friendly name-and-location sentence, removed the separate album section and assignee display, and placed photo controls in the edit dialog, opened with an accessible borderless pencil icon matching the delete control.
-
-- Renamed plant section and browser titles to «گلدون‌های ما», removed the family/shared-care subtitle and made the header add button full-width with more space below the title.
-
-- Exposed plant deletion as a labeled, 44-pixel trash icon on list cards and details with a named confirmation, safe initial cancel focus, duplicate-submit protection and success/error feedback; kept deletion available in details.
-
-- **Breaking:** Removed soil-check/fertilizer scheduling, due states and next-date history from all plant screens. Care remains a manual shared log; deploy with backend 3.0.0 and migrate the database. Home rows show location and newest plants first.
-
-- Simplified new-plant creation with 30 common plant types, unknown/custom options and shared family care; preserved existing custom species when editing.
-
-- Display plant-list photos as compact square thumbnails beside each plant name and location, preserving full-size detail photos and accessible image retry.
-
-- Moved personal reminders out of Finance into a dedicated «یادآورها» Management page, preserving existing reminder actions, back navigation and Management selection.
-
-- Grouped Management into softly colored Family, Finance and Plants buttons with dedicated pages and compact left-arrow back controls aligned with page titles. Finance preserves accounts, categories, rates and reminders; all three pages keep Management selected in bottom navigation, including on direct visits.
-
-- Simplified bottom navigation to Home, Management and Reports in RTL order, preserving existing page routes and content.
-
-- Added optional photo selection and preview directly to the new-plant form. Saving uploads the photo after plant creation; failed uploads retain the selected file in details for retry without creating another plant.
-
-- Added a home-page plants section below the financial divider, showing up to three compact photo/name/next-care rows ordered by care due date, sized similarly to the financial section with existing creation, detail and care flows, family selection, loading/error/empty states and navigation to all plants.
-
-- Added a horizontal divider below the financial section on the home page using the shared border token.
-
-- Replaced report-type buttons with equal-width underlined RTL tabs, keyboard navigation and labeled panels while preserving the selected date range.
-
-- Removed the report footer explanation about family cash flow and personal assets.
-
-- Renamed the report ledger to «تراکنش ها» and made it a keyboard-accessible disclosure, collapsed initially, with count-free income/expense tabs and five transactions per page with previous/next navigation.
-
-- Simplified the cash-flow chart to follow the report date filter directly, removing its separate interval-details selector and readout.
-
-- Refined report income/expense summaries into readable responsive rows with inline currency, percentage badges with up/down arrows and a dash for unchanged values labeled against the previous equivalent period, without an extra comparison-details section, preserving the shared application width. Percentage badges use pastel green for income growth or expense decline, pastel red for the inverse, and neutral colors for unchanged or unavailable comparisons. Nonzero totals with a zero comparison baseline display a compact unavailable-percentage placeholder.
-
-- Shortened the Reports page heading and browser title to «گزارش», renamed the summary heading to «خلاصهٔ», removed its record count, and added playful cash-flow copy with a gently wistful message when expenses exceed income.
-
-- Replaced the long Management page with expandable account/category cards: open content in place, keep only one card expanded, and preserve family selection with keyboard-accessible controls.
-
-- Reduced the balance label, icon and currency label sizes and sized amounts against available space to keep currency alongside large mobile balances.
-
-- Format all toman amount inputs with live three-digit separators, preserving Persian/Arabic/Latin digits, cursor editing and existing numeric API payloads.
-
-- Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
-
-### Added
 
 - Added optional plant photos in lists and details, with selection, preview, upload feedback, replacement and confirmed removal. New plants open their details for optional photo upload without resubmitting plant creation.
 
@@ -141,24 +95,89 @@ Current development version: `1.4.0`. No frontend release has been published.
 
 - Added full/view access selection on family invitations and permission labels on members and invitation previews.
 
-### Fixed
+- Added mobile-first family creation, member lists, invitation creation/copy/revocation
+  in bottom sheets, and explicit invitation acceptance. Preserve invitation context
+  through login/signup using URL fragments, without open redirects.
+- Added family entry points from dashboard and account settings.
 
-- Keep dialog sheets within the visible viewport as mobile keyboards open, close or pan the page; scroll focused controls inside the sheet into view.
+- Added a Persian mobile-first dashboard at `/dashboard`, with monthly financial
+  summaries, amount privacy controls, transaction creation and filtering, and
+  editable category budgets. Sample data stays in memory and resets on reload.
+  Dashboard access now requires an authenticated session; financial data remains
+  a clearly labeled sample rather than personal persisted transactions.
 
-- Prevent long user names and access-edit buttons from widening admin user cards and causing horizontal page scrolling on small screens.
+- Connected phone signup, password/OTP login and password recovery to the
+  FastAPI backend. Five-digit OTP auto-submit, Persian/Arabic digits, busy states,
+  errors and the login bottom sheet work with server-owned verification.
+- Added account profile editing, password changes, current/other session
+  management and logout. Added admin-only paginated user search, role changes
+  and activation/suspension, with server authorization on every operation.
+- Added authenticated page guards and same-origin API integration; updated
+  landing privacy/FAQ copy to describe actual account persistence.
 
-- Reduced the home fund selector height from 52px to 44px while preserving accessible touch targets, unified the card heading as balance across all three funds, and removed the shared/personal scope subtitles and empty-fund message from the home card. Tightened card padding and spacing; vertically centered the icon, balance title and adjacent amount in one compact row.
-
-- Redrew the family empty-state illustration with complete chipmunk characters, simpler facial details and a balanced family composition.
-
-- Removed the white circular background and border from family invitation delete buttons while preserving their touch targets and interaction feedback.
-
-- Replaced native dropdown menus across the app with shared RTL select controls, styled options, selected indicators and keyboard navigation.
-
-- Prevented full-page reloads when switching between family and dashboard tabs;
-  preserve the floating navigation, in-memory views, and browser back/forward.
+- Established the independent frontend version baseline in `VERSION`.
+- Added a Persian, RTL, mobile-first landing page matching the supplied visual
+  reference, with a full-width responsive hero and closing call to action,
+  original phone/brand artwork, financial cards, audience sections,
+  responsive navigation, and accessible introduction, FAQ, and information dialogs.
+- Added an interactive sample budget with expense updates and reset; demo data
+  stays in memory and does not connect to a bank or a backend.
+- Initialized React, Vite, TypeScript, Tailwind CSS, and shadcn/ui; integrated
+  central light-theme colors, sidebar/chart aliases, Persian fonts, keyboard
+  focus, reduced-motion support, and accessible demo feedback.
+- Added build/type checks, version-metadata validation, and local setup instructions.
 
 ### Changed
+
+- Collapsed plant care history behind a keyboard-accessible disclosure, preserving its open state while paging through events. Display each event's action, member and local date/time in a compact row without the Tehran suffix; long entries wrap on narrow screens.
+
+- Care entry now offers watering, fertilizing, soil replacement, repotting and examination; legacy no-water-needed events remain readable in history.
+
+- Plant detail back arrows now return to the plant list, including embedded details; removed the redundant detail list button while preserving list-to-Management navigation.
+
+- Moved detail photos into the plant information card, replaced location/species rows with a friendly name-and-location sentence, removed the separate album section and assignee display, and placed photo controls in the edit dialog, opened with an accessible borderless pencil icon matching the delete control.
+
+- Renamed plant section and browser titles to «گلدون‌های ما», removed the family/shared-care subtitle and made the header add button full-width with more space below the title.
+
+- Exposed plant deletion as a labeled, 44-pixel trash icon on list cards and details with a named confirmation, safe initial cancel focus, duplicate-submit protection and success/error feedback; kept deletion available in details.
+
+- **Breaking:** Removed soil-check/fertilizer scheduling, due states and next-date history from all plant screens. Care remains a manual shared log; deploy with backend 3.0.0 and migrate the database. Home rows show location and newest plants first.
+
+- Simplified new-plant creation with 30 common plant types, unknown/custom options and shared family care; preserved existing custom species when editing.
+
+- Display plant-list photos as compact square thumbnails beside each plant name and location, preserving full-size detail photos and accessible image retry.
+
+- Moved personal reminders out of Finance into a dedicated «یادآورها» Management page, preserving existing reminder actions, back navigation and Management selection.
+
+- Grouped Management into softly colored Family, Finance and Plants buttons with dedicated pages and compact left-arrow back controls aligned with page titles. Finance preserves accounts, categories, rates and reminders; all three pages keep Management selected in bottom navigation, including on direct visits.
+
+- Simplified bottom navigation to Home, Management and Reports in RTL order, preserving existing page routes and content.
+
+- Added optional photo selection and preview directly to the new-plant form. Saving uploads the photo after plant creation; failed uploads retain the selected file in details for retry without creating another plant.
+
+- Added a home-page plants section below the financial divider, showing up to three compact photo/name/next-care rows ordered by care due date, sized similarly to the financial section with existing creation, detail and care flows, family selection, loading/error/empty states and navigation to all plants.
+
+- Added a horizontal divider below the financial section on the home page using the shared border token.
+
+- Replaced report-type buttons with equal-width underlined RTL tabs, keyboard navigation and labeled panels while preserving the selected date range.
+
+- Removed the report footer explanation about family cash flow and personal assets.
+
+- Renamed the report ledger to «تراکنش ها» and made it a keyboard-accessible disclosure, collapsed initially, with count-free income/expense tabs and five transactions per page with previous/next navigation.
+
+- Simplified the cash-flow chart to follow the report date filter directly, removing its separate interval-details selector and readout.
+
+- Refined report income/expense summaries into readable responsive rows with inline currency, percentage badges with up/down arrows and a dash for unchanged values labeled against the previous equivalent period, without an extra comparison-details section, preserving the shared application width. Percentage badges use pastel green for income growth or expense decline, pastel red for the inverse, and neutral colors for unchanged or unavailable comparisons. Nonzero totals with a zero comparison baseline display a compact unavailable-percentage placeholder.
+
+- Shortened the Reports page heading and browser title to «گزارش», renamed the summary heading to «خلاصهٔ», removed its record count, and added playful cash-flow copy with a gently wistful message when expenses exceed income.
+
+- Replaced the long Management page with expandable account/category cards: open content in place, keep only one card expanded, and preserve family selection with keyboard-accessible controls.
+
+- Reduced the balance label, icon and currency label sizes and sized amounts against available space to keep currency alongside large mobile balances.
+
+- Format all toman amount inputs with live three-digit separators, preserving Persian/Arabic/Latin digits, cursor editing and existing numeric API payloads.
+
+- Simplified the expense sheet: removed the title input and replaced the category dropdown with wrapping icon-and-label radio buttons, selected color/border states, a shorter category label and keyboard support. Other is selected by default; new entries use a default title while preserving the API contract and historical titles.
 
 - Removed access selectors and badges. Every family member can record income/expenses and manage invitations; Management shows only families created by the current user. Requires backend 1.0.0.
 
@@ -215,6 +234,33 @@ Current development version: `1.4.0`. No frontend release has been published.
 
 ### Fixed
 
+- Place recent transaction dates beside their category/source on Home and show transaction descriptions below, wrapping long text on small screens.
+
+- Show per-part reminder SMS prices (Persian 500 / English 750 tomans), explain final-content multipart billing and use the minimum part price for low-balance guidance. Requires backend 5.0.0 with the family wallet tariff fields.
+
+- Replaced grouped cashflow bars with daily solid line charts, using green income/red expense strokes and circle/square markers from central chart tokens. Preserve zero-transaction days and exact daily values, with dated ticks, contained keyboard-accessible horizontal scrolling and the existing daily table; removed multi-day aggregation and the redundant line-style legend.
+
+- Removed the redundant «شروع:» prefix and Tehran suffix from reminder-card dates, including the next SMS date, while preserving Tehran time formatting.
+
+- Show the Management tab and hub/finance routes only for the selected family's creator or spouse, using authenticated family membership. Fail closed during permission loading/failure and adapt Home/Reports navigation to two columns. Family selection/onboarding, personal reminders and shared plant care remain available; existing server operation permissions are unchanged.
+
+- Aligned populated reminder lists with plant cards: full-width add action above the list, matching card surfaces and spacing, clear title/date/recurrence hierarchy, and consistently placed edit/delete controls. Kept SMS details in an accessible disclosure and preserved notes; removed the redundant personal badge from cards.
+
+- Keep dialog sheets within the visible viewport as mobile keyboards open, close or pan the page; scroll focused controls inside the sheet into view.
+
+- Prevent long user names and access-edit buttons from widening admin user cards and causing horizontal page scrolling on small screens.
+
+- Reduced the home fund selector height from 52px to 44px while preserving accessible touch targets, unified the card heading as balance across all three funds, and removed the shared/personal scope subtitles and empty-fund message from the home card. Tightened card padding and spacing; vertically centered the icon, balance title and adjacent amount in one compact row.
+
+- Redrew the family empty-state illustration with complete chipmunk characters, simpler facial details and a balanced family composition.
+
+- Removed the white circular background and border from family invitation delete buttons while preserving their touch targets and interaction feedback.
+
+- Replaced native dropdown menus across the app with shared RTL select controls, styled options, selected indicators and keyboard navigation.
+
+- Prevented full-page reloads when switching between family and dashboard tabs;
+  preserve the floating navigation, in-memory views, and browser back/forward.
+
 - Removed unnecessary text underlines from selected login-method and transaction-type toggle buttons.
 
 - Require server-side account verification before entering the dashboard;
@@ -224,37 +270,3 @@ Current development version: `1.4.0`. No frontend release has been published.
   screens while retaining the full-width hero layout.
 - Used the larger reference logo for the closing banner instead of enlarging
   the small header mark, preserving its proportions and original design.
-
-### Added
-
-- Added mobile-first family creation, member lists, invitation creation/copy/revocation
-  in bottom sheets, and explicit invitation acceptance. Preserve invitation context
-  through login/signup using URL fragments, without open redirects.
-- Added family entry points from dashboard and account settings.
-
-- Added a Persian mobile-first dashboard at `/dashboard`, with monthly financial
-  summaries, amount privacy controls, transaction creation and filtering, and
-  editable category budgets. Sample data stays in memory and resets on reload.
-  Dashboard access now requires an authenticated session; financial data remains
-  a clearly labeled sample rather than personal persisted transactions.
-
-- Connected phone signup, password/OTP login and password recovery to the
-  FastAPI backend. Five-digit OTP auto-submit, Persian/Arabic digits, busy states,
-  errors and the login bottom sheet work with server-owned verification.
-- Added account profile editing, password changes, current/other session
-  management and logout. Added admin-only paginated user search, role changes
-  and activation/suspension, with server authorization on every operation.
-- Added authenticated page guards and same-origin API integration; updated
-  landing privacy/FAQ copy to describe actual account persistence.
-
-- Established the independent frontend version baseline in `VERSION`.
-- Added a Persian, RTL, mobile-first landing page matching the supplied visual
-  reference, with a full-width responsive hero and closing call to action,
-  original phone/brand artwork, financial cards, audience sections,
-  responsive navigation, and accessible introduction, FAQ, and information dialogs.
-- Added an interactive sample budget with expense updates and reset; demo data
-  stays in memory and does not connect to a bank or a backend.
-- Initialized React, Vite, TypeScript, Tailwind CSS, and shadcn/ui; integrated
-  central light-theme colors, sidebar/chart aliases, Persian fonts, keyboard
-  focus, reduced-motion support, and accessible demo feedback.
-- Added build/type checks, version-metadata validation, and local setup instructions.

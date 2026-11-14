@@ -203,6 +203,8 @@ def test_access_migration_preserves_members_and_pending_invites(client, app):
     from test_income import payload
     from test_money_locations import location
 
+    # This older migration predates registration gifts and financial balances.
+    app.state.on_user_registered = None
     owner = register(client)
     family_id = create(client)
     first = invite(client, family_id)

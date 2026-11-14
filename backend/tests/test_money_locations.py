@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from test_families import accept, account, create, invite
@@ -62,6 +63,7 @@ def test_location_permissions_and_income_attribution(client, app):
     assert client.get(income_url).json()["total_toman"] == "30000000"
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_location_migration_preserves_existing_income(client):
     user = register(client)
     family = create(client)

@@ -1,5 +1,6 @@
 from dataclasses import asdict
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import inspect, text
@@ -20,6 +21,7 @@ def test_public_identity_dependency(client, app):
     assert client.get("/test/module-consumer").status_code == 401
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_schema_migration_preserves_accounts_sessions_and_constraints(client, app):
     user = register(client)
     engine = app.state.engine

@@ -39,7 +39,9 @@ def enabled():
 
 
 def create(client, **changes):
-    response = client.post("/api/reminders", json=payload(due_at=NOW.isoformat(), **changes))
+    from test_wallets import family, fund
+    fund(client.app)
+    response = client.post("/api/reminders", json=payload(sms_family_id=family(client), due_at=NOW.isoformat(), **changes))
     assert response.status_code == 201, response.text
     return response.json()["reminder"]
 
@@ -140,6 +142,7 @@ def test_recurring_catches_up_only_latest_and_preserves_schedule(client, app):
     assert sender.calls[-1][2]["title"] == "Updated title"
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_stale_one_time_reminder_is_skipped_and_migration_guarded(client, app):
     register(client)
     row = create(client)

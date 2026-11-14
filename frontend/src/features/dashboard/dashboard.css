@@ -9,10 +9,11 @@
 .management-hub { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-block-start: 24px; }
 .management-hub > button { min-width: 0; min-height: 96px; padding: 12px 4px; flex-direction: column; gap: 12px; border-radius: 24px; white-space: normal; }
 .management-hub > button svg { width: 24px; height: 24px; }
-.management-hub > .management-family-action { --management-action-bg: var(--scene-rose); }
+.management-hub > .management-family-action { grid-column: 1 / -1; --management-action-bg: var(--scene-rose); }
 .management-hub > .management-finance-action { --management-action-bg: var(--scene-peach); }
 .management-hub > .management-plants-action { --management-action-bg: var(--scene-lime); }
 .management-hub > .management-reminders-action { --management-action-bg: var(--muted); }
+.management-hub > .management-purchases-action { --management-action-bg: var(--scene-blue); }
 .management-hub > button { background: var(--management-action-bg); color: var(--foreground); }
 .management-hub > button:hover { background: var(--accent); color: var(--accent-foreground); }
 .management-hub > button:active { background: var(--secondary); color: var(--secondary-foreground); }
@@ -131,6 +132,7 @@
 .wallet-transaction-kind { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 .wallet-transaction-kind[data-kind="income"] { background: var(--success-bg); color: var(--success); }
 .wallet-transaction-kind[data-kind="expense"] { background: var(--error-bg); color: var(--error); }
-.wallet-recent time { display: block; margin-block-start: 4px; color: var(--muted-foreground); font-size: 12px; }
+.wallet-recent time { color: var(--muted-foreground); font-size: 12px; }
+.wallet-recent-description { margin: 4px 0 0; color: var(--muted-foreground); overflow-wrap: anywhere; white-space: pre-wrap; text-align: start; }
 .wallet-recent-amount { display: flex; flex-direction: column; text-align: end; max-width: 45%; overflow-wrap: anywhere; font-weight: 600; }
 .wallet-recent-amount small { color: var(--muted-foreground); font-size: 11px; font-weight: 400; }

@@ -411,3 +411,34 @@ Optional photos use a private MinIO bucket. Start `docker compose up -d minio`,
 configure `MABAN_MINIO_*` from `.env.example`, apply migrations, and initialize
 with `uv run python -m app.plants.storage`. PostgreSQL stores object keys only.
 See the linked guide for scoped credentials, backup and reconciliation commands.
+
+## Household shopping
+
+Run `uv run alembic upgrade head` before deploying backend 3.3.0 with frontend 1.6.0.
+Migration `aa7c3e21bd90` adds the `shopping` schema; `f09ab23d715c` adds the optional
+expense link and preserves existing shopping rows. `c31ea8507b42` adds named lists and groups existing items into a default list without losing purchase or expense data. `e8a1d6342fc9` adds durable list checkout receipts. Downgrade refuses to discard existing
+shopping data or expense links. Back up before migrating.
+
+Authenticated members use `/api/families/{family_id}/shopping`: GET accepts
+`status=pending|purchased` and `offset` (50 items per page), POST accepts name,
+optional quantity/note and a UUID `request_id`. PUT `/{item_id}` accepts the item
+fields plus `version`; PUT `/{item_id}/status` accepts a strict boolean `purchased`
+and `version`, plus optional positive integer `amount_toman` (maximum 1,000,000,000,000)
+and optional `category_id` when confirming a purchase. DELETE `/{item_id}?version=N` requires the version being deleted.
+Responses include item versions, purchase timestamps and separate status counts.
+Stale edits return 409; fetch the latest list before retrying. Creation retries with
+the same payload/request ID do not duplicate items. With no amount, purchase marking has no
+financial side effects. With an amount, expense creation and purchase marking commit together;
+the authenticated member is the payer and an omitted category uses Other. `expense_id` is
+returned on linked items. Undo/deletion preserves the expense; rechecking without a new
+amount is allowed, while submitting another amount for the same item is rejected. A new
+purchase requiring another expense should use a new shopping item. Quantities are free text (up to 80 characters); names and notes are
+limited to 120 and 500 characters.
+
+Named shopping lists: GET `/api/families/{family_id}/shopping/lists?offset=0` returns up to 50 lists with pending/purchased counts and `has_more`. POST to that path accepts `name`, UUID `request_id` and up to 100 initial `items` (name, optional quantity/note), creating them in one transaction. GET shopping accepts optional `list_id`; POST item accepts `list_id`. Omitted IDs retain the legacy family default list behavior. A list ID from another family is rejected.
+
+POST `/api/families/{family_id}/shopping/lists/{list_id}/complete` accepts UUID `request_id`, the current `checkout.token` returned by a list-scoped GET, optional positive `amount_toman` and optional `category_id`. It completes every non-deleted item, regardless of pagination, in the same transaction as a single optional expense. The confirming member pays and an omitted category uses Other. Empty lists, stale snapshots and another total when a live item or prior list checkout has an expense return 409. Use completion without an amount in that case. Exact retries return the stored receipt without repeating later item changes; different request contents/actors conflict. Linked item undo/deletion keeps the shared expense.
+
+Shopping item reads also accept `status=all` to paginate pending and purchased items together in their original order. Existing status defaults remain unchanged.
+
+Shopping list-index reads accept `status=all` (default), `pending` or `purchased`, applied before pagination. Purchased requires at least one live item and no unchecked live items; empty lists remain pending.

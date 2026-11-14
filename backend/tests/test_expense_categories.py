@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from test_expenses import payload
@@ -61,6 +62,7 @@ def test_category_owner_management_member_use_and_family_isolation(client, app):
     assert legacy.json()["entry"]["category_name"] == "خرید روزمره"
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_category_migration_preserves_expenses(client):
     user = register(client)
     family = create(client)
@@ -113,6 +115,7 @@ def test_new_category_icons_create_edit_and_list(client):
         assert edited.json()["category"] in client.get(path).json()["categories"]
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_icon_migration_defaults_existing_categories(client):
     register(client)
     family = create(client)

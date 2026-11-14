@@ -92,6 +92,7 @@ def test_asset_rate_changes_keep_purchase_and_history(client, app):
     assert client.get("/api/assets").json()["entries"][0]["purchase_price_toman"] == 500
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_migration_seeds_existing_rates_without_inventing_past(client, app):
     from alembic import command
     from alembic.config import Config

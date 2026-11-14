@@ -19,6 +19,8 @@ class ReminderFields(BaseModel):
     due_at: AwareDatetime
     recurrence: Literal["none", "daily", "weekly", "fortnightly", "monthly"] = "none"
     amount_toman: Annotated[int, Field(strict=True, gt=0, le=1_000_000_000_000)] | None = None
+    sms_family_id: UUID | None = None
+    recipient_user_ids: list[UUID] = Field(default_factory=list, max_length=99)
     plant_family_id: UUID | None = None
     plant_id: UUID | None = None
     note: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2000)] | None = None
@@ -28,6 +30,11 @@ class ReminderFields(BaseModel):
         if (self.plant_family_id is None) != (self.plant_id is None):
             raise ValueError("Plant and family must be provided together")
         return self
+
+    @field_validator("recipient_user_ids")
+    @classmethod
+    def normalize_recipients(cls, value):
+        return sorted(set(value), key=str)
 
     @field_validator("due_at", mode="before")
     @classmethod
