@@ -86,6 +86,7 @@ def test_invalid_and_animated_images_are_rejected(monkeypatch):
         normalize_photo(image_bytes(), "image/png")
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_private_photo_full_flow_and_migration(client, app, store):
     register(client)
     family = create(client)
@@ -214,6 +215,7 @@ def test_photos_require_authentication(client):
 
 
 @pytest.mark.parametrize("app", ["d58764dc192a"], indirect=True)
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_minio_migration_refuses_unexpected_legacy_images(app):
     row = {"id": str(uuid4())}
     config = Config("alembic.ini")

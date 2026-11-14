@@ -9,6 +9,7 @@ import { AdminUsersPage } from "./features/auth/AdminUsersPage";
 import { InvitePage } from "./features/families/InvitePage";
 import "./styles.css";
 import { PwaUpdateNotice } from "./components/PwaUpdateNotice";
+import { ActiveFamilyProvider } from "./features/families/ActiveFamily";
 import { WalletPage } from "./features/wallet/WalletPage";
 
 console.info(`%cClient Version: ${__APP_VERSION__}`, "color: #2478ff; font-size: 22px; font-weight: bold; font-family: monospace;");
@@ -19,7 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     {/^\/(dashboard|families)\/?$/.test(window.location.pathname) ? <ProtectedPage>{user => <MemberApp user={user} />}</ProtectedPage>
       : /^\/invite\/?$/.test(window.location.pathname) ? <ProtectedPage>{() => <InvitePage />}</ProtectedPage>
       : /^\/account\/?$/.test(window.location.pathname) ? <ProtectedPage>{user => <AccountPage user={user} />}</ProtectedPage>
-      : /^\/wallet\/?$/.test(window.location.pathname) ? <ProtectedPage>{() => <WalletPage />}</ProtectedPage>
+      : /^\/wallet\/?$/.test(window.location.pathname) ? <ProtectedPage>{user => <ActiveFamilyProvider userId={user.id}><WalletPage /></ActiveFamilyProvider>}</ProtectedPage>
       : /^\/admin\/users\/?$/.test(window.location.pathname) ? <ProtectedPage admin>{user => <AdminUsersPage user={user} />}</ProtectedPage>
       : /^\/(login|signup|forgot-password)\/?$/.test(window.location.pathname) ? <AuthPage /> : <LandingPage />}
   </React.StrictMode>,

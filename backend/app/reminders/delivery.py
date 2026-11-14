@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from sqlalchemy import select
 
+from app.families.public import is_member
 from app.messaging.public import enqueue_sms
 from app.reminders.models import Reminder, SmsAttempt
 from app.reminders.scheduling import occurrence_window, pattern_attributes
@@ -25,22 +26,29 @@ def schedule_one(sessions, settings, now):
         if row is None:
             return False
         due, following = occurrence_window(row.due_at, row.recurrence, now)
-        attempt_id = uuid4()
-        db.add(SmsAttempt(id=attempt_id, reminder_id=row.id, revision=row.sms_revision,
-                          due_at=due, attempted_at=now, status="unknown"))
         row.next_sms_at, row.sms_status = following, "pending"
         attributes = pattern_attributes(row.title, due, row.amount_toman)
         price = message_price(render_pattern(settings.sms_reminder_body, attributes))
-        if not reserve_sms(db, row.user_id, attempt_id, price):
-            db.flush()
-            db.get(SmsAttempt, attempt_id).status = "skipped"
-            row.sms_status = "skipped"
-            return True
-        # Occurrence reservation, next schedule and queue insertion commit together.
-        enqueue_sms(db, kind="reminder", reference_id=attempt_id, priority=10,
-                    available_at=now, expires_at=due + MAX_LATENESS,
-                    secret_key=settings.secret_key,
-                    payload={"pattern": settings.sms_reminder_template, "attributes": attributes})
+        authorized = row.sms_family_id is not None and is_member(db, row.sms_family_id, row.user_id)
+        for recipient in [row.user_id, *row.recipient_user_ids]:
+            attempt_id = uuid4()
+            attempt = SmsAttempt(id=attempt_id, reminder_id=row.id, revision=row.sms_revision,
+                recipient_user_id=recipient, due_at=due, attempted_at=now, status="unknown")
+            db.add(attempt)
+            if (not authorized or not is_member(db, row.sms_family_id, recipient)
+                    or notification_phone(db, recipient) is None
+                    or not reserve_sms(db, row.sms_family_id, attempt_id, price)):
+                attempt.status = "skipped"
+                continue
+            # Each recipient owns a separate reservation, job and refund reference.
+            enqueue_sms(db, kind="reminder", reference_id=attempt_id, priority=10,
+                        available_at=now, expires_at=due + MAX_LATENESS,
+                        secret_key=settings.secret_key,
+                        payload={"pattern": settings.sms_reminder_template, "attributes": attributes})
+        db.flush()
+        update_status(db, row, due)
+        if row.sms_status == "unknown":
+            row.sms_status = "pending"
         return True
 
 
@@ -52,7 +60,15 @@ def deliver(db, settings, sender, attempt_id, payload, now):
     if (row is None or row.deleted_at is not None or row.sms_revision != attempt.revision
             or attempt.due_at + MAX_LATENESS <= max(now, datetime.now(UTC))):
         return "skipped"
-    phone = notification_phone(db, row.user_id)
+    if row.sms_family_id is None or not is_member(db, row.sms_family_id, row.user_id):
+        return "skipped"
+    if notification_phone(db, row.user_id) is None:
+        return "skipped"
+    recipient = attempt.recipient_user_id
+    if (recipient != row.user_id and recipient not in row.recipient_user_ids
+            or not is_member(db, row.sms_family_id, recipient)):
+        return "skipped"
+    phone = notification_phone(db, recipient)
     if phone is None:
         return "skipped"
     # Jobs created before wallet billing was deployed have no prepaid reservation.
@@ -75,8 +91,17 @@ def record_result(db, attempt_id, status):
     if row is None or row.deleted_at is not None or row.sms_revision != attempt.revision:
         return
     # An old queued result must not overwrite a later recurrence's status.
-    latest = db.scalar(select(SmsAttempt.id).where(
+    latest = db.scalar(select(SmsAttempt.due_at).where(
         SmsAttempt.reminder_id == row.id, SmsAttempt.revision == row.sms_revision,
     ).order_by(SmsAttempt.due_at.desc()).limit(1))
-    if latest == attempt.id:
-        row.sms_status = attempt.status
+    if latest == attempt.due_at:
+        db.flush()
+        update_status(db, row, attempt.due_at)
+
+
+def update_status(db, row, due):
+    statuses = set(db.scalars(select(SmsAttempt.status).where(
+        SmsAttempt.reminder_id == row.id, SmsAttempt.revision == row.sms_revision,
+        SmsAttempt.due_at == due)))
+    # Never present a partially successful occurrence as fully accepted.
+    row.sms_status = next((s for s in ("unknown", "skipped", "accepted") if s in statuses), "skipped")

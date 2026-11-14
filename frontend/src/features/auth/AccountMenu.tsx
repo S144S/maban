@@ -60,7 +60,7 @@ export function AccountMenu() {
         </DropdownMenu.Item>
         <DropdownMenu.Separator className="account-menu-separator" />
         <DropdownMenu.Item asChild disabled={busy} className="account-menu-item">
-          <a href="/wallet" onClick={event => { if (pending.current) event.preventDefault(); }}><Wallet size={20} aria-hidden="true" />کیف پول من</a>
+          <a href="/wallet" onClick={event => { if (pending.current) event.preventDefault(); }}><Wallet size={20} aria-hidden="true" />کیف پول خانواده</a>
         </DropdownMenu.Item>
         <DropdownMenu.Item className="account-menu-item" disabled={busy} onSelect={event => { event.preventDefault(); void logout(); }}>
           <LogOut size={20} aria-hidden="true" />خروج

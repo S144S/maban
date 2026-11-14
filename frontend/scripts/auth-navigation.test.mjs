@@ -43,3 +43,14 @@ test("invalid invitation tokens never become a redirect or an auth link", () => 
     assert.equal(state.exports.authHref("/signup"), "/signup");
   }
 });
+test("payment family survives sign-in without trusting arbitrary return URLs", () => {
+  const family = "12345678-1234-4234-8234-123456789abc";
+  const target = `/wallet?family=${family}`;
+  const state = navigation(`https://maban.example/wallet?payment=confirmed&family=${family}`);
+  const login = state.exports.authHref("/login");
+  assert.equal(navigation(`https://maban.example${login}`).exports.afterAuth(), target);
+  assert.equal(navigation(`https://maban.example${login}`).exports.authHref("/signup"), `/signup?next=${encodeURIComponent(target)}`);
+  for (const next of ["/wallet?family=invalid", `${target}&next=//evil.example`, "//evil.example/wallet"]) {
+    assert.equal(navigation(`https://maban.example/login?next=${encodeURIComponent(next)}`).exports.afterAuth(), "/dashboard");
+  }
+});

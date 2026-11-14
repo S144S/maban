@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -28,8 +29,10 @@ def token_digest(token: str):
 
 
 class Families:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, *,
+                 on_member_joined: Callable[[Session, UUID, UUID], None] | None = None):
         self.db = db
+        self.on_member_joined = on_member_joined
 
     def create(self, user_id: UUID, name: str):
         lock(self.db, "member:" + str(user_id))
@@ -45,6 +48,8 @@ class Families:
             )
         )
         self.db.flush()
+        if self.on_member_joined:
+            self.on_member_joined(self.db, user_id, family.id)
         return self.summary(family)
 
     def check_membership_limit(self, user_id):
@@ -218,4 +223,6 @@ class Families:
         )
         invite.accepted_at, invite.accepted_by = now(), user_id
         self.db.flush()
+        if self.on_member_joined:
+            self.on_member_joined(self.db, user_id, invite.family_id)
         return {"family_id": str(invite.family_id)}

@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, LockKeyhole, Wallet, CreditCard, ReceiptText, History, MessageSquare } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import { ArrowLeft, Users, Wallet, CreditCard, ReceiptText, History, MessageSquare } from "lucide-react";
+import { useActiveFamily } from "@/features/families/ActiveFamily";
+import type { Family } from "@/features/families/api";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { MoneyInput } from "@/components/ui/money-input";
 import { ReferenceArtwork } from "@/features/landing/ReferenceArtwork";
@@ -10,12 +13,42 @@ import "@/features/auth/account.css";
 import "./wallet.css";
 
 type Summary = { balance_toman: number; sms_persian_part_toman: number; sms_english_part_toman: number; topup_enabled: boolean };
-type Entry = { id: string; kind: "topup" | "sms" | "sms_refund"; amount_toman: number; balance_after: number; created_at: string };
+type Entry = { id: string; kind: "topup" | "sms" | "sms_refund" | "signup_gift"; amount_toman: number; balance_after: number; created_at: string };
 type Topup = { id: string; amount_toman: number; status: "pending" | "paid"; reference: string | null; checkout_url: string | null; created_at: string };
-const entryLabels = { topup: "شارژ کیف پول", sms: "رزرو هزینهٔ پیامک", sms_refund: "برگشت هزینهٔ پیامک" };
+const entryLabels = { topup: "شارژ کیف پول", sms: "رزرو هزینهٔ پیامک", sms_refund: "برگشت هزینهٔ پیامک", signup_gift: "هدیهٔ ثبت‌نام عضو" };
 const date = (value: string) => new Date(value).toLocaleString("fa-IR", { timeZone: "Asia/Tehran", dateStyle: "medium", timeStyle: "short" });
 
 export function WalletPage() {
+  useEffect(() => { document.title = "کیف پول خانواده | مابان"; }, []);
+  const { selected, setSelected } = useActiveFamily();
+  const [families, setFamilies] = useState<Family[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true); setError("");
+    api<{ families: Family[] }>("/families", { signal: controller.signal }).then(result => {
+      if (controller.signal.aborted) return;
+      setFamilies(result.families);
+      const returned = new URLSearchParams(window.location.search).get("family");
+      if (result.families.some(f => f.id === returned)) setSelected(returned!);
+    }).catch(err => {
+      if (controller.signal.aborted) return;
+      if (err instanceof ApiError && err.status === 401) window.location.replace("/login");
+      else setError(errorMessage(err));
+    }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [retry, setSelected]);
+  const family = families.find(f => f.id === selected) ?? families[0];
+  if (loading || error || !family) return <main className="account-shell account-page" dir="rtl">
+    <h1>کیف پول خانواده</h1><a href="/account">بازگشت به حساب کاربری</a>
+    {loading ? <p role="status">در حال دریافت خانواده‌ها…</p> : error ? <div role="alert"><p>{error}</p><Button onClick={() => setRetry(n => n + 1)}>تلاش دوباره</Button></div> : <p>برای کیف پول مشترک، اول <a href="/families">یه خانواده بسازین یا عضو خانواده بشین</a>.</p>}
+  </main>;
+  return <FamilyCreditWallet key={family.id} familyId={family.id} selector={disabled => <div className="auth-field"><label htmlFor="credit-wallet-family">خانوادهٔ کیف پول</label><Select id="credit-wallet-family" value={family.id} disabled={disabled} options={families.map(f => ({ value: f.id, label: f.name }))} onValueChange={setSelected} /></div>} />;
+}
+
+function FamilyCreditWallet({ familyId, selector }: { familyId: string; selector: (disabled: boolean) => ReactNode }) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [topups, setTopups] = useState<Topup[]>([]);
@@ -32,14 +65,14 @@ export function WalletPage() {
   const request = useRef<{ amount: number; id: string } | null>(null);
   const initialPayment = useRef(new URLSearchParams(window.location.search).get("payment"));
 
-  useEffect(() => { document.title = "کیف پول من | مابان"; }, []);
+  useEffect(() => { document.title = "کیف پول خانواده | مابان"; }, []);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError("");
     Promise.all([
-      api<Summary>("/wallet", { signal: controller.signal }),
-      api<{ entries: Entry[]; has_more: boolean }>(`/wallet/entries?offset=${entryOffset}`, { signal: controller.signal }),
-      api<{ topups: Topup[]; has_more: boolean }>(`/wallet/topups?offset=${topupOffset}`, { signal: controller.signal }),
+      api<Summary>(`/families/${familyId}/wallet`, { signal: controller.signal }),
+      api<{ entries: Entry[]; has_more: boolean }>(`/families/${familyId}/wallet/entries?offset=${entryOffset}`, { signal: controller.signal }),
+      api<{ topups: Topup[]; has_more: boolean }>(`/families/${familyId}/wallet/topups?offset=${topupOffset}`, { signal: controller.signal }),
     ]).then(([wallet, history, payments]) => {
       if (controller.signal.aborted) return;
       setSummary(wallet); setEntries(history.entries); setMoreEntries(history.has_more);
@@ -56,7 +89,7 @@ export function WalletPage() {
       else setError(errorMessage(err));
     }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [entryOffset, topupOffset, refresh]);
+  }, [familyId, entryOffset, topupOffset, refresh]);
 
   async function perform(action: () => Promise<void>) {
     if (pending.current) return;
@@ -76,14 +109,15 @@ export function WalletPage() {
     if (request.current?.amount !== amount) request.current = { amount, id: crypto.randomUUID() };
     const requestId = request.current.id;
     void perform(async () => {
-      const result = await api<Topup>("/wallet/topups", { method: "POST", body: { amount_toman: amount, request_id: requestId } });
+      const result = await api<Topup>(`/families/${familyId}/wallet/topups`, { method: "POST", body: { amount_toman: amount, request_id: requestId } });
       if (result.status === "paid") { request.current = null; setMessage("این شارژ قبلاً تأیید شده و به موجودی اضافه شده."); setRefresh(n => n + 1); return; }
       if (result.checkout_url) window.location.assign(result.checkout_url);
     });
   }
   return <main className="account-shell account-page credit-wallet-page" dir="rtl">
     <header className="account-header"><a href="/dashboard" aria-label="مابان، داشبورد"><ReferenceArtwork variant="brand" /></a><a href="/account" className="account-back" aria-label="بازگشت به حساب کاربری" title="بازگشت به حساب کاربری"><ArrowLeft size={22} aria-hidden="true" /></a></header>
-    <div className="account-intro"><h1>کیف پول من</h1><p className="credit-wallet-scope"><LockKeyhole size={16} aria-hidden="true" />شخصی؛ برای خدمات مابان</p></div>
+    <div className="account-intro"><h1>کیف پول خانواده</h1><p className="credit-wallet-scope"><Users size={16} aria-hidden="true" />مشترک بین اعضای خانواده؛ برای خدمات مابان</p></div>
+    {selector(busy)}
     {error && <div role="alert" className="credit-wallet-error"><p>{error}</p><Button variant="outline" disabled={busy || loading} onClick={() => setRefresh(n => n + 1)}>دریافت دوبارهٔ اطلاعات</Button></div>}
     {message && <p role="status" className="auth-feedback">{message}</p>}
     {loading && <p role="status">در حال دریافت اطلاعات کیف پول…</p>}
@@ -110,7 +144,7 @@ export function WalletPage() {
           <time dateTime={t.created_at} className="credit-wallet-muted">{date(t.created_at)}</time>
           {t.reference && <p>شمارهٔ پیگیری: <bdi dir="ltr">{t.reference}</bdi></p>}
           {t.status === "pending" && <Button variant="outline" disabled={busy || loading} onClick={() => void perform(async () => {
-            await api(`/wallet/topups/${t.id}/verify`, { method: "POST" });
+            await api(`/families/${familyId}/wallet/topups/${t.id}/verify`, { method: "POST" });
             setMessage("پرداخت تأیید شد و موجودی به‌روز شد."); setRefresh(n => n + 1);
           })}>بررسی وضعیت پرداخت</Button>}
         </li>)}</ul>
@@ -126,6 +160,7 @@ export function WalletPage() {
         <Pagination offset={entryOffset} more={moreEntries} disabled={busy || loading} onChange={setEntryOffset} label="تراکنش‌ها" />
       </section>
       <details className="account-card credit-wallet-policy"><summary><ReceiptText size={20} aria-hidden="true" />دربارهٔ مصرف موجودی</summary><div>
+        <p>هر عضو تازه که ثبت‌نام می‌کنه، ۵٬۰۰۰ تومان هدیه برای اولین خانواده‌ای که می‌سازه یا عضوش می‌شه میاره. این هدیه برای هر نفر فقط یک‌باره.</p>
         <p>فعلاً موجودی برای پیامک یادآوری مصرف می‌شه. پیامک ورود رایگانه. امکان برداشت یا انتقال موجودی وجود نداره.</p>
         <p>هزینهٔ پیامک قبل از ارسال رزرو می‌شه. اگه ارسال لغو یا قطعی رد بشه، مبلغ برمی‌گرده. در وضعیت نامشخص، مبلغ تا بررسی پشتیبانی رزرو می‌مونه. یادآوری‌های ردشده به‌خاطر کمبود موجودی، بعد از شارژ دوباره ارسال نمی‌شن.</p>
       </div></details>

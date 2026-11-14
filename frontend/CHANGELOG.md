@@ -5,15 +5,21 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.9.1`. No frontend release has been published.
+Current development version: `1.12.0`. No frontend release has been published.
 
 ### Fixed
 
-- Show per-part reminder SMS prices (Persian 500 / English 750 tomans), explain final-content multipart billing and use the minimum part price for low-balance guidance. Requires backend 4.0.0 with the new wallet tariff fields.
+- Show per-part reminder SMS prices (Persian 500 / English 750 tomans), explain final-content multipart billing and use the minimum part price for low-balance guidance. Requires backend 5.0.0 with the family wallet tariff fields.
 
 ### Added
 
-- Added Persian RTL personal wallet at `/wallet`, linked from profile/account menus, with balance, configured SMS tariff, online top-up form, payment verification retries and independently paginated payment/ledger history. Match the shared 480px account shell, brand header, circular back control, pastel balance/top-up cards and capsule actions; place consumption details in an accessible disclosure. Explain insufficient funds, uncertain SMS charges and the absence of withdrawal/transfers; disable charging until the gateway is configured. Requires backend 3.5.0 and migration `bc854329da01`.
+- Add an optional family-member checkbox group to reminder forms, with loading/retry/empty states, preserved edit selections and per-recipient SMS cost/privacy guidance. Automatically use the family wallet without a payment selector; retain an existing reminder's accessible wallet and use the active family for new reminders. Clear selections when the resolved family changes; the author remains a recipient. Show additional-recipient counts and partial delivery failures. Requires backend 5.2.0 and migration `e8da512fc940`.
+
+- Label registration gifts in the family wallet ledger and explain the one-time 5,000-toman gift to each new member's first family. Requires backend 5.1.0 and migration `d7c8412eab30`.
+
+- Use the shared active-family selection for family-owned service wallets, including shared payment/ledger history and a no-family state. Personal reminders use the family wallet automatically for SMS. Payment returns restore the charged family. Requires backend 5.0.0 and migration `ce965430eb12`.
+
+- Added Persian RTL family wallet at `/wallet`, linked from profile/account menus, with balance, configured SMS tariff, online top-up form, payment verification retries and independently paginated payment/ledger history. Match the shared 480px account shell, brand header, circular back control, pastel balance/top-up cards and capsule actions; place consumption details in an accessible disclosure. Explain insufficient funds, uncertain SMS charges and the absence of withdrawal/transfers; disable charging until the gateway is configured. Requires backend 5.0.0 and migration `ce965430eb12`.
 
 - Show the active family's unfinished shopping-list cards below Home reminders, hiding the section when none remain. Reuse list progress and checkout actions, support pagination and retry, open items with a return to Home, and refresh the wallet after checkout. Keep the Home section heading free of a manual refresh action.
 

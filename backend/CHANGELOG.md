@@ -5,15 +5,21 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `4.0.0`. No backend release has been published.
+Current development version: `5.2.0`. No backend release has been published.
 
 ### Changed
 
-- **Breaking:** Replace the flat `sms_price_toman` wallet response with `sms_persian_part_toman` (500) and `sms_english_part_toman` (750). Bill each reminder from its complete rendered pattern using UTF-16 part counts and the supplied multipart overhead algorithm. Replace `MABAN_SMS_PRICE_TOMAN` with the exact approved `MABAN_SMS_REMINDER_BODY` before enabling delivery; update wallet clients and deploy API/worker/frontend together. Queue the priced pattern/attributes snapshot; legacy jobs without a snapshot skip and refund their original reservation. Existing ledger entries remain unchanged; no database migration is needed.
+- **Breaking:** Move prepaid wallets from users to families at `/api/families/{family_id}/wallet`; members share balance, top-ups and ledger history. Retain the authenticated top-up initiator and verify callbacks against the stored family. Reminders remain private and require an explicit `sms_family_id` before billing shared funds; check membership again at scheduling and dispatch. Migration `ce965430eb12` archives original personal ledgers and requires explicit attribution of existing financial accounts; see `docs/wallets.md`. Deploy API, worker and frontend together.
+
+- **Breaking:** Replace the flat `sms_price_toman` wallet response with `sms_persian_part_toman` (500) and `sms_english_part_toman` (750). Bill each reminder from its complete rendered pattern using UTF-16 part counts and the supplied multipart overhead algorithm. Replace `MABAN_SMS_PRICE_TOMAN` with the exact approved `MABAN_SMS_REMINDER_BODY` before enabling delivery; update wallet clients and deploy API/worker/frontend together. Queue the priced pattern/attributes snapshot; legacy jobs without a snapshot skip and refund their original reservation. Existing ledger amounts remain unchanged; this pricing rule itself needs no additional database migration.
 
 ### Added
 
-- Added private prepaid user wallets, paginated immutable ledger/payment history, idempotent Zarinpal top-ups and server-verified callbacks with exact toman/rial conversion. Reminder SMS reserves a configured positive tariff before dispatch; insufficient funds skip the occurrence, rejected/cancelled sends refund once and uncertain sends retain the reservation for reconciliation. OTP remains free; no withdrawal, transfer or manual-credit API exists. Migrate through `bc854329da01` and configure payments/tariff before enabling reminder delivery; see `docs/wallets.md`.
+- Allow reminder authors to select additional members of the paying family using optional `recipient_user_ids`. Send one separately billed SMS per recipient, including the author, with independent reservations/refunds, membership and active-account checks at scheduling/dispatch, and aggregate delivery status that never hides partial failure. Reminder lists and notes remain private. Existing clients preserve selections on update. Migration `e8da512fc940` attributes historical attempts to their authors and retains delivery history.
+
+- Grant each new registration a one-time 5,000-toman gift, credited atomically to the first family the user creates or joins. Serialize claims across families, retain a separate immutable `signup_gift` ledger entry, and preserve eligibility until membership succeeds. Existing registrations are not backfilled. Run migration `d7c8412eab30`; downgrade refuses to discard gift entitlements.
+
+- Added shared prepaid family wallets, paginated immutable ledger/payment history, idempotent Zarinpal top-ups and server-verified callbacks with exact toman/rial conversion. Reminder SMS reserves the calculated multipart tariff before dispatch; insufficient funds skip the occurrence, rejected/cancelled sends refund once and uncertain sends retain the reservation for reconciliation. OTP remains free; no withdrawal, transfer or manual-credit API exists. Migrate through `ce965430eb12` and configure payments/tariff before enabling reminder delivery; see `docs/wallets.md`.
 
 - Add the optional `status=all` shopping-item view with combined pagination, retaining existing pending/purchased filters and counts. List-index reads also accept pending/purchased status, filtering before pagination; empty lists remain pending and completed lists require all live items to be purchased.
 

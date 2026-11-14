@@ -136,6 +136,7 @@ def test_concurrent_care_retries_are_atomic(client, app):
     assert len(client.get(url + "/history").json()["events"]) == 1
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_validation_rejects_removed_schedules_and_migration(client):
     register(client)
     base = f"/api/families/{create(client)}/plants"
@@ -156,6 +157,7 @@ def test_validation_rejects_removed_schedules_and_migration(client):
 
 
 @pytest.mark.parametrize("app", ["d58764dc192a"], indirect=True)
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_upgrade_preserves_plant_photo_and_history(client, app):
     user = register(client)
     family = UUID(create(client))

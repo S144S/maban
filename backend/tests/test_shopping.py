@@ -235,6 +235,7 @@ def test_named_lists_batch_creation_isolation_and_retry(client, app):
 
 
 @pytest.mark.parametrize("app", ["f09ab23d715c"], indirect=True)
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_named_list_migration_preserves_items_and_receipts(client, app):
     from sqlalchemy import text
 
@@ -340,6 +341,7 @@ def test_family_isolation_and_shared_member_changes(client, app):
         assert client.get(base + "?status=purchased").json()["items"][0]["id"] == item["id"]
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_validation_pagination_and_migration(client):
     register(client)
     base = f"/api/families/{create(client)}/shopping"
@@ -393,6 +395,7 @@ def test_concurrent_creates_and_versioned_edits(client, app):
 
 
 @pytest.mark.parametrize("app", ["d2ea71b93508"], indirect=True)
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_empty_schema_upgrade_and_safe_downgrade(client):
     register(client)
     family = create(client)
@@ -404,6 +407,7 @@ def test_empty_schema_upgrade_and_safe_downgrade(client):
     assert client.get(f"/api/families/{family}").status_code == 200
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_purchase_creates_one_expense_and_preserves_it_on_undo(client):
     user = register(client)
     family = create(client)

@@ -13,7 +13,8 @@ COOKIE = "maban_session"
 
 def users(request: Request) -> Generator[Users]:
     with request.app.state.sessions() as db:
-        service = Users(db, request.app.state.settings)
+        service = Users(db, request.app.state.settings,
+                        on_registered=request.app.state.on_user_registered)
         try:
             yield service
         except UserError:

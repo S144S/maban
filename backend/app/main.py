@@ -18,6 +18,7 @@ from app.reminders.bootstrap import install as install_reminders
 from app.shopping.bootstrap import install as install_shopping
 from app.users.bootstrap import install
 from app.wallets.bootstrap import install as install_wallets
+from app.wallets.public import claim_signup_gift, register_signup_gift
 
 
 def create_app(settings: Settings | None = None):
@@ -31,6 +32,9 @@ def create_app(settings: Settings | None = None):
 
     app = FastAPI(title="MaBan", version=version("maban-backend"), lifespan=lifespan)
     app.state.settings, app.state.engine, app.state.sessions = settings, engine, sessions
+    # Compose transactional domain hooks without circular module dependencies.
+    app.state.on_user_registered = register_signup_gift
+    app.state.on_family_member_joined = claim_signup_gift
     install(app, settings)
     install_wallets(app)
     install_families(app)

@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from test_families import accept, account, create, invite
@@ -72,6 +73,7 @@ def test_reminder_validation(client):
     assert client.get("/api/reminders?offset=-1").status_code == 422
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_reminder_pagination_and_migration(client):
     register(client)
     config = Config("alembic.ini")
@@ -238,6 +240,7 @@ def test_recurrence_creation_editing_and_retries(client):
     assert all(row["recurrence"] == "none" for row in client.get("/api/reminders").json()["reminders"])
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_recurrence_migration_preserves_existing_reminders_and_retries(client):
     register(client)
     data = payload()
