@@ -1,4 +1,4 @@
-type Entry = { id: string; amount_toman: string | number; created_at: string };
+type Entry = { id: string; amount_toman: string | number; created_at: string; description?: string | null };
 export type IncomeEntry = Entry & { source: string };
 export type ExpenseEntry = Entry & { category_name: string; title: string };
 export type RecentTransaction = Entry & { kind: "income" | "expense"; label: string };

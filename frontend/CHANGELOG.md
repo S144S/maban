@@ -5,9 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.12.0`. No frontend release has been published.
+Current development version: `1.12.1`. No frontend release has been published.
 
 ### Fixed
+
+- Place recent transaction dates beside their category/source on Home and show transaction descriptions below, wrapping long text on small screens.
 
 - Show per-part reminder SMS prices (Persian 500 / English 750 tomans), explain final-content multipart billing and use the minimum part price for low-balance guidance. Requires backend 5.0.0 with the family wallet tariff fields.
 

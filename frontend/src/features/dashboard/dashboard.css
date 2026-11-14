@@ -132,6 +132,7 @@
 .wallet-transaction-kind { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 .wallet-transaction-kind[data-kind="income"] { background: var(--success-bg); color: var(--success); }
 .wallet-transaction-kind[data-kind="expense"] { background: var(--error-bg); color: var(--error); }
-.wallet-recent time { display: block; margin-block-start: 4px; color: var(--muted-foreground); font-size: 12px; }
+.wallet-recent time { color: var(--muted-foreground); font-size: 12px; }
+.wallet-recent-description { margin: 4px 0 0; color: var(--muted-foreground); overflow-wrap: anywhere; white-space: pre-wrap; text-align: start; }
 .wallet-recent-amount { display: flex; flex-direction: column; text-align: end; max-width: 45%; overflow-wrap: anywhere; font-weight: 600; }
 .wallet-recent-amount small { color: var(--muted-foreground); font-size: 11px; font-weight: 400; }
