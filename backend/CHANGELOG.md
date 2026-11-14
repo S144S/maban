@@ -5,13 +5,9 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `5.2.0`. No backend release has been published.
+Current development version: `5.2.0`. No pending changes.
 
-### Changed
-
-- **Breaking:** Move prepaid wallets from users to families at `/api/families/{family_id}/wallet`; members share balance, top-ups and ledger history. Retain the authenticated top-up initiator and verify callbacks against the stored family. Reminders remain private and require an explicit `sms_family_id` before billing shared funds; check membership again at scheduling and dispatch. Migration `ce965430eb12` archives original personal ledgers and requires explicit attribution of existing financial accounts; see `docs/wallets.md`. Deploy API, worker and frontend together.
-
-- **Breaking:** Replace the flat `sms_price_toman` wallet response with `sms_persian_part_toman` (500) and `sms_english_part_toman` (750). Bill each reminder from its complete rendered pattern using UTF-16 part counts and the supplied multipart overhead algorithm. Replace `MABAN_SMS_PRICE_TOMAN` with the exact approved `MABAN_SMS_REMINDER_BODY` before enabling delivery; update wallet clients and deploy API/worker/frontend together. Queue the priced pattern/attributes snapshot; legacy jobs without a snapshot skip and refund their original reservation. Existing ledger amounts remain unchanged; this pricing rule itself needs no additional database migration.
+## [5.2.0] - 2026-11-14
 
 ### Added
 
@@ -24,16 +20,6 @@ Current development version: `5.2.0`. No backend release has been published.
 - Add the optional `status=all` shopping-item view with combined pagination, retaining existing pending/purchased filters and counts. List-index reads also accept pending/purchased status, filtering before pagination; empty lists remain pending and completed lists require all live items to be purchased.
 
 - Added named family shopping lists with atomic multi-item creation, per-list counts, durable batch retries, item quantities/notes, pending/purchased filters and counts, paginated reads, reversible purchase marking, version-checked edits/deletion and durable idempotent creation. All endpoints require authenticated family membership. Purchase confirmation accepts an optional total in toman and expense category; supplying an amount atomically records one expense through the expenses public interface, attributed to the confirming member and defaulting to Other. Whole-list checkout completes every live item across pages and optionally records one total expense, using a list snapshot and durable receipts to reject stale edits and duplicate charges. Lists with existing item/list expenses can still complete without a new total. Undo/deletion preserves expenses and rechecking cannot charge twice. Migration `c31ea8507b42` groups existing items into a default list and preserves expense links; legacy item endpoints remain compatible. Run migrations through `e8a1d6342fc9` before deploying frontend 1.6.0; downgrade refuses to discard existing shopping data or expense links.
-
-### Fixed
-
-- Display family members by their complete given name in member lists, income attribution and plant care history; keep stored surnames and profile editing unchanged.
-
-### Removed
-
-- **Breaking:** Removed plant schedule inputs/outputs and care `next_due`; all care actions now log independently without calculating reminders. Migration `e69875ed203b` drops scheduling columns while preserving plant metadata, photo references and performed care. Back up before upgrade, deploy with the matching frontend and reopen pending forms; rollback requires restoring the backup. Plant lists now order newest first.
-
-### Added
 
 - Added authenticated, paginated `/api/reminders/upcoming` for occurrences within the inclusive next 24 hours. Calculates recurring dates in Tehran independently of SMS availability; excludes past one-time and deleted reminders and other users.
 
@@ -97,16 +83,6 @@ Current development version: `5.2.0`. No backend release has been published.
 
 - Added full/view family permissions enforced on invitation management. Existing owners receive full access; existing members and invitations retain view-only access. Run Alembic upgrade head before starting the updated API.
 
-### Fixed
-
-- Reject OTP login requests for unknown/inactive accounts before creating a
-  challenge, keeping the user on the phone form instead of opening the OTP sheet.
-
-- Clarified rejected OTP verification messages with actionable login/signup
-  guidance, including the requirement for an active registered account.
-
-### Added
-
 - Added a families module in its own PostgreSQL schema: one owned family per user,
   membership lists, single-use seven-day invitation links with spouse/child/friend
   relationships, explicit acceptance and owner-only revocation. Invitation tokens
@@ -123,18 +99,11 @@ Current development version: `5.2.0`. No backend release has been published.
 - Added fixed `12345` OTPs restricted to explicit local/develop/test environments.
 - Added integration tests using isolated PostgreSQL databases and real migrations.
 
-### Security
-
-- Hash passwords with Argon2id; store only keyed digests of session/OTP/proof
-  secrets. Use HttpOnly SameSite cookies, production Secure cookies, strict
-  Origin/custom-header checks, server-side expiry, cooldown and rate limits.
-- Reject unknown/inactive accounts, replayed or expired proofs/codes, role
-  escalation and cross-user session access. Password changes and suspension
-  revoke sessions. Serialize verification and registration to prevent races.
-- Fail production startup without secure origins/cookies, private secrets and
-  SMS configuration; never return passwords or provider secrets in errors.
-
 ### Changed
+
+- **Breaking:** Move prepaid wallets from users to families at `/api/families/{family_id}/wallet`; members share balance, top-ups and ledger history. Retain the authenticated top-up initiator and verify callbacks against the stored family. Reminders remain private and require an explicit `sms_family_id` before billing shared funds; check membership again at scheduling and dispatch. Migration `ce965430eb12` archives original personal ledgers and requires explicit attribution of existing financial accounts; see `docs/wallets.md`. Deploy API, worker and frontend together.
+
+- **Breaking:** Replace the flat `sms_price_toman` wallet response with `sms_persian_part_toman` (500) and `sms_english_part_toman` (750). Bill each reminder from its complete rendered pattern using UTF-16 part counts and the supplied multipart overhead algorithm. Replace `MABAN_SMS_PRICE_TOMAN` with the exact approved `MABAN_SMS_REMINDER_BODY` before enabling delivery; update wallet clients and deploy API/worker/frontend together. Queue the priced pattern/attributes snapshot; legacy jobs without a snapshot skip and refund their original reservation. Existing ledger amounts remain unchanged; this pricing rule itself needs no additional database migration.
 
 - BREAKING: IranPayamak is now the only production SMS provider. Replace previous provider credentials with an IranPayamak API key and pattern code in `MABAN_SMS_API_KEY` and `MABAN_SMS_TEMPLATE`, and configure the required `MABAN_SMS_LINE_NUMBER`. The OTP pattern must accept `code`. OTP request success now confirms job creation, not provider acceptance; delivery failures are asynchronous. Apply Alembic head and run the shared SMS worker even when reminders are disabled. Existing verification and resend response fields remain compatible.
 
@@ -147,3 +116,28 @@ Current development version: `5.2.0`. No backend release has been published.
   with a reversible, data-preserving migration. HTTP contracts stay unchanged;
   run Alembic upgrade before starting the updated application. Direct operator
   SQL must qualify user tables with `users.` instead of `public.`.
+
+### Removed
+
+- **Breaking:** Removed plant schedule inputs/outputs and care `next_due`; all care actions now log independently without calculating reminders. Migration `e69875ed203b` drops scheduling columns while preserving plant metadata, photo references and performed care. Back up before upgrade, deploy with the matching frontend and reopen pending forms; rollback requires restoring the backup. Plant lists now order newest first.
+
+### Fixed
+
+- Display family members by their complete given name in member lists, income attribution and plant care history; keep stored surnames and profile editing unchanged.
+
+- Reject OTP login requests for unknown/inactive accounts before creating a
+  challenge, keeping the user on the phone form instead of opening the OTP sheet.
+
+- Clarified rejected OTP verification messages with actionable login/signup
+  guidance, including the requirement for an active registered account.
+
+### Security
+
+- Hash passwords with Argon2id; store only keyed digests of session/OTP/proof
+  secrets. Use HttpOnly SameSite cookies, production Secure cookies, strict
+  Origin/custom-header checks, server-side expiry, cooldown and rate limits.
+- Reject unknown/inactive accounts, replayed or expired proofs/codes, role
+  escalation and cross-user session access. Password changes and suspension
+  revoke sessions. Serialize verification and registration to prevent races.
+- Fail production startup without secure origins/cookies, private secrets and
+  SMS configuration; never return passwords or provider secrets in errors.
