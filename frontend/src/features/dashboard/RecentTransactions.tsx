@@ -18,7 +18,14 @@ export function RecentTransactions({ items, loading, error, hasFamily, hidden, o
         : !hasFamily ? <p className="dash-muted">برای دیدن تراکنش‌ها، اول خانواده‌تون رو انتخاب کنین.</p>
         : !items.length ? <p className="dash-muted">هنوز دخل یا خرجی ثبت نکردین.</p>
         : <ul>{items.map(item => <li key={`${item.kind}:${item.id}`}>
-          <div className="wallet-recent-copy"><div className="wallet-recent-heading"><span className="wallet-transaction-kind" data-kind={item.kind}>{item.kind === "income" ? "دخل" : "خرج"}</span><strong>{item.label}</strong></div><time dateTime={item.created_at}>{date.format(new Date(item.created_at))}</time></div>
+          <div className="wallet-recent-copy">
+            <div className="wallet-recent-heading">
+              <span className="wallet-transaction-kind" data-kind={item.kind}>{item.kind === "income" ? "دخل" : "خرج"}</span>
+              <strong>{item.label}</strong>
+              <time dateTime={item.created_at}>{date.format(new Date(item.created_at))}</time>
+            </div>
+            {item.description && <p className="wallet-recent-description" dir="auto">{item.description}</p>}
+          </div>
           <span className="wallet-recent-amount"><bdi>{hidden ? "••••••" : BigInt(item.amount_toman).toLocaleString("fa-IR")}</bdi><small>تومان</small></span>
         </li>)}</ul>}
     </div>

@@ -50,3 +50,10 @@ def app(monkeypatch, request):
 def client(app):
     with TestClient(app, headers=HEADERS) as client:
         yield client
+
+
+@pytest.fixture
+def before_signup_gifts(app):
+    """Historical migration scenarios use registrations made before gift eligibility existed."""
+    app.state.on_user_registered = None
+    app.state.on_family_member_joined = None

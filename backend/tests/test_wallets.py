@@ -1,0 +1,463 @@
+from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
+from uuid import UUID, uuid4
+
+import httpx
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import func, select
+from test_users import register
+
+from app.families.service import Families
+from app.users.models import User
+from app.wallets.errors import WalletError
+from app.wallets.models import Entry, Topup, Wallet
+from app.wallets.payments import Zarinpal
+from app.wallets.service import Wallets, locked_wallet, record, reserve_sms, settle_sms
+
+
+class Gateway:
+    def __init__(self):
+        self.requests, self.verifications = [], []
+        self.fail = False
+
+    def request(self, amount):
+        self.requests.append(amount)
+        return "A" + uuid4().hex + "000"
+
+    def checkout_url(self, authority):
+        return "https://www.zarinpal.com/pg/StartPay/" + authority
+
+    def verify(self, authority, amount):
+        self.verifications.append((authority, amount))
+        if self.fail:
+            raise WalletError("پرداخت تأیید نشده.", 409)
+        return str(int(authority[1:33], 16))
+
+
+@pytest.fixture
+def gateway(app):
+    app.state.payment_gateway = Gateway()
+    return app.state.payment_gateway
+
+
+def fund(app, amount=10000):
+    """Set an exact spendable test balance, including the normal registration gift."""
+    with app.state.sessions.begin() as db:
+        user = db.scalar(select(User))
+        families = Families(db, on_member_joined=app.state.on_family_member_joined)
+        rows = families.list(user.id)
+        family_id = UUID(rows[0]["id"] if rows else families.create(user.id, "خانوادهٔ آزمون")["id"])
+        wallet = locked_wallet(db, family_id)
+        difference = amount - wallet.balance_toman
+        if difference:
+            record(db, wallet, "topup" if difference > 0 else "sms", uuid4(), difference)
+
+
+
+def family(client):
+    rows = client.get("/api/families").json()["families"]
+    if rows:
+        return rows[0]["id"]
+    return client.post("/api/families", json={"name": "خانوادهٔ آزمون"}).json()["family"]["id"]
+
+
+def wallet_url(client):
+    return f"/api/families/{family(client)}/wallet"
+
+
+def sms_payload(client, **changes):
+    from test_reminders import payload
+    return payload(sms_family_id=family(client), **changes)
+
+
+def charge(client, amount=50000, request_id=None):
+    return client.post(wallet_url(client) + "/topups", json={"request_id": request_id or str(uuid4()), "amount_toman": amount})
+
+
+def test_family_service_wallet_starts_with_registration_gift(client):
+    assert client.get(f"/api/families/{uuid4()}/wallet").status_code == 401
+    register(client)
+    assert client.get(wallet_url(client)).json() == {"balance_toman": 5000, "sms_persian_part_toman": 500, "sms_english_part_toman": 750, "topup_enabled": False}
+    entries = client.get(wallet_url(client) + "/entries").json()
+    assert not entries["has_more"]
+    assert len(entries["entries"]) == 1
+    assert entries["entries"][0]["kind"] == "signup_gift"
+    assert entries["entries"][0]["amount_toman"] == 5000
+    assert charge(client).status_code == 503
+    assert client.post(wallet_url(client) + "/withdraw", json={"amount_toman": 1}).status_code == 404
+
+
+@pytest.mark.parametrize("amount", [-1, 0, 9999, 10000001, 10000.5, True, "50000"])
+def test_invalid_amounts_rejected(client, gateway, amount):
+    register(client)
+    assert charge(client, amount).status_code == 422
+    assert gateway.requests == []
+
+
+def test_topup_retries_and_verification_are_idempotent(client, app, gateway):
+    register(client)
+    key = str(uuid4())
+    created = charge(client, request_id=key)
+    assert created.status_code == 201
+    row = created.json()
+    assert charge(client, request_id=key).json()["id"] == row["id"]
+    assert len(gateway.requests) == 1
+    assert charge(client, amount=60000, request_id=key).status_code == 409
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 5000
+    gateway.fail = True
+    assert client.post(wallet_url(client) + f"/topups/{row['id']}/verify").status_code == 409
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 5000
+    gateway.fail = False
+    assert client.post(wallet_url(client) + f"/topups/{row['id']}/verify").json()["status"] == "paid"
+    assert client.post(wallet_url(client) + f"/topups/{row['id']}/verify").status_code == 200
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 55000
+    assert len(client.get(wallet_url(client) + "/entries").json()["entries"]) == 2
+
+
+def test_other_users_cannot_read_or_verify_payment(client, app, gateway):
+    register(client)
+    row = charge(client).json()
+    from conftest import HEADERS
+    with TestClient(app, headers=HEADERS) as other:
+        register(other, "09123456780")
+        assert other.get(wallet_url(client)).status_code == 404
+        assert other.get(wallet_url(client) + "/topups").status_code == 404
+        assert other.post(wallet_url(client) + f"/topups/{row['id']}/verify").status_code == 404
+    assert gateway.verifications == []
+
+
+def test_members_share_wallet_but_families_remain_isolated(client, app, gateway):
+    from conftest import HEADERS
+    from test_families import accept, invite
+
+    register(client)
+    shared = wallet_url(client)
+    token = invite(client, family(client))["token"]
+    payment = charge(client).json()
+    with TestClient(app, headers=HEADERS) as member:
+        user = register(member, "09123456780")
+        separate = wallet_url(member)
+        assert accept(member, token).status_code == 200
+        assert member.get(shared + "/topups").json()["topups"][0]["id"] == payment["id"]
+        assert member.post(shared + f"/topups/{payment['id']}/verify").status_code == 200
+        assert member.get(shared).json()["balance_toman"] == 55000
+        assert client.get(shared).json()["balance_toman"] == 55000
+        assert member.get(separate).json()["balance_toman"] == 5000
+        assert client.get(separate).status_code == 404
+        assert member.post(separate + f"/topups/{payment['id']}/verify").status_code == 404
+        paid_by_member = member.post(shared + "/topups", json={
+            "amount_toman": 10000, "request_id": str(uuid4()),
+        }).json()
+        with app.state.sessions() as db:
+            assert db.get(Topup, UUID(paid_by_member["id"])).actor_user_id == UUID(user["id"])
+
+
+@pytest.mark.parametrize("phase", ["schedule", "dispatch"])
+def test_former_member_cannot_spend_and_refunds_stay_with_original_family(client, app, phase):
+    from sqlalchemy import delete
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.families.models import Membership
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+
+    user = register(client)
+    fund(app)
+    original_family = UUID(family(client))
+    client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat()))
+    if phase == "dispatch":
+        assert schedule_sms(app.state.sessions, enabled(), NOW)
+    with app.state.sessions.begin() as db:
+        db.execute(delete(Membership).where(Membership.family_id == original_family,
+                                            Membership.user_id == UUID(user["id"])))
+    sender = Sender()
+    run_batch(app.state.sessions, enabled(), sender, now=NOW)
+    assert sender.calls == []
+    with app.state.sessions() as db:
+        assert db.get(Wallet, original_family).balance_toman == 10000
+        assert db.scalar(select(func.count()).select_from(Entry).where(Entry.kind == "sms_refund")) == (
+            1 if phase == "dispatch" else 0)
+
+
+def test_reminders_require_explicit_authorized_sms_family(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+    from test_reminders import payload
+
+    from app.sms_worker import run_batch
+
+    register(client)
+    fund(app)
+    assert client.post("/api/reminders", json=payload(sms_family_id=str(uuid4()))).status_code == 404
+    created = client.post("/api/reminders", json=payload(due_at=NOW.isoformat()))
+    assert created.status_code == 201
+    assert created.json()["reminder"]["sms_family_id"] is None
+    sender = Sender()
+    assert run_batch(app.state.sessions, enabled(), sender, now=NOW) == 0
+    assert sender.calls == []
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 10000
+
+
+def test_changing_billing_family_refunds_original_without_replaying_occurrence(client, app):
+    from conftest import HEADERS
+    from test_families import accept, invite
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+
+    register(client)
+    fund(app)
+    original = wallet_url(client)
+    reminder = client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat())).json()["reminder"]
+    assert schedule_sms(app.state.sessions, enabled(), NOW)
+    with TestClient(app, headers=HEADERS) as other:
+        register(other, "09123456780")
+        second = family(other)
+        assert accept(client, invite(other, second)["token"]).status_code == 200
+    updated = client.put(f"/api/reminders/{reminder['id']}", json={
+        "title": reminder["title"], "due_at": reminder["due_at"], "sms_family_id": second,
+    })
+    assert updated.status_code == 200
+    assert updated.json()["reminder"]["delivery_status"] == "skipped"
+    sender = Sender()
+    run_batch(app.state.sessions, enabled(), sender, now=NOW)
+    assert sender.calls == []
+    assert client.get(original).json()["balance_toman"] == 10000
+    assert client.get(f"/api/families/{second}/wallet").json()["balance_toman"] == 5000
+
+
+def test_callback_requires_remote_verification_and_is_replay_safe(client, app, gateway):
+    register(client)
+    row = charge(client).json()
+    with app.state.sessions() as db:
+        authority = db.get(Topup, UUID(row["id"])).authority
+    gateway.fail = True
+    url = f"/api/wallet/callback?Authority={authority}&Status=OK"
+    assert client.get(url, follow_redirects=False).headers["location"].count("payment=unconfirmed") == 1
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 5000
+    assert client.get(url.replace("Status=OK", "Status=NOK"), follow_redirects=False).status_code == 303
+    gateway.fail = False
+    with TestClient(app) as anonymous:
+        assert anonymous.get(url, follow_redirects=False).headers["location"].count("payment=confirmed") == 1
+        assert anonymous.get(url, follow_redirects=False).status_code == 303
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 55000
+    assert gateway.verifications[-1] == (authority, 50000)
+
+
+def test_parallel_verification_credits_once(client, app, gateway):
+    register(client)
+    row = charge(client).json()
+    family_id = UUID(family(client))
+    def verify(_):
+        with app.state.sessions.begin() as db:
+            return Wallets(db, app.state.settings, gateway).verify(family_id=family_id, topup_id=UUID(row["id"]))
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        assert all(r["status"] == "paid" for r in pool.map(verify, range(3)))
+    assert len(gateway.verifications) == 1
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 55000
+
+
+def test_parallel_spending_never_overdraws_and_refund_once(client, app):
+    register(client)
+    fund(app, 200)
+    ids = [uuid4(), uuid4()]
+    family_id = UUID(family(client))
+    def spend(ref):
+        with app.state.sessions.begin() as db:
+            return reserve_sms(db, family_id, ref, 200)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(spend, ids))
+    assert sum(results) == 1
+    ref = ids[results.index(True)]
+    assert spend(ref)  # Same occurrence is not debited again.
+    with app.state.sessions.begin() as db:
+        settle_sms(db, ref, "unknown")
+        settle_sms(db, ref, "accepted")
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 0
+    with app.state.sessions.begin() as db:
+        settle_sms(db, ref, "failed")
+        settle_sms(db, ref, "failed")
+        assert not reserve_sms(db, family_id, ref, 200)
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 200
+    with app.state.sessions() as db:
+        assert db.scalar(select(func.sum(Entry.amount_toman))) == db.scalar(select(Wallet.balance_toman))
+
+
+def test_empty_balance_skips_reminder_without_send(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app, 0)
+    before = client.get(wallet_url(client) + "/entries").json()["entries"]
+    assert client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat())).status_code == 201
+    sender = Sender()
+    assert run_batch(app.state.sessions, enabled(), sender, now=NOW) == 0
+    assert sender.calls == []
+    assert client.get(wallet_url(client) + "/entries").json()["entries"] == before
+    assert client.get("/api/reminders").json()["reminders"][0]["delivery_status"] == "skipped"
+
+
+@pytest.mark.parametrize("failure,expected", [("accepted", 9500), ("rejected", 10000), ("unknown", 9500)])
+def test_sms_billing_follows_delivery_result(client, app, failure, expected):
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.sms import SmsRejected
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app)
+    assert client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat())).status_code == 201
+    sender = Sender(fail=failure == "unknown")
+    if failure == "rejected":
+        def reject(*args):
+            raise SmsRejected("rejected")
+        sender.send_pattern = reject
+    run_batch(app.state.sessions, enabled(), sender, now=NOW)
+    assert client.get(wallet_url(client)).json()["balance_toman"] == expected
+    run_batch(app.state.sessions, enabled(), sender, now=NOW + timedelta(minutes=3))
+    assert client.get(wallet_url(client)).json()["balance_toman"] == expected
+
+
+def test_zarinpal_converts_tomans_and_handles_already_verified(monkeypatch, app):
+    config = app.state.settings.model_copy(update={"payment_merchant_id": "merchant",
+        "payment_callback_url": "https://api.example/api/wallet/callback"})
+    requests = []
+    authority = "A" * 36
+    def handler(request):
+        import json
+        data = json.loads(request.content)
+        requests.append(data)
+        assert data["amount"] == 500000
+        assert data["merchant_id"] == "merchant"
+        if request.url.path.endswith("request.json"):
+            return httpx.Response(200, json={"data": {"code": 100, "authority": authority}})
+        return httpx.Response(200, json={"data": {"code": 101, "ref_id": 12345}})
+    real = httpx.Client
+    monkeypatch.setattr("app.wallets.payments.httpx.Client", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
+    gateway = Zarinpal(config)
+    assert gateway.request(50000) == authority
+    assert gateway.verify(authority, 50000) == "12345"
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("response", [
+    httpx.Response(302, headers={"Location": "https://untrusted.example"}),
+    httpx.Response(500, text="private-provider-secret"),
+    httpx.Response(200, json=[]),
+    httpx.Response(200, json={"data": []}),
+    httpx.Response(200, json={"data": {"code": 100, "ref_id": None}}),
+    httpx.Response(200, content=b" " * 65537),
+    httpx.Response(200, content=b"invalid json"),
+])
+def test_gateway_failures_never_confirm_or_expose_provider_details(monkeypatch, response):
+    from test_sms import settings
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return response
+    real = httpx.Client
+    monkeypatch.setattr("app.wallets.payments.httpx.Client", lambda **kw: real(
+        transport=httpx.MockTransport(handler), **kw))
+    gateway = Zarinpal(settings(payment_merchant_id="merchant",
+                               payment_callback_url="https://api.example/api/wallet/callback"))
+    with pytest.raises(WalletError) as error:
+        gateway.verify("A" * 36, 50000)
+    assert "private-provider-secret" not in error.value.message
+    assert len(calls) == 1
+
+
+def test_pending_requests_are_limited_and_paginated(client, gateway):
+    register(client)
+    for _ in range(5):
+        assert charge(client).status_code == 201
+    assert charge(client).status_code == 429
+    rows = client.get(wallet_url(client) + "/topups").json()
+    assert len(rows["topups"]) == 5 and not rows["has_more"]
+    assert client.get(wallet_url(client) + "/topups?offset=5").json()["topups"] == []
+    assert client.get(wallet_url(client) + "/entries?offset=-1").status_code == 422
+
+
+def test_cancelled_and_expired_sms_refund_reserved_price(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app)
+    reminder = client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat())).json()["reminder"]
+    assert schedule_sms(app.state.sessions, enabled(), NOW)
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 9500
+    assert client.delete(f"/api/reminders/{reminder['id']}").status_code == 204
+    sender = Sender()
+    run_batch(app.state.sessions, enabled().model_copy(update={"sms_reminder_body": "changed " * 100}), sender, now=NOW)
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 10000
+    assert sender.calls == []
+    client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat()))
+    assert schedule_sms(app.state.sessions, enabled(), NOW)
+    run_batch(app.state.sessions, enabled(), sender, now=NOW + timedelta(days=2))
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 10000
+    assert sender.calls == []
+
+
+@pytest.mark.parametrize("body,title,amount,price", [
+    ("a" * 80 + "{title}", "a" * 80, 1, 750),
+    ("a" * 81 + "{title}", "a" * 80, 1, 1500),
+    ("{title}", "س" * 71, 1, 1000),
+    ("ی" * 65 + "{title}", "123456", 1, 1000),
+    ("{title} {date} {time} {amount}", "English", None, 500),
+])
+def test_full_rendered_content_is_reserved_and_snapshot_is_sent(client, app, body, title, amount, price):
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app, price)
+    config = enabled().model_copy(update={"sms_reminder_body": body})
+    assert client.post("/api/reminders", json=sms_payload(client,
+        title=title, amount_toman=amount, due_at=NOW.isoformat())).status_code == 201
+    assert schedule_sms(app.state.sessions, config, NOW)
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 0
+    debit = client.get(wallet_url(client) + "/entries").json()["entries"][0]
+    assert debit["amount_toman"] == -price
+    sender = Sender()
+    changed = config.model_copy(update={"sms_reminder_template": "new-pattern", "sms_reminder_body": "changed"})
+    assert run_batch(app.state.sessions, changed, sender, now=NOW) == 1
+    assert sender.calls[0][1] == "reminder-pattern"
+    assert sender.calls[0][2]["title"] == title
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 0
+
+
+def test_multipart_insufficient_balance_does_not_send_or_debit(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app, 500)
+    client.post("/api/reminders", json=sms_payload(client, title="س" * 71, due_at=NOW.isoformat()))
+    sender = Sender()
+    config = enabled().model_copy(update={"sms_reminder_body": "{title}"})
+    assert run_batch(app.state.sessions, config, sender, now=NOW) == 0
+    assert sender.calls == []
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 500
+
+
+def test_legacy_queued_content_is_skipped_and_original_charge_refunded(client, app):
+    from test_reminder_sms import NOW, Sender, enabled
+
+    from app.messaging.models import SmsJob
+    from app.messaging.security import payload_cipher
+    from app.reminders.public import schedule_sms
+    from app.sms_worker import run_batch
+    register(client)
+    fund(app)
+    client.post("/api/reminders", json=sms_payload(client, due_at=NOW.isoformat()))
+    assert schedule_sms(app.state.sessions, enabled(), NOW)
+    with app.state.sessions.begin() as db:
+        job = db.scalar(select(SmsJob).where(SmsJob.kind == "reminder"))
+        job.encrypted_payload = payload_cipher(enabled().secret_key).encrypt(b"{}").decode()
+    sender = Sender()
+    assert run_batch(app.state.sessions, enabled(), sender, now=NOW) == 1
+    assert sender.calls == []
+    assert client.get(wallet_url(client)).json()["balance_toman"] == 10000

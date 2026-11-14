@@ -6,14 +6,14 @@ const items = [
   { id: "budgets", label: "مدیریت", icon: Settings2, href: "/dashboard?page=budgets" },
   { id: "reports", label: "گزارش", icon: ChartNoAxesCombined, href: "/dashboard?page=reports" },
 ] as const;
-export type Destination = typeof items[number]["id"] | "plants" | "families" | "finance" | "reminders";
+export type Destination = typeof items[number]["id"] | "plants" | "families" | "finance" | "reminders" | "purchases";
 
 export function BottomNavigation({ active, onNavigate, canManage = false }: {
   active: Destination;
   onNavigate?: (page: Destination) => void;
   canManage?: boolean;
 }) {
-  const selected = active === "families" || active === "plants" || active === "finance" || active === "reminders" ? (canManage ? "budgets" : "home") : active;
+  const selected = active === "families" || active === "plants" || active === "finance" || active === "reminders" || active === "purchases" ? (canManage ? "budgets" : "home") : active;
   return <nav className="dash-nav" data-active={selected} data-management={canManage} aria-label="ناوبری اصلی">
     {items.filter(item => item.id !== "budgets" || canManage).map(({ id, label, icon: Icon, href }) => <a key={id} href={href}
       aria-current={selected === id ? "page" : undefined}

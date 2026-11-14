@@ -1,7 +1,10 @@
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from app.sms_parts import render_pattern
 
 
 class Settings(BaseSettings):
@@ -17,6 +20,9 @@ class Settings(BaseSettings):
     sms_line_number: str = ""
     sms_reminder_template: str = ""
     reminder_sms_enabled: bool = False
+    sms_reminder_body: str = ""
+    payment_merchant_id: str = Field(default="", repr=False)
+    payment_callback_url: str = ""
     minio_endpoint: str = ""
     minio_access_key: str = Field(default="", repr=False)
     minio_secret_key: str = Field(default="", repr=False)
@@ -25,6 +31,18 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production(self):
+        if bool(self.payment_merchant_id) != bool(self.payment_callback_url):
+            raise ValueError("Payments require PAYMENT_MERCHANT_ID and PAYMENT_CALLBACK_URL together")
+        if self.payment_callback_url:
+            callback = urlsplit(self.payment_callback_url)
+            if (callback.scheme not in {"http", "https"} or not callback.netloc
+                    or callback.path != "/api/wallet/callback" or callback.query or callback.fragment
+                    or callback.username or callback.password):
+                raise ValueError("PAYMENT_CALLBACK_URL must point to /api/wallet/callback")
+            if self.environment == "production" and callback.scheme != "https":
+                raise ValueError("Production payments require an HTTPS callback")
+            if not self.allowed_origins:
+                raise ValueError("Payments require a frontend origin for callback redirects")
         storage = (self.minio_endpoint, self.minio_access_key, self.minio_secret_key)
         if any(storage) and not all(storage):
             raise ValueError("MinIO requires endpoint, access key and secret key together")
@@ -46,6 +64,9 @@ class Settings(BaseSettings):
             ):
                 raise ValueError("IranPayamak requires an ASCII numeric SMS_LINE_NUMBER")
         if self.reminder_sms_enabled:
+            if not self.sms_reminder_body.strip():
+                raise ValueError("Reminder SMS requires the approved SMS_REMINDER_BODY")
+            render_pattern(self.sms_reminder_body, dict.fromkeys(("title", "date", "time", "amount"), ""))
             if self.environment != "production":
                 raise ValueError("Reminder SMS is restricted to production")
             if not self.sms_reminder_template.strip():

@@ -9,11 +9,20 @@ export function invitationToken() {
 export function authHref(path: "/login" | "/signup") {
   const token = invitationToken();
   if (token) return `${path}#invite=${token}`;
-  const next = entryUrl.pathname === "/families" || new URLSearchParams(entryUrl.search).get("next") === "/families";
-  return next ? `${path}?next=/families` : path;
+  const next = returnPath();
+  return next ? `${path}?next=${next.includes("?") ? encodeURIComponent(next) : next}` : path;
+}
+function returnPath() {
+  const requested = new URLSearchParams(entryUrl.search).get("next");
+  const walletReturn = requested?.match(/^\/wallet\?family=([0-9a-fA-F-]{36})$/);
+  const path = ["/families", "/wallet"].find(path => entryUrl.pathname === path || requested === path)
+    ?? (walletReturn ? "/wallet" : undefined);
+  const family = entryUrl.pathname === "/wallet" ? entryUrl.searchParams.get("family") : walletReturn?.[1];
+  return path === "/wallet" && family && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(family)
+    ? `/wallet?family=${family}` : path;
 }
 export function afterAuth() {
   const token = invitationToken();
   if (token) return `/invite#token=${token}`;
-  return new URLSearchParams(entryUrl.search).get("next") === "/families" ? "/families" : "/dashboard";
+  return returnPath() ?? "/dashboard";
 }

@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import secrets
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -40,8 +41,10 @@ def user_view(user: User):
 
 
 class Users:
-    def __init__(self, db: Session, settings: Settings):
+    def __init__(self, db: Session, settings: Settings, *,
+                 on_registered: Callable[[Session, UUID], None] | None = None):
         self.db, self.settings = db, settings
+        self.on_registered = on_registered
 
     def hash(self, value: str):
         return digest(self.settings.secret_key, value)
@@ -194,6 +197,8 @@ class Users:
         )
         self.db.add(user)
         self.db.flush()
+        if self.on_registered:
+            self.on_registered(self.db, user.id)
         return user
 
     def password_login(self, phone: str, password: str, ip: str):

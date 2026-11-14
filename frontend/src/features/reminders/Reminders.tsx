@@ -66,6 +66,7 @@ export function Reminders() {
         {item.note && <p className="reminder-note">{item.note}</p>}
         <details className="reminder-delivery"><summary><MessageSquare size={18} aria-hidden="true" /><span>وضعیت پیامک</span><ChevronDown size={18} aria-hidden="true" /></summary><div>
           <p>{deliveryLabels[item.delivery_status] ?? "وضعیت پیامک مشخص نیست"}</p>
+          {!!item.recipient_user_ids?.length && <p>گیرنده‌ها: شما و {item.recipient_user_ids.length.toLocaleString("fa-IR")} عضو خانواده</p>}
           {item.next_delivery_at && <p>موعد پیامک بعدی: <time dateTime={item.next_delivery_at}>{formatReminderDate(item.next_delivery_at)}</time></p>}
         </div></details>
       </article></li>)}</ul> : <div className="management-empty"><span className="management-empty-icon"><Bell size={32} aria-hidden="true" /></span><h3>اولین یادآورتون رو ثبت کنین</h3><p>مثلاً رسیدگی به گلدون، وقت دکتر، تولد عزیزان یا پرداخت قسط.</p></div>}

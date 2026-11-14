@@ -5,7 +5,31 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.4.0`. No frontend release has been published.
+Current development version: `1.12.1`. No frontend release has been published.
+
+### Fixed
+
+- Place recent transaction dates beside their category/source on Home and show transaction descriptions below, wrapping long text on small screens.
+
+- Show per-part reminder SMS prices (Persian 500 / English 750 tomans), explain final-content multipart billing and use the minimum part price for low-balance guidance. Requires backend 5.0.0 with the family wallet tariff fields.
+
+### Added
+
+- Add an optional family-member checkbox group to reminder forms, with loading/retry/empty states, preserved edit selections and per-recipient SMS cost/privacy guidance. Automatically use the family wallet without a payment selector; retain an existing reminder's accessible wallet and use the active family for new reminders. Clear selections when the resolved family changes; the author remains a recipient. Show additional-recipient counts and partial delivery failures. Requires backend 5.2.0 and migration `e8da512fc940`.
+
+- Label registration gifts in the family wallet ledger and explain the one-time 5,000-toman gift to each new member's first family. Requires backend 5.1.0 and migration `d7c8412eab30`.
+
+- Use the shared active-family selection for family-owned service wallets, including shared payment/ledger history and a no-family state. Personal reminders use the family wallet automatically for SMS. Payment returns restore the charged family. Requires backend 5.0.0 and migration `ce965430eb12`.
+
+- Added Persian RTL family wallet at `/wallet`, linked from profile/account menus, with balance, configured SMS tariff, online top-up form, payment verification retries and independently paginated payment/ledger history. Match the shared 480px account shell, brand header, circular back control, pastel balance/top-up cards and capsule actions; place consumption details in an accessible disclosure. Explain insufficient funds, uncertain SMS charges and the absence of withdrawal/transfers; disable charging until the gateway is configured. Requires backend 5.0.0 and migration `ce965430eb12`.
+
+- Show the active family's unfinished shopping-list cards below Home reminders, hiding the section when none remain. Reuse list progress and checkout actions, support pagination and retry, open items with a return to Home, and refresh the wallet after checkout. Keep the Home section heading free of a manual refresh action.
+
+- Show all shopping-list items together with their purchase checkboxes, preserving checked items in place and removing the per-item pending/purchased tabs. Each nonempty list card contains a separate «خریدم» action inside its border, opening the total-cost dialog directly with a fresh checkout snapshot, retry/conflict handling and duplicate-expense protection. The list index offers «در انتظار خرید» and «خرید شده» filters; a nonempty list is purchased when every live item is checked, while empty lists remain pending. Show red draft-item delete actions only after an item name is entered, aligned with the name/quantity fields; deleting the final item resets it to an empty row. Add spacing above the new-list action and use soft secondary filter colors with a selected check icon instead of underlined text. Requires backend 3.4.0.
+
+- Added «خریدهای خونه» as named persistent family shopping lists with a multi-item creation form, per-list progress, quantities/notes, pending and purchased views with counts, reversible purchase marking, editing, confirmed deletion, pagination, refresh/retry feedback and conflict protection for shared edits. The list index omits the redundant shared-family subtitle and introductory description. Item rows align the checkbox, name/quantity and edit/delete actions horizontally, allowing long text to wrap. Uses a basket icon and a distinct soft-blue Management button; Family spans the full Management grid width. Item checkboxes save purchases directly without requesting individual costs. The cost dialog omits explanatory copy and labels the amount with the list name, falling back to «این لیست» when unnamed. Checking the final pending item opens the whole-list total-cost/category dialog using refreshed list state; the completion button also opens this dialog. Confirmation completes all remaining items and optionally records one expense for the list, reusing existing financial categories. Cancelling the dialog preserves saved checkmarks; stale lists require refresh, and prior charges prevent duplicate expenses. Linked expenses survive undo/deletion and cannot be duplicated by rechecking. Migration `c31ea8507b42` preserves existing items and expense links inside a default list. Requires backend 3.3.0 and migrations through `e8a1d6342fc9`.
+
+- Added an online-only service worker with a build fingerprint and a Persian RTL update notice on all pages. The compact card uses contextual icons, clear title/body hierarchy, equal touch-friendly actions, a reversible save-confirmation step, and explicit loading/error/retry feedback. New builds wait for explicit confirmation, warn about unsaved forms, support deferral and activation retry, and reload only the accepting tab. Check on startup, return to the app, restored connectivity and once per visible online minute; never cache financial data or queue offline writes. Production hosting must serve `/sw.js` as JavaScript with revalidation and retain old hashed assets for open tabs.
 
 ### Fixed
 

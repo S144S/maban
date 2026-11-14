@@ -13,14 +13,17 @@ const income = (id, created_at) => ({ id, created_at, source: "salary", amount_t
 const expense = (id, created_at) => ({ id, created_at, category_name: "خرید خونه", title: "خرج", amount_toman: 100 });
 
 test("last three transactions combine income and expenses by actual time across timezones", () => {
-  const incomes = [income("a", "2030-01-01T12:00:00Z"), income("b", "2030-01-01T10:00:00Z")];
-  const expenses = [expense("c", "2030-01-01T16:00:00+03:30"), expense("d", "2030-01-01T11:00:00Z")];
+  const incomes = [{ ...income("a", "2030-01-01T12:00:00Z"), description: "حقوق این ماه" }, income("b", "2030-01-01T10:00:00Z")];
+  const expenses = [{ ...expense("c", "2030-01-01T16:00:00+03:30"), description: "خرید میوه" }, { ...expense("d", "2030-01-01T11:00:00Z"), description: null }];
   const before = JSON.stringify([incomes, expenses]);
   const rows = recentTransactions(incomes, expenses);
   assert.equal(rows.map(row => row.id).join(","), "c,a,d");
   assert.equal(rows.map(row => row.kind).join(","), "expense,income,expense");
   assert.equal(rows[0].label, "خرید خونه");
   assert.equal(rows[1].label, "حقوق");
+  assert.equal(rows[0].description, "خرید میوه");
+  assert.equal(rows[1].description, "حقوق این ماه");
+  assert.equal(rows[2].description, null);
   assert.equal(rows[1].amount_toman, "1000000000000");
   assert.equal(JSON.stringify([incomes, expenses]), before);
 });

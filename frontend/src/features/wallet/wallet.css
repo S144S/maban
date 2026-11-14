@@ -1,0 +1,26 @@
+.credit-wallet-muted { color: var(--muted-foreground); font-size: 14px; }
+.credit-wallet-scope, .credit-wallet-tariff { display: flex; align-items: center; gap: 8px; }
+.credit-wallet-scope svg, .credit-wallet-tariff svg { flex-shrink: 0; }
+.credit-wallet-page .credit-wallet-overview { background: var(--scene-lime); border-color: transparent; }
+.credit-wallet-page .credit-wallet-charge { background: var(--scene-peach); border-color: transparent; }
+.credit-wallet-tariff { font-size: 14px; border-top: 1px solid var(--border); padding-top: 16px; }
+.credit-wallet-notice { font-size: 14px; }
+.credit-wallet-balance { color: var(--foreground); font-size: clamp(26px, 6vw, 36px); font-weight: 800; overflow-wrap: anywhere; }
+.credit-wallet-balance small { font-size: 16px; font-weight: 400; }
+.credit-wallet-warning { background: var(--warning-bg); color: var(--warning); padding: 12px; border-radius: 12px; }
+.credit-wallet-error { background: var(--error-bg); color: var(--error); padding: 12px; border-radius: 12px; display: grid; gap: 12px; }
+.credit-wallet-list { list-style: none; padding: 0; display: grid; gap: 16px; }
+.credit-wallet-list:empty { display: none; }
+.credit-wallet-list li { display: grid; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.credit-wallet-list li + li { padding-block-start: 16px; border-block-start: 1px solid var(--border); }
+.credit-wallet-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.credit-wallet-status { padding: 4px 10px; border-radius: 20px; font-size: 12px; background: var(--warning-bg); color: var(--warning); }
+.credit-wallet-status[data-paid="true"] { background: var(--success-bg); color: var(--success); }
+.credit-wallet-page .credit-wallet-policy { display: block; padding-block: 10px; }
+.credit-wallet-policy summary { display: flex; align-items: center; gap: 8px; min-height: 48px; cursor: pointer; font-size: 14px; font-weight: 600; list-style: none; }
+.credit-wallet-policy summary::-webkit-details-marker { display: none; }
+.credit-wallet-policy summary::after { content: "+"; margin-inline-start: auto; font-size: 22px; }
+.credit-wallet-policy[open] summary::after { content: "−"; }
+.credit-wallet-policy > div { display: grid; gap: 12px; padding-block: 8px 10px; color: var(--muted-foreground); font-size: 14px; }
+.credit-wallet-policy summary:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; border-radius: 12px; }
+.credit-wallet-page a:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }

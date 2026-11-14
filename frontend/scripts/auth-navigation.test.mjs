@@ -29,10 +29,28 @@ test("external, protocol-relative and encoded return destinations are rejected",
     assert.equal(navigation(`https://maban.example/login?next=${next}`).exports.afterAuth(), "/dashboard");
   }
 });
+test("wallet payments remain recoverable across sign-in and signup navigation", () => {
+  for (const url of ["https://maban.example/wallet?payment=confirmed", "https://maban.example/login?next=/wallet"]) {
+    const state = navigation(url);
+    assert.equal(state.exports.authHref("/signup"), "/signup?next=/wallet");
+    assert.equal(state.exports.afterAuth(), "/wallet");
+  }
+});
 test("invalid invitation tokens never become a redirect or an auth link", () => {
   for (const token of ["short", "a".repeat(44), "https://evil.example", "a".repeat(42)+"%2F"]) {
     const state = navigation(`https://maban.example/login#invite=${token}`);
     assert.equal(state.exports.afterAuth(), "/dashboard");
     assert.equal(state.exports.authHref("/signup"), "/signup");
+  }
+});
+test("payment family survives sign-in without trusting arbitrary return URLs", () => {
+  const family = "12345678-1234-4234-8234-123456789abc";
+  const target = `/wallet?family=${family}`;
+  const state = navigation(`https://maban.example/wallet?payment=confirmed&family=${family}`);
+  const login = state.exports.authHref("/login");
+  assert.equal(navigation(`https://maban.example${login}`).exports.afterAuth(), target);
+  assert.equal(navigation(`https://maban.example${login}`).exports.authHref("/signup"), `/signup?next=${encodeURIComponent(target)}`);
+  for (const next of ["/wallet?family=invalid", `${target}&next=//evil.example`, "//evil.example/wallet"]) {
+    assert.equal(navigation(`https://maban.example/login?next=${encodeURIComponent(next)}`).exports.afterAuth(), "/dashboard");
   }
 });

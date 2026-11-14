@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from app.families.public import is_member
 from app.reminders.models import Reminder
 from app.reminders.scheduling import occurrence_window
 
@@ -29,14 +30,18 @@ class Reminders:
 
     def view(self, row):
         status = row.sms_status
-        if status == "pending":
+        if row.sms_family_id is None:
+            status = "not_available"
+        elif status == "pending":
             status = "scheduled" if self.sms_enabled else "not_available"
         return {"id": str(row.id), "title": row.title, "note": row.note, "due_at": row.due_at.isoformat(),
                 "recurrence": row.recurrence,
+                "sms_family_id": str(row.sms_family_id) if row.sms_family_id else None,
+                "recipient_user_ids": [str(uid) for uid in row.recipient_user_ids],
                 "amount_toman": row.amount_toman, "delivery_status": status,
                 "plant_family_id": str(row.plant_family_id) if row.plant_family_id else None,
                 "plant_id": str(row.plant_id) if row.plant_id else None,
-                "next_delivery_at": row.next_sms_at.isoformat() if self.sms_enabled and row.next_sms_at else None}
+                "next_delivery_at": row.next_sms_at.isoformat() if self.sms_enabled and row.sms_family_id and row.next_sms_at else None}
 
     def list(self, user_id, offset):
         rows = self.db.scalars(select(Reminder).where(
@@ -70,11 +75,17 @@ class Reminders:
         if data.plant_id is None:
             fingerprint_fields.pop("plant_id")
             fingerprint_fields.pop("plant_family_id")
+        if data.sms_family_id is None:
+            fingerprint_fields.pop("sms_family_id")
+        if not data.recipient_user_ids:
+            fingerprint_fields.pop("recipient_user_ids")
         fingerprint = hashlib.sha256(json.dumps(
             fingerprint_fields, sort_keys=True, default=str
         ).encode()).hexdigest()
         existing = self.db.scalar(select(Reminder).where(
             Reminder.user_id == user_id, Reminder.request_id == data.request_id))
+        self.authorize_sms(user_id, data.sms_family_id)
+        self.authorize_recipients(user_id, data.sms_family_id, data.recipient_user_ids)
         if existing is None and data.plant_id is not None:
             self.plants.authorize(data.plant_family_id, user_id, data.plant_id)
         self.db.execute(insert(Reminder).values(
@@ -87,6 +98,10 @@ class Reminders:
             raise ReminderError("این درخواست قبلاً ثبت شده؛ برای یادآور جدید، فرم رو دوباره باز کنین.")
         return self.view(row)
 
+    def authorize_sms(self, user_id, family_id):
+        if family_id is not None and not is_member(self.db, family_id, user_id):
+            raise ReminderError("به خانوادهٔ پرداخت‌کننده دسترسی ندارین.", 404)
+
     def owned(self, user_id, reminder_id):
         row = self.db.scalar(select(Reminder).where(
             Reminder.user_id == user_id, Reminder.id == reminder_id
@@ -95,15 +110,32 @@ class Reminders:
             raise ReminderError("یادآور پیدا نشد.", 404)
         return row
 
+    def authorize_recipients(self, user_id, family_id, recipients):
+        if not recipients:
+            return
+        if family_id is None:
+            raise ReminderError("برای یادآوری به اعضا، خانوادهٔ ارسال پیامک رو انتخاب کنین.", 422)
+        self.authorize_sms(user_id, family_id)
+        if user_id in recipients or any(not is_member(self.db, family_id, uid) for uid in recipients):
+            raise ReminderError("گیرنده‌ها باید از اعضای دیگر خانوادهٔ انتخاب‌شده باشن.", 422)
+
     def update(self, user_id, reminder_id, data):
         row = self.owned(user_id, reminder_id)
         if row.deleted_at is not None:
             raise ReminderError("یادآور پیدا نشد.", 404)
+        if "sms_family_id" in data.model_fields_set:
+            self.authorize_sms(user_id, data.sms_family_id)
+        if {"sms_family_id", "recipient_user_ids"} & data.model_fields_set:
+            self.authorize_recipients(user_id,
+                data.sms_family_id if "sms_family_id" in data.model_fields_set else row.sms_family_id,
+                data.recipient_user_ids if "recipient_user_ids" in data.model_fields_set else row.recipient_user_ids)
         reference_given = bool({"plant_family_id", "plant_id"} & data.model_fields_set)
         if reference_given and data.plant_id is not None and (
             row.plant_id != data.plant_id or row.plant_family_id != data.plant_family_id
         ):
             self.plants.authorize(data.plant_family_id, user_id, data.plant_id)
+        billing_changed = "sms_family_id" in data.model_fields_set and row.sms_family_id != data.sms_family_id
+        recipients_changed = "recipient_user_ids" in data.model_fields_set and row.recipient_user_ids != data.recipient_user_ids
         reschedule = row.due_at != data.due_at or (
             "recurrence" in data.model_fields_set and row.recurrence != data.recurrence
         )
@@ -111,13 +143,16 @@ class Reminders:
             if key in {"plant_family_id", "plant_id"} and not reference_given:
                 continue
             # Older clients do not know this field and must not reset it.
-            if key in {"recurrence", "note", "amount_toman"} and key not in data.model_fields_set:
+            if key in {"recurrence", "note", "amount_toman", "sms_family_id", "recipient_user_ids"} and key not in data.model_fields_set:
                 continue
             setattr(row, key, value)
-        if reschedule:
+        if reschedule or billing_changed or recipients_changed:
             row.sms_revision += 1
+        if reschedule:
             row.next_sms_at = row.due_at
             row.sms_status = "pending"
+        elif (billing_changed or recipients_changed) and row.next_sms_at is None and row.sms_status == "pending":
+            row.sms_status = "skipped"
         self.db.flush()
         return self.view(row)
 

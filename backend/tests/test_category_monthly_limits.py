@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from test_expense_categories import category
@@ -71,6 +72,7 @@ def test_monthly_limit_validation_and_auth(client):
     assert client.put(path, json={"monthly_limit_toman": 1, "name": "test"}).status_code == 422
 
 
+@pytest.mark.usefixtures("before_signup_gifts")
 def test_monthly_limit_migration_preserves_category_and_expenses(client):
     user = register(client)
     family = create(client)
