@@ -1,6 +1,6 @@
 import { parseReminderDate, reminderDateFields } from "@/lib/persian-date";
 
-export type Entry = { id: string; amount_toman: number; created_at: string; title?: string; description: string | null; category_name?: string; category?: string; source?: string; location_name?: string };
+export type Entry = { id: string; amount_toman: number; created_at: string; occurred_at?: string; title?: string; description: string | null; category_name?: string; category?: string; source?: string; location_name?: string };
 export type Report = { total_toman: string; count: number; previous_total_toman: string; previous_start: string; previous_end: string; start: string; end: string; daily: { date: string; total_toman: string; count: number }[]; groups: { key: string; name: string; total_toman: string; count: number }[]; entries: Entry[]; offset: number };
 export type Range = { start: string; end: string };
 export const money = (value: string | bigint | number) => BigInt(value).toLocaleString("fa-IR");

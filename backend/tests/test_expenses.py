@@ -70,3 +70,30 @@ def test_expenses_schema_ownership():
     for table in TABLES:
         assert table.schema == "expenses"
         assert not table.foreign_keys
+
+
+def test_expense_occurrence_dates_and_retries(client):
+    from datetime import datetime
+
+    user = register(client)
+    url = f"/api/families/{create(client)}/expenses"
+    # Just after Tehran midnight, on the previous UTC day.
+    data = payload(user, occurred_at="2026-01-02T00:15:00+03:30")
+    response = client.post(url, json=data)
+    assert response.status_code == 201, response.text
+    entry = response.json()["entry"]
+    assert datetime.fromisoformat(entry["occurred_at"]) == datetime.fromisoformat(data["occurred_at"])
+    assert entry["created_at"] != entry["occurred_at"]
+    assert client.post(url, json=data).json() == response.json()
+    assert client.post(url, json={**data, "occurred_at": "2026-01-01T00:15:00+03:30"}).status_code == 409
+    report = client.get(url + "/report?start=2026-01-02&end=2026-01-02").json()
+    assert report["total_toman"] == "500"
+    assert report["daily"] == [{"date": "2026-01-02", "total_toman": "500", "count": 1}]
+    assert client.get(url + "/report?start=2026-01-01&end=2026-01-01").json()["count"] == 0
+    default_data = payload(user)
+    default = client.post(url, json=default_data).json()["entry"]
+    assert default["occurred_at"] == default["created_at"]
+    assert client.post(url, json=default_data).json()["entry"] == default
+    assert client.get(url).json()["entries"][0]["id"] == default["id"]
+    for invalid in ("2026-01-02T00:15:00", "invalid", "2026-02-30T00:15:00Z"):
+        assert client.post(url, json=payload(user, occurred_at=invalid)).status_code == 422

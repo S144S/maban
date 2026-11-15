@@ -37,6 +37,7 @@ class Expense:
             "title": row.title,
             "description": row.description,
             "created_at": row.created_at.isoformat(),
+            "occurred_at": (row.occurred_at or row.created_at).isoformat(),
         }
 
     def create(self, family_id, user_id, data):
@@ -47,6 +48,7 @@ class Expense:
             "amount_toman": data.amount_toman, "category": data.category or "other",
             "submitted_category_id": data.category_id, "paid_by_member_id": data.paid_by_member_id,
             "title": data.title, "description": data.description or None, "created_by": user_id,
+            "occurred_at": data.occurred_at,
         }
         existing = self.db.scalar(select(ExpenseEntry).where(
             ExpenseEntry.family_id == family_id, ExpenseEntry.request_id == data.request_id))
@@ -73,6 +75,7 @@ class Expense:
             "description": data.description or None,
             "created_by": user_id,
             "request_id": data.request_id,
+            "occurred_at": data.occurred_at,
         }
         self.db.execute(
             insert(ExpenseEntry)
@@ -91,8 +94,9 @@ class Expense:
     def list(self, family_id, user_id, offset):
         self.access.authorize(family_id, user_id)
         query = select(ExpenseEntry).where(ExpenseEntry.family_id == family_id)
+        occurred_at = func.coalesce(ExpenseEntry.occurred_at, ExpenseEntry.created_at)
         rows = self.db.scalars(
-            query.order_by(ExpenseEntry.created_at.desc(), ExpenseEntry.id.desc()).offset(offset).limit(50)
+            query.order_by(occurred_at.desc(), ExpenseEntry.id.desc()).offset(offset).limit(50)
         ).all()
         count, total = self.db.execute(
             select(func.count(), func.coalesce(func.sum(ExpenseEntry.amount_toman), 0)).where(
@@ -208,12 +212,13 @@ class Expense:
         until = datetime.combine(end + timedelta(days=1), time.min, zone)
         previous = since - (until - since)
         scope = ExpenseEntry.family_id == family_id
-        period = (scope, ExpenseEntry.created_at >= since, ExpenseEntry.created_at < until)
+        occurred_at = func.coalesce(ExpenseEntry.occurred_at, ExpenseEntry.created_at)
+        period = (scope, occurred_at >= since, occurred_at < until)
         count, total = self.db.execute(select(func.count(), func.coalesce(func.sum(ExpenseEntry.amount_toman), 0))
             .where(*period)).one()
         previous_total = self.db.scalar(select(func.coalesce(func.sum(ExpenseEntry.amount_toman), 0))
-            .where(scope, ExpenseEntry.created_at >= previous, ExpenseEntry.created_at < since))
-        day = func.date(func.timezone("Asia/Tehran", ExpenseEntry.created_at))
+            .where(scope, occurred_at >= previous, occurred_at < since))
+        day = func.date(func.timezone("Asia/Tehran", occurred_at))
         daily = self.db.execute(select(day, func.sum(ExpenseEntry.amount_toman), func.count())
             .where(*period).group_by(day).order_by(day)).all()
         group_name = func.coalesce(ExpenseEntry.category_name, ExpenseEntry.category)
@@ -222,7 +227,7 @@ class Expense:
             .where(*period).group_by(group_key, group_name)
             .order_by(func.sum(ExpenseEntry.amount_toman).desc(), group_key)).all()
         rows = self.db.scalars(select(ExpenseEntry).where(*period)
-            .order_by(ExpenseEntry.created_at.desc(), ExpenseEntry.id.desc()).offset(offset).limit(20)).all()
+            .order_by(occurred_at.desc(), ExpenseEntry.id.desc()).offset(offset).limit(20)).all()
         return {"total_toman": str(total), "count": count, "previous_total_toman": str(previous_total),
                 "start": start.isoformat(), "end": end.isoformat(),
                 "previous_start": previous.date().isoformat(), "previous_end": (start - timedelta(days=1)).isoformat(),

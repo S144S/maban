@@ -1,5 +1,7 @@
 import { useActiveFamily } from "../families/ActiveFamily";
 import { MoneyInput } from "@/components/ui/money-input";
+import { PersianDatePicker } from "@/components/ui/persian-date-picker";
+import { parseReminderDate, reminderDateFields } from "@/lib/persian-date";
 import { CategoryField } from "../expenses/CategoryField";
 import { PersonalFundValue } from "./PersonalFundValue";
 import { AssetDialog } from "../assets/AssetDialog";
@@ -39,6 +41,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
   const [kind, setKind] = useState<Kind>("income");
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
+  const [expenseDate, setExpenseDate] = useState(() => reminderDateFields(new Date().toISOString()));
   const [notice, setNotice] = useState("");
   const pending = useRef(false);
   const request = useRef({ fingerprint: "", id: "" });
@@ -70,6 +73,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
 
   const canWrite = !!wallet?.members.some(m => m.user_id === userId);
   function prepare(next: Kind) {
+    setExpenseDate(reminderDateFields(new Date().toISOString()));
     setKind(next); setFormError(""); setNotice(""); request.current = { fingerprint: "", id: "" };
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -80,10 +84,13 @@ export function FamilyWallet({ userId }: { userId: string }) {
     if (amount === null) { setFormError("مبلغ رو به تومان و بین ۱ تا ۱٬۰۰۰٬۰۰۰٬۰۰۰٬۰۰۰ وارد کنین."); return; }
     if (kind === "income" && !fields.get("location")) { setFormError("حساب مقصد رو انتخاب کنین؛ اگر حسابی ندارین، از مدیریت اضافه کنین."); return; }
     if (kind === "expenses" && !fields.get("category_id")) { setFormError("دسته‌بندی خرج رو انتخاب کنین؛ سازندهٔ خانواده می‌تونه از مدیریت اضافه‌اش کنه."); return; }
+    const occurredAt = kind === "expenses" ? parseReminderDate(String(fields.get("date") ?? ""), expenseDate.time) : null;
+    if (kind === "expenses" && !occurredAt) { setFormError("تاریخ خرج رو به‌صورت سال/ماه/روز شمسی وارد کنین."); return; }
     const familyId = wallet.familyId;
     const payload = {
       amount_toman: amount,
       description: String(fields.get("description") ?? "").trim() || null,
+      ...(occurredAt && reminderDateFields(occurredAt).date !== expenseDate.date ? { occurred_at: occurredAt } : {}),
       ...(kind === "income" ? { source: fields.get("source"), location_id: fields.get("location"), from_member_id: fields.get("member") } : { title: "خرج", category_id: fields.get("category_id"), paid_by_member_id: fields.get("member") }),
     };
     const fingerprint = JSON.stringify({ familyId, kind, payload });
@@ -135,6 +142,7 @@ export function FamilyWallet({ userId }: { userId: string }) {
           </>}
           <label htmlFor="wallet-member">{kind === "income" ? "از جانب" : "پرداخت‌کننده"}<Select id="wallet-member" name="member" defaultValue={userId} options={(wallet?.members ?? []).map(m => ({ value: m.user_id, label: m.name }))} disabled={busy} required /></label>
           {kind === "income" && wallet && <LocationField familyId={wallet.familyId} disabled={busy} />}
+          {kind === "expenses" && <PersianDatePicker id="wallet-expense-date" name="date" label="تاریخ خرج" defaultValue={expenseDate.date} required disabled={busy} />}
           <label htmlFor="wallet-description">توضیح (اختیاری)<input id="wallet-description" name="description" maxLength={500} /></label>
           {formError && <p className="dash-error" role="alert">{formError}</p>}
           <Button type="submit">{busy ? "در حال ثبت…" : kind === "income" ? "ثبت دخل" : "ثبت خرج"}</Button>

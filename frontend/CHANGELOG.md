@@ -5,7 +5,11 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.12.1`. No pending changes.
+Current development version: `1.13.0`.
+
+### Added
+
+- Add an editable Persian date to expense registration, defaulting to the recording date and time. Show and sort expense dates consistently in recent transactions and reports. Requires backend 5.3.0 and migration `f2c710a9e631`.
 
 ## [1.12.1] - 2026-11-14
 

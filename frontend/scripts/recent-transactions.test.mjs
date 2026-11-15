@@ -37,3 +37,11 @@ test("empty, fewer than three, one-sided and simultaneous transactions remain de
   assert.ok(rows.every(row => row.kind === "expense"));
   assert.equal(recentTransactions([income("shared", at)], [expense("shared", at)]).length, 2);
 });
+
+test("backdated expenses use occurrence time without changing recording time", () => {
+  const backdated = { ...expense("old", "2030-01-05T12:00:00Z"), occurred_at: "2030-01-01T00:15:00+03:30" };
+  const rows = recentTransactions([income("new", "2030-01-03T12:00:00Z")], [backdated]);
+  assert.equal(rows.map(row => row.id).join(","), "new,old");
+  assert.equal(rows[1].created_at, backdated.created_at);
+  assert.equal(rows[1].occurred_at, backdated.occurred_at);
+});
