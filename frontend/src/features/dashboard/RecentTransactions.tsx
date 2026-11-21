@@ -22,7 +22,7 @@ export function RecentTransactions({ items, loading, error, hasFamily, hidden, o
             <div className="wallet-recent-heading">
               <span className="wallet-transaction-kind" data-kind={item.kind}>{item.kind === "income" ? "دخل" : "خرج"}</span>
               <strong>{item.label}</strong>
-              <time dateTime={item.created_at}>{date.format(new Date(item.created_at))}</time>
+              <time dateTime={item.occurred_at ?? item.created_at}>{date.format(new Date(item.occurred_at ?? item.created_at))}</time>
             </div>
             {item.description && <p className="wallet-recent-description" dir="auto">{item.description}</p>}
           </div>

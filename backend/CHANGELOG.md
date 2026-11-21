@@ -5,7 +5,13 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `5.2.0`. No pending changes.
+Current development version: `5.3.0`.
+
+## [5.3.0] - 2026-11-21
+
+### Added
+
+- Allow optional timezone-aware expense occurrence dates, keeping recording timestamps and retry protection intact. Expense reports and lists use occurrence time, falling back to recording time for existing entries and clients. Run migration `f2c710a9e631` before deployment.
 
 ## [5.2.0] - 2026-11-14
 

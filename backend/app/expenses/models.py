@@ -28,6 +28,7 @@ class ExpenseEntry(Base):
     created_by: Mapped[UUID] = mapped_column()
     request_id: Mapped[UUID] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    occurred_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class ExpenseCategory(Base):

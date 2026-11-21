@@ -22,6 +22,8 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel 
   const [family, setFamily] = useState<Family | null>(null);
   const [list, setList] = useState<List | null>(null);
   const [offset, setOffset] = useState(0);
+  const [loadedScope, setLoadedScope] = useState("");
+  const scope = `${selected}:${listId}:${offset}`;
   const [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -52,6 +54,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel 
       if (signal.aborted) return;
       if (offset && !result.items.length) { setOffset(0); return; }
       setList(result);
+      setLoadedScope(scope);
       const check = completionCheck.current;
       if (check?.familyId === active.id && check.listId === listId) {
         completionCheck.current = null;
@@ -63,7 +66,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel 
     void load().catch(err => { if (!signal.aborted) setError(errorMessage(err)); })
       .finally(() => { if (!signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [selected, setSelected, offset, revision, listId]);
+  }, [selected, setSelected, offset, revision, listId, scope]);
 
   function show(next: Modal) {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -82,7 +85,6 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel 
       if (checkCompletion && family) completionCheck.current = { familyId: family.id, listId };
       if (path.endsWith("/complete")) setOffset(0);
       setModal(null); setNotice(message); setRevision(value => value + 1);
-      if (!inDialog) heading.current?.focus({ preventScroll: true });
     } catch (err) {
       const conflict = err instanceof ApiError && (err.status === 409 || err.status === 404);
       if (inDialog) { setFormError(errorMessage(err)); setStale(conflict); }
@@ -122,7 +124,8 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel 
     void mutate(path, "POST", { ...body, request_id: request.current.id },
       cost.amount_toman ? "لیست تکمیل شد و هزینهٔ کلش در مالی ثبت شد." : "همهٔ کالاهای لیست تکمیل شدن.", true);
   }
-  const unavailable = loading || busy || !!error;
+  const currentList = loadedScope === scope && list !== null;
+  const unavailable = loading || busy || !!error || !currentList;
 
   return <section className="shopping-page" aria-labelledby="shopping-title">
     <div className="dash-welcome management-title-row"><h1 id="shopping-title" ref={heading} tabIndex={-1}>{listName}</h1><ManagementBack onBack={onBack} label={backLabel} /></div>
@@ -135,7 +138,7 @@ export function ShoppingItems({ onBack, onFamilies, listId, listName, backLabel 
       <ListChecks aria-hidden="true" />{!list.pending_count && list.checkout.has_expense ? "لیست تکمیل شده" : "خریدم"}</Button>}
     <p className="shopping-notice" role="status">{notice}</p>
     {error && <div className="shopping-error" role="alert"><p>{error}</p><Button variant="outline" disabled={busy} onClick={refresh}><RefreshCw aria-hidden="true" />دریافت دوبارهٔ لیست</Button></div>}
-    {loading ? <p className="dash-empty" role="status">در حال دریافت لیست خرید…</p> : !family && !error ? <div className="shopping-empty"><ShoppingBasket aria-hidden="true" /><h2>لیست خرید رو با خانواده شروع کنین</h2><p>اول خانوادهٔ فعال رو انتخاب کنین یا یه خانواده بسازین.</p><Button onClick={onFamilies}>رفتن به خانواده</Button></div> : family && list && <>
+    {(loading || (family && !currentList && !error)) && !currentList ? <p className="dash-empty" role="status">در حال دریافت لیست خرید…</p> : !family && !error ? <div className="shopping-empty"><ShoppingBasket aria-hidden="true" /><h2>لیست خرید رو با خانواده شروع کنین</h2><p>اول خانوادهٔ فعال رو انتخاب کنین یا یه خانواده بسازین.</p><Button onClick={onFamilies}>رفتن به خانواده</Button></div> : family && currentList && list && <>
       <div className="shopping-list-heading"><h2>کالاهای لیست</h2><Button variant="ghost" size="icon" aria-label="تازه‌سازی لیست خرید" disabled={unavailable} onClick={refresh}><RefreshCw aria-hidden="true" /></Button></div>
       {list.items.length ? <ul className="shopping-list">{list.items.map(item => <li key={item.id} className="shopping-item" data-purchased={item.purchased}>
         <div className="shopping-item-main">

@@ -5,7 +5,22 @@ and independent Semantic Versioning.
 
 ## [Unreleased]
 
-Current development version: `1.12.1`. No pending changes.
+Current development version: `1.14.0`.
+
+## [1.14.0] - 2026-11-21
+
+### Added
+
+- Replace the landing preview with an explicitly labeled interactive family account, shopping checklist and category report. Sample expense registration updates the local balance and report without accessing user data.
+- Add an editable Persian date to expense registration, defaulting to the recording date and time. Show and sort expense dates consistently in recent transactions and reports. Requires backend 5.3.0 and migration `f2c710a9e631`.
+
+### Changed
+
+- Redesign the Persian RTL landing around available family finances, shopping lists, reminders, reports and personal holdings. Introduce original line-art squirrel-family/home illustrations reflecting MaBan's mascot, varied soft blue, peach, rose and lime section/card backgrounds, restrained pastel sticker motifs and reduced-motion-aware entrance feedback around the interactive sample. Link primary actions to signup, explain shared versus personal data and SMS costs, update privacy/use guidance and page metadata, and remove unsupported savings-goal, bill-splitting and app-store claims. Preserve the logo and add centrally defined teal interaction states scoped to the landing.
+
+### Fixed
+
+- Keep shopping items mounted during refresh after checking or undoing a purchase, preserving scroll position instead of replacing the list with a loading screen. Stop moving focus to the page heading after inline purchases; keep stale family/list/page data hidden and controls disabled until refreshed.
 
 ## [1.12.1] - 2026-11-14
 
