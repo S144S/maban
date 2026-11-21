@@ -7,6 +7,8 @@ and independent Semantic Versioning.
 
 Current development version: `1.14.0`.
 
+## [1.14.0] - 2026-11-21
+
 ### Added
 
 - Replace the landing preview with an explicitly labeled interactive family account, shopping checklist and category report. Sample expense registration updates the local balance and report without accessing user data.
