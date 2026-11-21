@@ -1,4 +1,4 @@
-type Entry = { id: string; amount_toman: string | number; created_at: string; description?: string | null };
+type Entry = { id: string; amount_toman: string | number; created_at: string; occurred_at?: string; description?: string | null };
 export type IncomeEntry = Entry & { source: string };
 export type ExpenseEntry = Entry & { category_name: string; title: string };
 export type RecentTransaction = Entry & { kind: "income" | "expense"; label: string };
@@ -10,6 +10,6 @@ export function recentTransactions(income: IncomeEntry[], expenses: ExpenseEntry
   return [
     ...income.map(row => ({ ...row, kind: "income" as const, label: sources[row.source] ?? "دخل" })),
     ...expenses.map(row => ({ ...row, kind: "expense" as const, label: row.category_name || row.title || "خرج" })),
-  ].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)
+  ].sort((a, b) => Date.parse(b.occurred_at ?? b.created_at) - Date.parse(a.occurred_at ?? a.created_at)
     || b.id.localeCompare(a.id) || a.kind.localeCompare(b.kind)).slice(0, 3);
 }

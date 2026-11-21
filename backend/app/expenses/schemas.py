@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 
 class CreateExpense(BaseModel):
@@ -13,6 +13,7 @@ class CreateExpense(BaseModel):
     title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
     description: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = None
     request_id: UUID
+    occurred_at: AwareDatetime | None = None
 
 
     @model_validator(mode="after")
